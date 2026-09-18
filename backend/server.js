@@ -41,6 +41,8 @@ app.use(cors({
 // Body parser
 app.use(express.json({ limit: '2mb' }));
 
+const generateRoutes = require('./routes/generateRoutes');
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -57,6 +59,9 @@ app.get('/api/health', (req, res) => {
 // Cohort interpretation API
 app.use('/api/cohort', cohortRoutes);
 
+// Synthetic generation API (SDV Gaussian Copula)
+app.use('/api/generate', generateRoutes);
+
 // Optional: Serve frontend static files if accessed directly through backend port
 const frontendDir = path.join(__dirname, '../frontend');
 app.use(express.static(frontendDir));
@@ -67,6 +72,12 @@ app.get('/', (req, res) => {
 });
 app.get('/create', (req, res) => {
   res.sendFile(path.join(frontendDir, 'create.html'));
+});
+app.get('/generate', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'generate.html'));
+});
+app.get('/validation', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'validation.html'));
 });
 
 // Error handling middleware

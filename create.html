@@ -2044,22 +2044,16 @@ const closeModalBtn = document.getElementById('closeModalBtn');
 
 generateBtn.addEventListener('click', () => {
   if (generateBtn.disabled) return;
-  genModalOverlay.style.display = 'flex';
-  modalDesc.textContent = `Synthia is projecting ${cohortState.size.toLocaleString('en-US')} mathematically representative synthetic patient records based on "${cohortState.fileName}".`;
-  modalBar.style.width = '0%';
-  modalProgressText.textContent = "INITIALIZING MULTIVARIATE CORRELATION KERNEL...";
-  closeModalBtn.style.display = 'none';
+  // Persist canonical cohortState for the Generation stage
+  cohortState.model = "Gaussian Copula";
+  try {
+    sessionStorage.setItem('synthia_cohort_state', JSON.stringify(cohortState));
+  } catch (err) {
+    console.warn('Could not save cohortState to sessionStorage:', err);
+  }
 
-  setTimeout(() => {
-    modalBar.style.width = '65%';
-    modalProgressText.textContent = `CALIBRATING ${cohortState.ageOver60}% AGE 60+, ${cohortState.diabetes}% DIABETES COVARIANCE...`;
-  }, 400);
-
-  setTimeout(() => {
-    modalBar.style.width = '100%';
-    modalProgressText.textContent = "COHORT SYNTHESIZED \u2713 READY FOR FIDELITY VALIDATION.";
-    closeModalBtn.style.display = 'inline-block';
-  }, 1600);
+  // Navigate to the Synthetic Generation stage
+  window.location.href = 'generate.html';
 });
 
 closeModalBtn.addEventListener('click', () => {

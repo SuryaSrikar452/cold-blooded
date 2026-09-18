@@ -135,17 +135,20 @@ Open `http://localhost:8080` in your browser.
 ### `POST /api/cohort/interpret`
 Interprets natural language cohort requests into structured epidemiology parameters.
 
+### `POST /api/generate/conditional`
+Generates authentic multivariate synthetic clinical patient cohorts using the trained SDV Gaussian Copula model.
+
 **Request:**
 ```json
 {
-  "text": "I want 12,000 patients with 50% over 60, 25% diabetic, and 40% low activity",
-  "currentCohort": {
-    "size": 10000,
+  "targetSize": 10000,
+  "model": "Gaussian Copula",
+  "conditions": {
     "ageOver60": 40,
     "diabetes": 30,
     "lowActivity": 35
   },
-  "datasetSchema": ["age", "blood_pressure", "diabetes", "activity_level"]
+  "sourceDataset": "nhanes_generative_train.csv"
 }
 ```
 
@@ -153,13 +156,32 @@ Interprets natural language cohort requests into structured epidemiology paramet
 ```json
 {
   "success": true,
-  "requirements": {
-    "targetSize": 12000,
-    "ageOver60": 50,
-    "diabetes": 25,
-    "lowActivity": 40
+  "cohort_id": "SYN-GC-2E98C081",
+  "model": "Gaussian Copula",
+  "model_type": "GaussianCopulaSynthesizer",
+  "sdv_version": "1.38.3",
+  "source_records": 4826,
+  "generated_count": 10000,
+  "target_size": 10000,
+  "num_features": 9,
+  "features": [
+    "age", "sex", "diabetes", "systolic_bp", "diastolic_bp",
+    "activity_mims", "n_medications", "adherence_pct", "pain_score"
+  ],
+  "constraints_applied": {
+    "targetSize": 10000,
+    "ageOver60": 40,
+    "diabetes": 30,
+    "lowActivity": 35
   },
-  "summary": "A cohort of 12,000 patients with 50% aged 60 or older, 25% diagnosed with diabetes, and 40% exhibiting low physical activity levels."
+  "summary_metrics": {
+    "age_over_60_pct": 28.2,
+    "diabetes_pct": 30.0,
+    "low_activity_pct": 32.9,
+    "mean_systolic_bp": 118.0,
+    "mean_diastolic_bp": 67.0,
+    "generation_time_sec": 0.192
+  }
 }
 ```
 

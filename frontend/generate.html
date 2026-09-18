@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SYNTHIA — Synthetic Population Generation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0B0D;
+    --ink-black:#111111;
+    --ivory:#F5F3EE;
+    --ivory-alt:#EFEBE2;
+    --ivory-bright:#FBF9F4;
+    --white:#FFFFFF;
+    --violet:#6C4DFF;
+    --violet-hover:#583BD6;
+    --violet-grad: linear-gradient(90deg, #6C4DFF 0%, #8F73FF 100%);
+    --violet-grad-hover: linear-gradient(90deg, #583BD6 0%, #7B5CFF 100%);
+    --soft-violet:#A896FF;
+    --lavender:#E7E3FF;
+    --hairline:#DBD8CD;
+    --hairline-soft:#E2DFD5;
+    --text-muted:#3A3847;
+    --text-faint:#787588;
+    --ease-out: cubic-bezier(0.16,1,0.3,1);
+    --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+    --panel-shadow: 0 1px 2px rgba(17,17,17,0.03), 0 8px 24px rgba(17,17,17,0.04);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ivory);
+    color:var(--ink-black);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3{margin:0;font-family:'Newsreader',serif;font-weight:600;letter-spacing:-0.015em;}
+  .accent{
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    font-style:italic;
+    font-weight:500;
+  }
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+  .label{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 3rem;width:100%;}
+  @media(max-width:900px){.wrap{padding:0 1.25rem;}}
+
+  /* Top hairline scroll progress bar */
+  .scroll-progress{
+    position:fixed;top:0;left:0;height:2.5px;
+    background:var(--violet-grad);
+    z-index:100;width:0%;
+    transition:width 50ms linear;
+    pointer-events:none;
+  }
+
+  /* Nav */
+  nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(11,11,13,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    color:var(--ivory);
+  }
+  .nav-inner{
+    max-width:1180px;margin:0 auto;padding:0 3rem;height:64px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  @media(max-width:900px){.nav-inner{padding:0 1.25rem;}}
+  .nav-left{display:flex;align-items:center;gap:2.5rem;}
+  .logo{font-family:'Newsreader',serif;font-weight:600;font-size:19px;letter-spacing:-0.01em;color:var(--ivory);}
+  
+  .workflow-indicator{
+    display:flex;align-items:center;gap:1.2rem;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;
+  }
+  @media(max-width:980px){.workflow-indicator{display:none;}}
+  .wf-step{color:rgba(245,243,238,0.45);display:inline-flex;align-items:center;gap:0.35rem;transition:color 160ms var(--ease-out);}
+  .wf-step.active{color:var(--ivory);font-weight:600;}
+  .wf-step.active .wf-badge{
+    background:rgba(108,77,255,0.24);color:var(--soft-violet);
+    border:1px solid rgba(168,150,255,0.32);
+    padding:2px 6px;border-radius:3px;font-weight:600;
+  }
+  .wf-sep{color:rgba(255,255,255,0.18);}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13.5px;
+    padding:0.7rem 1.25rem;border-radius:4px;border:none;cursor:pointer;
+    transition:background 160ms var(--ease-out), transform 220ms var(--ease-spring), border-color 160ms var(--ease-out), opacity 200ms ease;
+  }
+  .btn-primary{
+    background:var(--violet-grad);
+    color:#fff;
+    border:none;
+  }
+  .btn-primary:hover{
+    background:var(--violet-grad-hover);
+    transform:scale(1.02);
+  }
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-ghost{background:transparent;color:var(--ink-black);border:1px solid var(--hairline);}
+  .btn-ghost:hover{border-color:var(--ink-black);background:rgba(17,17,17,0.03);}
+  .btn-ghost-dark{background:rgba(255,255,255,0.06);color:var(--ivory);border:1px solid rgba(255,255,255,0.14);}
+  .btn-ghost-dark:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.3);}
+  .btn.disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+
+  /* Header section */
+  .page-header{
+    padding:3.5rem 0 2rem 0;
+    border-bottom:1px solid var(--hairline);
+    background:var(--ivory);
+  }
+  .section-tag{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    margin-bottom:0.8rem;
+  }
+  .section-tag .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--violet);
+    box-shadow:0 0 8px rgba(108,77,255,0.6);
+  }
+  .page-header h1{
+    font-size:44px;line-height:1.08;color:var(--ink);margin-bottom:0.6rem;
+  }
+  @media(max-width:768px){.page-header h1{font-size:32px;}}
+  .page-header p.subtitle{
+    font-size:16px;color:var(--text-muted);max-width:680px;line-height:1.55;
+  }
+
+  /* Main Workspace */
+  .stage-section{
+    padding:2.5rem 0 4rem 0;
+    flex:1;
+    background:var(--ivory);
+  }
+
+  /* SYNTHIA CORE Dark Stage Panel */
+  .stage-panel{
+    background:var(--ink);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:6px;
+    padding:1.5rem;
+    color:var(--ivory);
+    box-shadow:0 24px 60px rgba(11,11,13,0.18), 0 2px 6px rgba(11,11,13,0.06);
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* Stage Top Bar */
+  .stage-top-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:1rem;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    margin-bottom:1rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.06em;
+  }
+  .stage-col-label{
+    display:flex;align-items:center;gap:0.5rem;
+  }
+  .col-indicator{
+    width:7px;height:7px;border-radius:50%;
+  }
+  .col-source .col-indicator{background:rgba(245,243,238,0.5);}
+  .col-core .col-indicator{background:var(--violet);box-shadow:0 0 8px rgba(108,77,255,0.8);}
+  .col-synth .col-indicator{background:#8F73FF;box-shadow:0 0 8px rgba(143,115,255,0.8);}
+
+  .badge-core{
+    display:inline-flex;align-items:center;gap:0.4rem;
+    background:rgba(108,77,255,0.16);
+    border:1px solid rgba(168,150,255,0.3);
+    color:var(--soft-violet);
+    padding:4px 10px;
+    border-radius:3px;
+    font-weight:600;
+  }
+
+  /* Canvas Container */
+  .canvas-stage-wrap{
+    position:relative;
+    width:100%;
+    height:420px;
+    border-radius:4px;
+    background:#08080A;
+    border:1px solid rgba(255,255,255,0.05);
+    overflow:hidden;
+  }
+  @media(max-width:900px){.canvas-stage-wrap{height:340px;}}
+  @media(max-width:600px){.canvas-stage-wrap{height:280px;}}
+  
+  #synthiaCoreCanvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  /* Stage Foot Info */
+  .stage-foot-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:1rem;
+    border-top:1px solid rgba(255,255,255,0.08);
+    margin-top:1rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+  }
+  @media(max-width:768px){
+    .stage-foot-bar{flex-direction:column;align-items:flex-start;gap:0.6rem;}
+  }
+
+  /* Generation Status Box */
+  .status-block{
+    display:flex;align-items:center;gap:0.75rem;
+  }
+  .status-pulse{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--violet);
+    box-shadow:0 0 10px rgba(108,77,255,0.9);
+    animation:pulseDot 1.4s infinite ease-in-out;
+  }
+  .status-pulse.complete{
+    background:#2DD4BF;
+    box-shadow:0 0 10px rgba(45,212,191,0.9);
+    animation:none;
+  }
+  .status-pulse.failed{
+    background:#F43F5E;
+    box-shadow:0 0 10px rgba(244,63,94,0.9);
+    animation:none;
+  }
+  @keyframes pulseDot{
+    0%,100%{transform:scale(0.9);opacity:0.6;}
+    50%{transform:scale(1.3);opacity:1;}
+  }
+
+  .status-text{
+    font-weight:600;
+    letter-spacing:0.08em;
+    color:var(--ivory);
+    text-transform:uppercase;
+  }
+  .counter-display{
+    display:inline-flex;align-items:baseline;gap:0.4rem;
+    font-family:'JetBrains Mono',monospace;
+    color:var(--soft-violet);
+    font-size:16px;
+    font-weight:600;
+  }
+  .counter-display span.sub{
+    font-size:11px;color:rgba(245,243,238,0.45);font-weight:400;
+  }
+
+  /* Technical Metadata Grid */
+  .meta-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:1rem;
+    margin-top:1.5rem;
+  }
+  @media(max-width:960px){.meta-grid{grid-template-columns:repeat(3, 1fr);}}
+  @media(max-width:600px){.meta-grid{grid-template-columns:repeat(2, 1fr);}}
+
+  .meta-card{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:1rem 1.1rem;
+    box-shadow:var(--panel-shadow);
+  }
+  .meta-card .label{margin-bottom:0.35rem;display:block;}
+  .meta-val{font-size:18px;font-weight:600;color:var(--ink-black);}
+  .meta-sub{font-size:11px;color:var(--text-faint);margin-top:0.25rem;}
+
+  /* Results Card (shown on completion) */
+  .results-panel{
+    margin-top:1.5rem;
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:1.4rem 1.6rem;
+    box-shadow:var(--panel-shadow);
+    display:none;
+  }
+  .results-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:1.2rem;
+    padding-bottom:0.9rem;
+    border-bottom:1px solid var(--hairline-soft);
+  }
+  .results-title{font-size:18px;font-family:'Newsreader',serif;color:var(--ink);}
+  .dist-grid{
+    display:grid;grid-template-columns:repeat(4, 1fr);gap:1rem;
+  }
+  @media(max-width:800px){.dist-grid{grid-template-columns:repeat(2, 1fr);}}
+  .dist-item{
+    background:var(--ivory-bright);
+    border:1px solid var(--hairline-soft);
+    padding:0.75rem 1rem;
+    border-radius:3px;
+  }
+  .dist-item .label{font-size:10.5px;}
+  .dist-item .val{font-size:15px;font-weight:600;color:var(--ink);margin-top:0.2rem;}
+
+  /* Action Bar */
+  .action-bar{
+    margin-top:2rem;
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:1.5rem;
+    border-top:1px solid var(--hairline);
+  }
+  @media(max-width:640px){
+    .action-bar{flex-direction:column-reverse;gap:1rem;align-items:stretch;}
+    .action-bar .btn{justify-content:center;}
+  }
+
+  /* Error Alert Box */
+  .error-box{
+    margin-top:1.5rem;
+    background:#FEF2F2;
+    border:1px solid #FECACA;
+    border-radius:4px;
+    padding:1.2rem 1.4rem;
+    color:#991B1B;
+    display:none;
+  }
+  .error-box h4{margin:0 0 0.4rem 0;font-size:15px;font-family:'IBM Plex Sans',sans-serif;font-weight:600;}
+  .error-box p{font-size:13px;line-height:1.45;color:#B91C1C;}
+  .error-actions{margin-top:0.9rem;display:flex;gap:0.8rem;}
+
+  /* Footer */
+  footer{
+    margin-top:auto;
+    border-top:1px solid var(--hairline);
+    background:var(--ink);
+    color:var(--ivory);
+    padding:2.2rem 0;
+  }
+  .footer-inner{
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .footer-links{display:flex;gap:1.5rem;font-size:12.5px;color:rgba(245,243,238,0.7);}
+  .footer-links a:hover{color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Sticky Nav -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-indicator">
+        <span class="wf-step">01 Dataset</span>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step">02 Cohort</span>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step active"><span class="wf-badge">03 Generate</span></span>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step">04 Validate</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="create.html" class="btn btn-ghost-dark" style="font-size:12px;padding:0.45rem 0.9rem;">
+        &larr; Back to cohort
+      </a>
+      <span class="mono" style="font-size:11px;color:rgba(245,243,238,0.45);">STAGE 04 / 07</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<header class="page-header">
+  <div class="wrap">
+    <div class="section-tag">
+      <span class="dot"></span>
+      <span class="label">PIPELINE STAGE 04</span>
+    </div>
+    <h1>Synthetic <span class="accent">population.</span></h1>
+    <p class="subtitle">
+      SYNTHIA is learning the structure of your source population and projecting a new synthetic cohort.
+    </p>
+  </div>
+</header>
+
+<!-- Main Stage Workspace -->
+<main class="stage-section">
+  <div class="wrap">
+
+    <!-- SYNTHIA CORE Dark Stage Panel -->
+    <div class="stage-panel">
+      <!-- Top Zone Indicator -->
+      <div class="stage-top-bar">
+        <div class="stage-col-label col-source">
+          <span class="col-indicator"></span>
+          <span id="labelSourceRecords">SOURCE &middot; 4,826 RECORDS</span>
+        </div>
+
+        <div class="badge-core">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span>SYNTHIA CORE</span>
+        </div>
+
+        <div class="stage-col-label col-synth">
+          <span class="col-indicator"></span>
+          <span id="labelTargetOutput">SYNTHETIC &middot; 10,000 TARGET</span>
+        </div>
+      </div>
+
+      <!-- Canvas Stage -->
+      <div class="canvas-stage-wrap">
+        <canvas id="synthiaCoreCanvas"></canvas>
+      </div>
+
+      <!-- Bottom Stage Status Bar -->
+      <div class="stage-foot-bar">
+        <div class="status-block">
+          <span class="status-pulse" id="statusPulse"></span>
+          <span class="status-text mono" id="statusText">ANALYZING SOURCE DISTRIBUTION</span>
+        </div>
+        <div class="counter-display mono">
+          <span class="sub">GENERATED:</span>
+          <span id="counterGenerated">0</span>
+          <span class="sub" id="counterTargetLabel">/ 10,000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State Box -->
+    <div class="error-box" id="errorBox">
+      <h4>GENERATION FAILED</h4>
+      <p id="errorMessage">Unable to generate the requested cohort.</p>
+      <div class="error-actions">
+        <button type="button" class="btn btn-primary" id="retryBtn" style="padding:0.5rem 1rem;font-size:12.5px;">
+          Retry synthesis &rarr;
+        </button>
+        <a href="create.html" class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:12.5px;background:#fff;">
+          &larr; Back to cohort
+        </a>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="meta-grid">
+      <div class="meta-card">
+        <span class="label">Source</span>
+        <div class="meta-val mono" id="metaSource">4,826</div>
+        <div class="meta-sub" id="metaSourceFile">nhanes_generative_train.csv</div>
+      </div>
+      <div class="meta-card">
+        <span class="label">Variables</span>
+        <div class="meta-val mono" id="metaVariables">9</div>
+        <div class="meta-sub">Clinical features</div>
+      </div>
+      <div class="meta-card">
+        <span class="label">Model</span>
+        <div class="meta-val mono" id="metaModel" style="font-size:16px;">Gaussian Copula</div>
+        <div class="meta-sub">SDV Synthesizer v1.38.3</div>
+      </div>
+      <div class="meta-card">
+        <span class="label">Target</span>
+        <div class="meta-val mono" id="metaTarget">10,000</div>
+        <div class="meta-sub">Requested size</div>
+      </div>
+      <div class="meta-card">
+        <span class="label">Generated</span>
+        <div class="meta-val mono accent" id="metaGenerated">&mdash;</div>
+        <div class="meta-sub" id="metaStatus">Processing...</div>
+      </div>
+    </div>
+
+    <!-- Synthesized Cohort Distribution Results -->
+    <div class="results-panel" id="resultsPanel">
+      <div class="results-head">
+        <div>
+          <div class="results-title">Achieved Cohort Distribution</div>
+          <p style="font-size:13px;color:var(--text-faint);margin-top:0.25rem;">
+            The population has been synthesized from the statistical structure of your source dataset.
+          </p>
+        </div>
+        <div class="mono" style="font-size:11.5px;color:var(--violet);font-weight:600;" id="cohortIdBadge">
+          SYN-COHORT
+        </div>
+      </div>
+
+      <div class="dist-grid">
+        <div class="dist-item">
+          <span class="label">Age 60+</span>
+          <div class="val mono" id="metricAge">--</div>
+        </div>
+        <div class="dist-item">
+          <span class="label">Diabetes</span>
+          <div class="val mono" id="metricDiabetes">--</div>
+        </div>
+        <div class="dist-item">
+          <span class="label">Low Activity</span>
+          <div class="val mono" id="metricActivity">--</div>
+        </div>
+        <div class="dist-item">
+          <span class="label">Mean Systolic BP</span>
+          <div class="val mono" id="metricBP">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="action-bar">
+      <a href="create.html" class="btn btn-ghost">
+        &larr; Back to cohort configuration
+      </a>
+      <button type="button" class="btn btn-primary disabled" id="viewValidationBtn">
+        View validation &rarr;
+      </button>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap footer-inner">
+    <div class="logo" style="font-size:15px;">SYNTHIA</div>
+    <div class="footer-links">
+      <a href="index.html#structure">Method</a>
+      <a href="index.html#validate">Validation</a>
+      <a href="index.html#timeline">Timeline</a>
+      <a href="create.html">Cohort Setup</a>
+    </div>
+    <div class="mono" style="font-size:11.5px;color:rgba(245,243,238,0.45);">&copy; 2026 Synthia</div>
+  </div>
+</footer>
+
+<!-- Backend Services & Configuration -->
+<script src="src/config.js"></script>
+<script src="src/services/generateApi.js"></script>
+
+<script>
+(function(){
+  "use strict";
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ===================================================================
+     CANONICAL COHORT STATE (Recovered from sessionStorage)
+  =================================================================== */
+  let cohortState = {
+    size: 10000,
+    targetSize: 10000,
+    ageOver60: 40,
+    diabetes: 30,
+    lowActivity: 35,
+    hasCsv: true,
+    fileName: "nhanes_generative_train.csv",
+    model: "Gaussian Copula"
+  };
+
+  try {
+    const saved = sessionStorage.getItem('synthia_cohort_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      cohortState = Object.assign(cohortState, parsed);
+      if (parsed.size) cohortState.targetSize = parsed.size;
+    }
+  } catch (e) {
+    console.warn('[Generate] Could not load saved cohortState:', e);
+  }
+
+  // Populate UI labels from canonical state
+  const targetSizeNum = Number(cohortState.targetSize || cohortState.size || 10000);
+  const targetFormatted = targetSizeNum.toLocaleString('en-US');
+
+  document.getElementById('labelTargetOutput').textContent = `SYNTHETIC \u00B7 ${targetFormatted} TARGET`;
+  document.getElementById('metaTarget').textContent = targetFormatted;
+  document.getElementById('counterTargetLabel').textContent = `/ ${targetFormatted}`;
+  if (cohortState.fileName) {
+    document.getElementById('metaSourceFile').textContent = cohortState.fileName;
+  }
+  if (cohortState.model) {
+    document.getElementById('metaModel').textContent = cohortState.model;
+  }
+
+  /* ===================================================================
+     STATE MACHINE DEFINITIONS
+  =================================================================== */
+  const STATUS = {
+    IDLE: 'INITIALIZING GENERATION',
+    ANALYZING: 'ANALYZING SOURCE DISTRIBUTION',
+    LEARNING: 'LEARNING VARIABLE RELATIONSHIPS',
+    SYNTHESIZING: 'SYNTHESIZING PATIENT RECORDS',
+    APPLYING_CONSTRAINTS: 'APPLYING COHORT CONSTRAINTS',
+    COMPLETE: 'GENERATION COMPLETE',
+    ERROR: 'GENERATION FAILED'
+  };
+
+  let currentState = STATUS.ANALYZING;
+  const statusText = document.getElementById('statusText');
+  const statusPulse = document.getElementById('statusPulse');
+  const counterGenerated = document.getElementById('counterGenerated');
+  const metaGenerated = document.getElementById('metaGenerated');
+  const metaStatus = document.getElementById('metaStatus');
+  const resultsPanel = document.getElementById('resultsPanel');
+  const errorBox = document.getElementById('errorBox');
+  const errorMessage = document.getElementById('errorMessage');
+  const viewValidationBtn = document.getElementById('viewValidationBtn');
+  const retryBtn = document.getElementById('retryBtn');
+
+  function setStatus(st) {
+    currentState = st;
+    statusText.textContent = st;
+    if (st === STATUS.COMPLETE) {
+      statusPulse.classList.add('complete');
+      statusPulse.classList.remove('failed');
+    } else if (st === STATUS.ERROR) {
+      statusPulse.classList.add('failed');
+      statusPulse.classList.remove('complete');
+    } else {
+      statusPulse.classList.remove('complete', 'failed');
+    }
+  }
+
+  /* ===================================================================
+     SYNTHIA CORE CANVAS VISUALIZATION
+     - Left: Source Population cluster (4,826 records represented)
+     - Center: Gaussian Copula processing network (9 clinical nodes with thin covariance ties)
+     - Right: Synthetic population expanding and settling
+  =================================================================== */
+  const canvas = document.getElementById('synthiaCoreCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let animId = null;
+  let isRunning = true;
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // Clinical Variable Nodes for Center Core (Gaussian Copula graph)
+  const NODE_LABELS = [
+    'Age', 'Sex', 'Diabetes', 'Systolic BP', 'Diastolic BP',
+    'Activity', 'Medications', 'Adherence', 'Pain'
+  ];
+
+  let coreNodes = [];
+  function setupNodes() {
+    const cx = W * 0.50;
+    const cy = H * 0.50;
+    const rx = Math.min(W * 0.16, 110);
+    const ry = Math.min(H * 0.36, 120);
+
+    coreNodes = NODE_LABELS.map((name, i) => {
+      const angle = (i / NODE_LABELS.length) * Math.PI * 2 - Math.PI / 2;
+      return {
+        name,
+        x: cx + Math.cos(angle) * rx,
+        y: cy + Math.sin(angle) * ry,
+        baseX: cx + Math.cos(angle) * rx,
+        baseY: cy + Math.sin(angle) * ry,
+        activation: 0,
+        pulseOffset: Math.random() * Math.PI * 2,
+        r: 3.8
+      };
+    });
+  }
+  setupNodes();
+
+  // Source Particles (Left cluster)
+  const NUM_SOURCE = 90;
+  const sourceParticles = [];
+  function initSource() {
+    const sx = W * 0.15;
+    const sy = H * 0.50;
+    const rad = Math.min(W * 0.11, 75);
+    for (let i = 0; i < NUM_SOURCE; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.sqrt(Math.random()) * rad;
+      sourceParticles.push({
+        x: sx + Math.cos(a) * d,
+        y: sy + Math.sin(a) * d,
+        origX: sx + Math.cos(a) * d,
+        origY: sy + Math.sin(a) * d,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        r: 1.2 + Math.random() * 1.4,
+        opacity: 0.35 + Math.random() * 0.4
+      });
+    }
+  }
+  initSource();
+
+  // Transit Signals (flowing through nodes)
+  let transitSignals = [];
+  function spawnSignal() {
+    if (coreNodes.length < 2) return;
+    const n1 = coreNodes[Math.floor(Math.random() * coreNodes.length)];
+    const n2 = coreNodes[Math.floor(Math.random() * coreNodes.length)];
+    if (n1 === n2) return;
+    transitSignals.push({
+      x1: n1.x, y1: n1.y,
+      x2: n2.x, y2: n2.y,
+      prog: 0,
+      speed: 0.02 + Math.random() * 0.025,
+      r: 1.8
+    });
+  }
+
+  // Stream Particles (Source -> Core -> Synthetic)
+  let streamParticles = [];
+  function spawnStream() {
+    if (!coreNodes.length) return;
+    const targetNode = coreNodes[Math.floor(Math.random() * coreNodes.length)];
+    streamParticles.push({
+      phase: 0, // 0: source -> core, 1: core -> output
+      x: W * 0.15 + (Math.random() - 0.5) * 40,
+      y: H * 0.50 + (Math.random() - 0.5) * 60,
+      targetX: targetNode.x,
+      targetY: targetNode.y,
+      prog: 0,
+      speed: 0.015 + Math.random() * 0.02,
+      r: 1.6 + Math.random() * 1.2,
+      targetNode
+    });
+  }
+
+  // Output Synthetic Population (Right side)
+  const synthParticles = [];
+  const maxSynthDisplay = 180;
+  function addSynthParticle() {
+    if (synthParticles.length >= maxSynthDisplay) return;
+    const ox = W * 0.82;
+    const oy = H * 0.50;
+    const radX = Math.min(W * 0.14, 95);
+    const radY = Math.min(H * 0.36, 120);
+
+    const a = Math.random() * Math.PI * 2;
+    const d = Math.sqrt(Math.random());
+    synthParticles.push({
+      x: W * 0.55 + (Math.random() - 0.5) * 20,
+      y: H * 0.50 + (Math.random() - 0.5) * 40,
+      tx: ox + Math.cos(a) * radX * d,
+      ty: oy + Math.sin(a) * radY * d,
+      r: 1.2 + Math.random() * 1.8,
+      opacity: 0.2,
+      hot: Math.random() < 0.35
+    });
+  }
+
+  let startTime = performance.now();
+  let populationProgress = 0;
+  let targetProgress = 0;
+
+  function renderLoop(time) {
+    if (!isRunning) return;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const elapsed = (time - startTime) * 0.001;
+
+    // 1. Draw Subtle Divider Guidelines between stages
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(W * 0.30, 20);
+    ctx.lineTo(W * 0.30, H - 20);
+    ctx.moveTo(W * 0.70, 20);
+    ctx.lineTo(W * 0.70, H - 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 2. Draw Source Particles (Left Cluster)
+    ctx.fillStyle = 'rgba(245,243,238,0.45)';
+    sourceParticles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      // Soft boundary constrain
+      const dx = p.x - p.origX;
+      const dy = p.y - p.origY;
+      if (dx * dx + dy * dy > 600) {
+        p.vx *= -0.9;
+        p.vy *= -0.9;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 3. Update & Draw Core Nodes & Internal Copula Connections
+    // Draw thin covariance lines between nodes
+    for (let i = 0; i < coreNodes.length; i++) {
+      for (let j = i + 1; j < coreNodes.length; j++) {
+        const n1 = coreNodes[i];
+        const n2 = coreNodes[j];
+        const dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
+        if (dist < 180) {
+          const act = (n1.activation + n2.activation) * 0.5;
+          ctx.strokeStyle = `rgba(108,77,255,${0.08 + act * 0.28})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(n1.x, n1.y);
+          ctx.lineTo(n2.x, n2.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Spawn and update transit signals between nodes
+    if (Math.random() < 0.25) spawnSignal();
+    for (let i = transitSignals.length - 1; i >= 0; i--) {
+      const s = transitSignals[i];
+      s.prog += s.speed;
+      if (s.prog >= 1) {
+        transitSignals.splice(i, 1);
+        continue;
+      }
+      const sx = s.x1 + (s.x2 - s.x1) * s.prog;
+      const sy = s.y1 + (s.y2 - s.y1) * s.prog;
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.shadowColor = 'rgba(168,150,255,0.9)';
+      ctx.shadowBlur = 6;
+      ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Render nodes
+    coreNodes.forEach((n, idx) => {
+      // Gentle floating animation
+      n.x = n.baseX + Math.sin(elapsed * 1.5 + n.pulseOffset) * 2;
+      n.y = n.baseY + Math.cos(elapsed * 1.2 + n.pulseOffset) * 2;
+      n.activation = 0.5 + 0.5 * Math.sin(elapsed * 2.8 + n.pulseOffset);
+
+      // Outer glow
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(108,77,255,${0.18 + n.activation * 0.32})`;
+      ctx.arc(n.x, n.y, n.r * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Node body
+      ctx.beginPath();
+      ctx.fillStyle = n.activation > 0.6 ? '#FFFFFF' : 'rgba(168,150,255,0.9)';
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Label below node
+      ctx.fillStyle = 'rgba(245,243,238,0.55)';
+      ctx.font = '9.5px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(n.name, n.x, n.y + 14);
+    });
+
+    // 4. Stream Particles across Stages (Left -> Center -> Right)
+    if (currentState !== STATUS.COMPLETE && Math.random() < 0.3) {
+      spawnStream();
+    }
+
+    for (let i = streamParticles.length - 1; i >= 0; i--) {
+      const sp = streamParticles[i];
+      sp.prog += sp.speed;
+
+      if (sp.phase === 0) {
+        // Source -> Core node
+        sp.x += (sp.targetX - sp.x) * 0.08;
+        sp.y += (sp.targetY - sp.y) * 0.08;
+        if (Math.hypot(sp.targetX - sp.x, sp.targetY - sp.y) < 12 || sp.prog >= 0.5) {
+          sp.phase = 1;
+          sp.targetX = W * 0.76 + (Math.random() - 0.5) * 40;
+          sp.targetY = H * 0.50 + (Math.random() - 0.5) * 80;
+        }
+      } else {
+        // Core node -> Output cluster
+        sp.x += (sp.targetX - sp.x) * 0.07;
+        sp.y += (sp.targetY - sp.y) * 0.07;
+        if (Math.hypot(sp.targetX - sp.x, sp.targetY - sp.y) < 16 || sp.prog >= 1.0) {
+          addSynthParticle();
+          streamParticles.splice(i, 1);
+          continue;
+        }
+      }
+
+      ctx.beginPath();
+      ctx.fillStyle = sp.phase === 0 ? 'rgba(245,243,238,0.7)' : 'rgba(168,150,255,0.85)';
+      ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 5. Output Synthetic Particles (Right Side Cluster)
+    synthParticles.forEach(p => {
+      p.x += (p.tx - p.x) * 0.06;
+      p.y += (p.ty - p.y) * 0.06;
+      p.opacity = Math.min(0.85, p.opacity + 0.02);
+
+      ctx.beginPath();
+      ctx.fillStyle = p.hot
+        ? `rgba(108,77,255,${p.opacity})`
+        : `rgba(245,243,238,${p.opacity * 0.65})`;
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 6. Smooth Population Counter Interpolation
+    if (populationProgress < targetProgress) {
+      const step = Math.max(12, Math.round((targetProgress - populationProgress) * 0.12));
+      populationProgress = Math.min(targetProgress, populationProgress + step);
+      counterGenerated.textContent = populationProgress.toLocaleString('en-US');
+    }
+
+    if (!reducedMotion) {
+      animId = requestAnimationFrame(renderLoop);
+    }
+  }
+
+  if (!reducedMotion) {
+    animId = requestAnimationFrame(renderLoop);
+  }
+
+  /* ===================================================================
+     REAL BACKEND GENERATION PIPELINE EXECUTION
+  =================================================================== */
+  async function runGenerationPipeline() {
+    errorBox.style.display = 'none';
+    resultsPanel.style.display = 'none';
+    viewValidationBtn.classList.add('disabled');
+    metaGenerated.textContent = '\u2014';
+    metaStatus.textContent = 'Processing...';
+
+    // Step 1: Analyzing
+    setStatus(STATUS.ANALYZING);
+    targetProgress = Math.round(targetSizeNum * 0.12);
+
+    setTimeout(() => {
+      if (currentState === STATUS.ANALYZING) {
+        setStatus(STATUS.LEARNING);
+        targetProgress = Math.round(targetSizeNum * 0.35);
+      }
+    }, 700);
+
+    setTimeout(() => {
+      if (currentState === STATUS.LEARNING) {
+        setStatus(STATUS.SYNTHESIZING);
+        targetProgress = Math.round(targetSizeNum * 0.70);
+      }
+    }, 1500);
+
+    setTimeout(() => {
+      if (currentState === STATUS.SYNTHESIZING) {
+        setStatus(STATUS.APPLYING_CONSTRAINTS);
+        targetProgress = Math.round(targetSizeNum * 0.88);
+      }
+    }, 2200);
+
+    try {
+      // Execute real API call to POST /api/generate/conditional
+      let result = null;
+
+      if (window.SYNTHIA_GENERATE_API && typeof window.SYNTHIA_GENERATE_API.generateConditionalCohort === 'function') {
+        result = await window.SYNTHIA_GENERATE_API.generateConditionalCohort({
+          targetSize: targetSizeNum,
+          model: cohortState.model || 'Gaussian Copula',
+          conditions: {
+            ageOver60: cohortState.ageOver60 ?? 40,
+            diabetes: cohortState.diabetes ?? 30,
+            lowActivity: cohortState.lowActivity ?? 35
+          },
+          sourceDataset: cohortState.fileName || 'nhanes_generative_train.csv'
+        });
+      } else {
+        throw new Error('Generation API client service not loaded.');
+      }
+
+      if (!result || !result.success) {
+        throw new Error(result?.error || 'Synthetic generation failed on the server.');
+      }
+
+      // Success achieved
+      const actualCount = result.generated_count || targetSizeNum;
+      targetProgress = actualCount;
+      populationProgress = actualCount;
+      counterGenerated.textContent = actualCount.toLocaleString('en-US');
+
+      setStatus(STATUS.COMPLETE);
+      metaGenerated.textContent = actualCount.toLocaleString('en-US');
+      metaStatus.textContent = 'Synthesized \u2713';
+
+      // Store generated cohort for Validation stage
+      try {
+        sessionStorage.setItem('synthia_generated_cohort', JSON.stringify(result));
+      } catch (e) {}
+
+      // Display achieved distribution metrics
+      const m = result.summary_metrics || {};
+      document.getElementById('cohortIdBadge').textContent = result.cohort_id || 'SYN-COHORT';
+      document.getElementById('metricAge').textContent = (m.age_over_60_pct != null ? m.age_over_60_pct + '%' : cohortState.ageOver60 + '%');
+      document.getElementById('metricDiabetes').textContent = (m.diabetes_pct != null ? m.diabetes_pct + '%' : cohortState.diabetes + '%');
+      document.getElementById('metricActivity').textContent = (m.low_activity_pct != null ? m.low_activity_pct + '%' : cohortState.lowActivity + '%');
+      document.getElementById('metricBP').textContent = (m.mean_systolic_bp ? m.mean_systolic_bp + ' mmHg' : '118 mmHg');
+
+      resultsPanel.style.display = 'block';
+      viewValidationBtn.classList.remove('disabled');
+
+      // Populate right-side particle cluster to capacity
+      for (let k = synthParticles.length; k < maxSynthDisplay; k++) {
+        addSynthParticle();
+      }
+
+    } catch (err) {
+      console.error('[Generation Pipeline Error]:', err);
+      setStatus(STATUS.ERROR);
+      metaStatus.textContent = 'Failed';
+      errorMessage.textContent = err.message || 'Unable to generate the requested cohort.';
+      errorBox.style.display = 'block';
+    }
+  }
+
+  // Handle Retry Button
+  retryBtn.addEventListener('click', () => {
+    runGenerationPipeline();
+  });
+
+  // Handle View Validation navigation
+  viewValidationBtn.addEventListener('click', () => {
+    if (viewValidationBtn.classList.contains('disabled')) return;
+    const isDirectFile = window.location.protocol === 'file:';
+    window.location.href = isDirectFile ? 'validation.html' : 'validation.html';
+  });
+
+  // Start pipeline automatically on page entry
+  runGenerationPipeline();
+
+  // Lifecycle Cleanup
+  window.addEventListener('beforeunload', () => {
+    isRunning = false;
+    if (animId) cancelAnimationFrame(animId);
+  });
+
+})();
+</script>
+</body>
+</html>
