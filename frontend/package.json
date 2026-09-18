@@ -1,0 +1,8 @@
+{
+  "name": "synthia-frontend",
+  "version": "1.0.0",
+  "description": "SYNTHIA Healthcare Synthetic Data Platform - Frontend UI",
+  "scripts": {
+    "dev": "node -e \"const http=require('http'), fs=require('fs'), path=require('path'); const server=http.createServer((req,res)=>{ let p=path.join(__dirname, req.url==='/'?'index.html':req.url); if(!fs.existsSync(p)) p=path.join(__dirname, req.url + '.html'); if(fs.existsSync(p)&&fs.statSync(p).isFile()){ const ext=path.extname(p); const ct=ext==='.html'?'text/html':ext==='.js'?'application/javascript':ext==='.css'?'text/css':'text/plain'; res.writeHead(200,{'Content-Type':ct}); fs.createReadStream(p).pipe(res); } else { res.writeHead(404); res.end('Not Found'); } }); server.listen(8080,()=>console.log('Frontend running on http://localhost:8080'));\""
+  }
+}

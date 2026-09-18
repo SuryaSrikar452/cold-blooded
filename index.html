@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SYNTHIA — Synthetic patient data, without the patient.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0B0D;
+    --ink-black:#111111;
+    --ivory:#F5F3EE;
+    --ivory-alt:#EFEBE2;
+    --ivory-bright:#FBF9F4;
+    --white:#FFFFFF;
+    --violet:#6C4DFF;
+    --violet-hover:#583BD6;
+    --violet-grad: linear-gradient(90deg, #6C4DFF 0%, #8F73FF 100%);
+    --violet-grad-hover: linear-gradient(90deg, #583BD6 0%, #7B5CFF 100%);
+    --soft-violet:#A896FF;
+    --lavender:#E7E3FF;
+    --hairline:#DBD8CD;
+    --hairline-soft:#E2DFD5;
+    --text-muted:#3A3847; /* increased contrast */
+    --text-faint:#787588;
+    --ease-out: cubic-bezier(0.16,1,0.3,1);
+    --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+    --panel-shadow: 0 1px 2px rgba(17,17,17,0.03), 0 8px 24px rgba(17,17,17,0.04);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ivory);
+    color:var(--ink-black);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{margin:0;font-family:'Newsreader',serif;font-weight:600;letter-spacing:-0.015em;}
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+  .label{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 3rem;}
+  @media(max-width:900px){.wrap{padding:0 1.25rem;}}
+
+  /* ---------- reveal system ---------- */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity 700ms var(--ease-out), transform 700ms var(--ease-out);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+  .reveal-el{opacity:0;transform:translateY(14px);transition:opacity 800ms var(--ease-out), transform 800ms var(--ease-out);}
+  .reveal-el.in{opacity:1;transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .reveal, .reveal-el{transition:none; opacity:1; transform:none;}
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(251,249,244,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .nav-inner{max-width:1180px;margin:0 auto;padding:0 3rem;height:64px;display:flex;align-items:center;justify-content:space-between;}
+  @media(max-width:900px){.nav-inner{padding:0 1.25rem;}}
+  .logo{font-family:'Newsreader',serif;font-weight:600;font-size:19px;letter-spacing:-0.01em;}
+  .nav-links{display:flex;gap:2.25rem;}
+  .nav-links a{font-size:13px;color:var(--text-muted);transition:color 160ms var(--ease-out);}
+  .nav-links a:hover{color:var(--ink-black);}
+  @media(max-width:900px){.nav-links{display:none;}}
+  .btn{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13.5px;
+    padding:0.7rem 1.25rem;border-radius:4px;border:none;cursor:pointer;
+    transition:background 160ms var(--ease-out), transform 220ms var(--ease-spring), border-color 160ms var(--ease-out);
+  }
+  .btn-primary{
+    background:var(--violet-grad);
+    color:#fff;
+    border:none;
+  }
+  .btn-primary:hover{
+    background:var(--violet-grad-hover);
+    transform:scale(1.02);
+  }
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-ghost{background:transparent;color:var(--ink-black);border:1px solid var(--hairline);}
+  .btn-ghost:hover{border-color:var(--ink-black);background:var(--white);}
+
+  /* ---------- hero (natural smooth scroll flow, no scroll hijacking) ---------- */
+  .hero-scroll{position:relative;min-height:100vh;overflow:hidden;background:var(--ink);}
+  .hero-pin{position:relative;width:100%;min-height:100vh;overflow:hidden;background:var(--ink);}
+  canvas#field{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;}
+  .hero-content{position:relative;z-index:3;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 1.5rem;pointer-events:none;}
+  .hero-gradient-edge{
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+    height:140px;
+    background:linear-gradient(180deg, 
+      rgba(11, 11, 13, 0) 0%,
+      rgba(11, 11, 13, 0.20) 25%,
+      rgba(18, 17, 21, 0.50) 50%,
+      rgba(48, 44, 54, 0.75) 70%,
+      rgba(142, 134, 130, 0.50) 85%,
+      rgba(245, 243, 238, 0.95) 96%,
+      var(--ivory) 100%
+    );
+    pointer-events:none;
+    z-index:1;
+  }
+  .eyebrow{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.12em;color:var(--soft-violet);margin-bottom:1.1rem;}
+  
+  /* Bold impact on load/refresh that smoothly settles */
+  .hero-h{
+    font-size:clamp(32px,5.4vw,60px);
+    line-height:1.05;
+    color:var(--ivory);
+    margin-bottom:1.1rem;
+    max-width:16ch;
+    font-variation-settings: "wght" 700;
+    font-weight: 700;
+    transform: scale(1.015);
+    opacity: 0;
+    transition:
+      font-variation-settings 700ms cubic-bezier(0.16,1,0.3,1),
+      font-weight 700ms cubic-bezier(0.16,1,0.3,1),
+      transform 700ms cubic-bezier(0.16,1,0.3,1),
+      opacity 500ms ease-out;
+  }
+  .hero-h.in{
+    font-variation-settings: "wght" 600; /* settles to normal weight */
+    font-weight: 600;
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .hero-sub{font-family:'IBM Plex Sans',sans-serif;font-size:clamp(14.5px,1.4vw,17px);color:rgba(245,243,238,0.62);max-width:40ch;line-height:1.6;margin-bottom:2.25rem;}
+  .hero-cta{display:flex;gap:1.5rem;align-items:center;pointer-events:all;}
+  .hero-cta .btn-primary{background:var(--violet-grad);color:#fff;}
+  .hero-cta .btn-primary:hover{background:var(--violet-grad-hover);}
+  .hero-link{font-size:13.5px;color:rgba(245,243,238,0.75);border-bottom:1px solid rgba(245,243,238,0.3);padding-bottom:2px;transition:border-color 160ms var(--ease-out), color 160ms;}
+  .hero-link:hover{color:#fff;border-color:#fff;}
+  .scroll-cue{position:absolute;bottom:2.25rem;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:0.12em;color:rgba(245,243,238,0.5);text-align:center;transition:opacity 300ms;}
+  .scroll-cue .line{display:block;width:1px;height:22px;margin:8px auto 0;background:linear-gradient(var(--soft-violet),transparent);}
+
+  /* ---------- section shells ---------- */
+  section.block{padding:8rem 0;}
+  section.block.tight{padding:6rem 0;}
+  .section-tag{display:flex;align-items:center;gap:0.6rem;margin-bottom:1.5rem;}
+  .section-tag .dot{width:5px;height:5px;border-radius:50%;background:var(--violet);}
+  .section-head{max-width:640px;margin-bottom:3.5rem;}
+  .section-head h2{font-size:clamp(26px,3.6vw,42px);line-height:1.15;}
+  .section-head .accent{
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    font-style:italic;
+    font-weight:500;
+  }
+  .section-head p{margin-top:1rem;color:var(--text-muted);font-size:15.5px;line-height:1.7;max-width:52ch;}
+  .divider{height:1px;background:var(--hairline);border:none;margin:0;}
+
+  /* alternating section background with warmth & depth */
+  .bg-bone{background:var(--ivory-alt);}
+
+  /* ---------- Section 1: expansion ---------- */
+  .expand-grid{display:grid;grid-template-columns:0.85fr 1.15fr;gap:4rem;align-items:center;}
+  @media(max-width:900px){.expand-grid{grid-template-columns:1fr;gap:2.5rem;}}
+  .expand-panel-wrap{position:relative;isolation:isolate;}
+  .expand-panel-wrap::before{
+    content:"";
+    position:absolute;
+    width:480px;height:480px;
+    left:50%;top:50%;
+    transform:translate(-50%, -50%);
+    background:radial-gradient(circle, rgba(108,77,255,0.10) 0%, rgba(108,77,255,0) 70%);
+    filter:blur(40px);
+    z-index:-1;
+    pointer-events:none;
+  }
+  .expand-panel{
+    position:relative;
+    overflow:hidden;
+    --spot-x:50%; --spot-y:50%;
+    border:1px solid var(--hairline);
+    background:var(--white);
+    border-radius:4px;
+    padding:2rem;
+    box-shadow:var(--panel-shadow);
+  }
+  .expand-panel::after{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(320px circle at var(--spot-x) var(--spot-y), rgba(108,77,255,0.06), transparent 65%);
+    opacity:0;
+    transition:opacity 300ms ease-out;
+    pointer-events:none;
+  }
+  .expand-panel:hover::after{opacity:1;}
+  .expand-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.75rem;}
+  .expand-num{
+    font-size:clamp(34px,4vw,44px);
+    font-weight:600;
+    letter-spacing:-0.02em;
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    display:inline-block;
+  }
+  .expand-arrow{color:var(--text-faint);font-size:13px;margin:0.5rem 0;}
+  .var-list{margin-top:2rem;display:grid;grid-template-columns:repeat(2,1fr);gap:1.1rem 1.5rem;}
+  .var-row{
+    border-top:1px solid var(--hairline-soft);
+    transition:background 220ms ease-out;
+    border-radius:4px;
+    margin:0 -0.5rem;
+    padding:0.5rem;
+  }
+  .var-row:hover{
+    background:rgba(231, 227, 255, 0.45); /* lavender mist, 45% */
+  }
+  .var-row .name{font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.5rem;}
+  .bar-track{height:5px;background:var(--hairline-soft);border-radius:3px;overflow:hidden;}
+  .bar-fill{height:100%;width:0%;background:var(--violet-grad);border-radius:3px;transition:width 900ms var(--ease-out);}
+
+  /* ---------- Section 2: relationship diagram ---------- */
+  .diagram-wrap{border:1px solid var(--hairline);background:var(--white);border-radius:4px;padding:3rem 2rem;box-shadow:var(--panel-shadow);}
+  svg.diagram{width:100%;height:auto;display:block;}
+  .node-label{font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.04em;fill:var(--ink-black);}
+  .edge{stroke:var(--hairline);stroke-width:1.2;fill:none;transition:stroke 300ms var(--ease-out), stroke-width 300ms var(--ease-out), opacity 300ms;}
+  .edge.active{stroke:var(--violet);stroke-width:1.8;}
+  .node-dot{fill:var(--white);stroke:var(--ink-black);stroke-width:1.4;transition:stroke 250ms, fill 250ms;cursor:pointer;}
+  .node-dot.hot{stroke:var(--violet);fill:var(--lavender);}
+
+  /* ---------- Section 3: cohort designer ---------- */
+  .cohort-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;}
+  @media(max-width:900px){.cohort-grid{grid-template-columns:1fr;}}
+  .control-panel{border:1px solid var(--hairline);background:var(--white);border-radius:4px;padding:2rem;box-shadow:var(--panel-shadow);}
+  .control-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--hairline-soft);}
+  .control-row{margin-bottom:1.6rem;}
+  .control-row:last-child{margin-bottom:0;}
+  .control-row .ctrl-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:0.6rem;}
+  .control-row .ctrl-top .val{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  input[type=range]{
+    -webkit-appearance:none;width:100%;height:2px;background:var(--hairline);border-radius:2px;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;border-radius:3px;background:var(--ink-black);cursor:pointer;
+    transition:background 160ms, transform 160ms var(--ease-spring);
+  }
+  input[type=range]:hover::-webkit-slider-thumb{background:var(--violet);transform:scale(1.15);}
+  .viz-panel{border:1px solid var(--hairline);background:var(--ink);border-radius:4px;padding:2rem;display:flex;flex-direction:column;justify-content:space-between;color:var(--ivory);min-height:320px;box-shadow:var(--panel-shadow);}
+  .viz-panel .mono{
+    background:linear-gradient(90deg, #A896FF 0%, #D2C7FF 100%);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    font-weight:600;
+  }
+  .cluster-canvas{flex:1;position:relative;}
+  canvas#cohortCanvas{width:100%;height:100%;display:block;}
+
+  /* ---------- Section 4: validation ---------- */
+  .val-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;}
+  @media(max-width:900px){.val-grid{grid-template-columns:1fr;}}
+  .val-card{border:1px solid var(--hairline);background:var(--white);border-radius:4px;padding:1.75rem;box-shadow:var(--panel-shadow);}
+  .val-metric{margin-bottom:1.35rem;}
+  .val-metric:last-child{margin-bottom:0;}
+  .val-metric .m-top{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-muted);margin-bottom:0.5rem;}
+  .compare-track{height:6px;background:var(--hairline-soft);border-radius:3px;position:relative;overflow:hidden;margin-bottom:4px;}
+  .compare-fill{height:100%;border-radius:3px;width:0%;transition:width 900ms var(--ease-out);}
+  .compare-fill.orig{background:var(--ink-black);}
+  .compare-fill.synth{background:var(--violet-grad);}
+  .legend{display:flex;gap:1.25rem;margin-top:1.5rem;font-size:12px;color:var(--text-faint);}
+  .legend span{display:inline-flex;align-items:center;gap:0.4rem;}
+  .legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+
+  /* ---------- Section 5: timeline ---------- */
+  .timeline-panel{border:1px solid var(--hairline);background:var(--white);border-radius:4px;padding:2.5rem 2rem;box-shadow:var(--panel-shadow);}
+  .timeline-days{display:flex;justify-content:space-between;font-size:11px;color:var(--text-faint);margin-bottom:1.5rem;font-family:'JetBrains Mono',monospace;}
+  .timeline-row{margin-bottom:1.75rem;}
+  .timeline-row:last-child{margin-bottom:0;}
+  .timeline-row .t-label{font-size:12px;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);margin-bottom:0.5rem;}
+  .timeline-row svg{width:100%;height:36px;display:block;}
+  .t-path{fill:none;stroke:url(#violetGrad);stroke-width:2.4;stroke-linecap:round;}
+
+  /* ---------- final CTA ---------- */
+  .final-cta{background:var(--ink);color:var(--ivory);text-align:center;padding:8rem 1.5rem;}
+  .final-cta .label{color:var(--soft-violet);margin-bottom:1.25rem;}
+  .final-cta h2{font-size:clamp(30px,5vw,52px);color:var(--ivory);max-width:16ch;margin:0 auto 2.25rem;}
+  .final-cta .actions{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;}
+  .final-cta .btn-primary{background:var(--violet-grad);color:#fff;}
+  .final-cta .btn-primary:hover{background:var(--violet-grad-hover);}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--hairline);padding:3rem 0;}
+  .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+  .footer-links{display:flex;gap:2rem;font-size:12.5px;color:var(--text-faint);}
+  .footer-links a:hover{color:var(--ink-black);}
+</style>
+</head>
+<body>
+
+<!-- Hidden SVG definitions for global gradient strokes -->
+<svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="violetGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6C4DFF" />
+      <stop offset="100%" stop-color="#8F73FF" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo">SYNTHIA</div>
+    <div class="nav-links">
+      <a href="#structure">Method</a>
+      <a href="#validate">Validation</a>
+      <a href="#timeline">Timeline</a>
+    </div>
+    <a href="create.html" class="btn btn-ghost">Create a cohort →</a>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<div class="hero-scroll" id="heroScroll">
+  <div class="hero-pin">
+    <canvas id="field"></canvas>
+    <div class="hero-content">
+      <div class="eyebrow reveal-el" id="eyebrow">SYNTHETIC PATIENT DATA, WITHOUT THE PATIENT</div>
+      <h1 class="hero-h reveal-el" id="headline">Create the population you need.</h1>
+      <p class="hero-sub reveal-el" id="subhead">Generate realistic synthetic patient cohorts from small healthcare datasets while preserving relationships, distributions and patterns over time.</p>
+      <div class="hero-cta reveal-el" id="ctaRow">
+        <a href="create.html" class="btn btn-primary">Create a cohort →</a>
+        <a href="#structure" class="hero-link">See how it works</a>
+      </div>
+    </div>
+    <div class="scroll-cue" id="scrollCue">SCROLL<span class="line"></span></div>
+    <div class="hero-gradient-edge"></div>
+  </div>
+</div>
+
+<!-- ============ SECTION 1: EXPANSION ============ -->
+<section class="block" id="structure">
+  <div class="wrap">
+    <div class="expand-grid">
+      <div class="reveal">
+        <div class="section-tag"><span class="dot"></span><span class="label">01 / Scale transformation</span></div>
+        <h2>A small sample, <span class="accent">held together at a larger scale.</span></h2>
+        <p style="margin-top:1.25rem;color:var(--text-muted);font-size:15.5px;line-height:1.7;">
+          Clinical and disease-registry data can be scarce, siloed, or too sensitive to move freely.
+          Synthia projects those discrete observations through non-destructive correlation modeling,
+          expanding a small handful of records into thousands of mathematically representative
+          synthetic patients — without ever copying a real one.
+        </p>
+      </div>
+      <div class="expand-panel-wrap reveal">
+        <div class="expand-panel" id="dataPanel">
+          <div class="expand-row">
+            <span class="label">Original dataset</span>
+            <span class="expand-num mono" id="numOrig">512</span>
+          </div>
+          <div class="expand-arrow">↓ same structure, larger scale ↓</div>
+          <div class="expand-row">
+            <span class="label">Synthetic population</span>
+            <span class="expand-num mono" id="numSynth">10,000</span>
+          </div>
+          <div class="var-list">
+            <div class="var-row"><div class="name">Age</div><div class="bar-track"><div class="bar-fill" data-w="72"></div></div></div>
+            <div class="var-row"><div class="name">Blood pressure</div><div class="bar-track"><div class="bar-fill" data-w="58"></div></div></div>
+            <div class="var-row"><div class="name">Activity</div><div class="bar-track"><div class="bar-fill" data-w="44"></div></div></div>
+            <div class="var-row"><div class="name">Adherence</div><div class="bar-track"><div class="bar-fill" data-w="66"></div></div></div>
+            <div class="var-row"><div class="name">Pain</div><div class="bar-track"><div class="bar-fill" data-w="38"></div></div></div>
+            <div class="var-row"><div class="name">Diabetes</div><div class="bar-track"><div class="bar-fill" data-w="30"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ SECTION 2: RELATIONSHIPS ============ -->
+<section class="block bg-bone">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-tag"><span class="dot"></span><span class="label">02 / Causal structure</span></div>
+      <h2>Not random data. <span class="accent">It's learned.</span></h2>
+      <p>Synthetic health records aren't built through independent coin flips. In human biology, blood
+      pressure relates to age and weight, activity relates to pain, and adherence to medication
+      shapes how symptoms resolve. Synthia preserves those relationships so synthetic patients
+      behave like real ones — statistically, not individually.</p>
+    </div>
+    <div class="diagram-wrap reveal">
+      <svg class="diagram" viewBox="0 0 800 260" id="diagramSvg"></svg>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ SECTION 3: VALIDATION ============ -->
+<section class="block" id="validate">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-tag"><span class="dot"></span><span class="label">03 / Statistical fidelity</span></div>
+      <h2>Then, check <span class="accent">the distance.</span></h2>
+      <p>Synthetic data only matters if you can trust it. Synthia compares generated statistical
+      benchmarks against original margins, measuring distribution divergence, off-diagonal
+      covariance, and membership-inference resistance.</p>
+    </div>
+    <div class="val-grid">
+      <div class="val-card reveal">
+        <div class="label" style="margin-bottom:1.25rem;">Empirical distribution match</div>
+        <div class="val-metric">
+          <div class="m-top"><span>Age</span><span class="mono">98.6 corr</span></div>
+          <div class="compare-track"><div class="compare-fill orig" data-w="82"></div></div>
+          <div class="compare-track"><div class="compare-fill synth" data-w="80"></div></div>
+        </div>
+        <div class="val-metric">
+          <div class="m-top"><span>Blood pressure</span><span class="mono">97.2 corr</span></div>
+          <div class="compare-track"><div class="compare-fill orig" data-w="64"></div></div>
+          <div class="compare-track"><div class="compare-fill synth" data-w="68"></div></div>
+        </div>
+        <div class="val-metric">
+          <div class="m-top"><span>Activity score</span><span class="mono">95.9 corr</span></div>
+          <div class="compare-track"><div class="compare-fill orig" data-w="47"></div></div>
+          <div class="compare-track"><div class="compare-fill synth" data-w="52"></div></div>
+        </div>
+        <div class="legend"><span><i style="background:var(--ink-black);"></i>Original</span><span><i style="background:var(--soft-violet);"></i>Synthetic</span></div>
+      </div>
+      <div class="val-card reveal">
+        <div class="label" style="margin-bottom:1.25rem;">Privacy & re-identification</div>
+        <div class="val-metric"><div class="m-top"><span>Differential privacy budget (ε)</span><span class="mono">1.8</span></div></div>
+        <div class="val-metric"><div class="m-top"><span>Membership inference AUC</span><span class="mono">0.51</span></div></div>
+        <div class="val-metric"><div class="m-top"><span>Nearest-neighbour distance</span><span class="mono">0.34 avg</span></div></div>
+        <div class="val-metric"><div class="m-top"><span>Exact-match records</span><span class="mono">0 / 10,000</span></div></div>
+        <p style="margin-top:1.5rem;font-size:12.5px;color:var(--text-faint);line-height:1.6;">
+          Full validation dashboard with per-record diagnostics lives inside the application.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ SECTION 4: TIMELINE ============ -->
+<section class="block bg-bone" id="timeline">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-tag"><span class="dot"></span><span class="label">04 / Longitudinal structure</span></div>
+      <h2>Every patient has <span class="accent">a story over time.</span></h2>
+      <p>Human health isn't a single snapshot. Synthia inspects individual synthetic patient records
+      across a 30-day treatment window — blood pressure, reported pain, and activity respond and
+      stay chronologically coherent with each other over time.</p>
+    </div>
+    <div class="timeline-panel reveal">
+      <div class="timeline-days"><span>DAY 1</span><span>DAY 7</span><span>DAY 14</span><span>DAY 21</span><span>DAY 30</span></div>
+      <div class="timeline-row">
+        <div class="t-label">Blood pressure</div>
+        <svg viewBox="0 0 600 36" preserveAspectRatio="none"><path class="t-path" id="p1" d="M0,18 C60,10 120,26 180,14 C260,4 320,28 380,16 C440,8 520,24 600,12" /></svg>
+      </div>
+      <div class="timeline-row">
+        <div class="t-label">Reported pain</div>
+        <svg viewBox="0 0 600 36" preserveAspectRatio="none"><path class="t-path" id="p2" d="M0,8 C80,20 160,10 240,26 C320,32 400,18 480,10 C520,6 560,10 600,8" /></svg>
+      </div>
+      <div class="timeline-row">
+        <div class="t-label">Activity level</div>
+        <svg viewBox="0 0 600 36" preserveAspectRatio="none"><path class="t-path" id="p3" d="M0,28 C80,22 160,16 240,10 C320,6 400,12 480,8 C520,6 560,6 600,4" /></svg>
+      </div>
+      <div class="timeline-row">
+        <div class="t-label">Medication adherence</div>
+        <svg viewBox="0 0 600 36" preserveAspectRatio="none"><path class="t-path" id="p4" d="M0,10 C150,10 150,10 300,10 C450,10 450,10 600,10" /></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final-cta" id="final">
+  <div class="label reveal">Ready to build a population?</div>
+  <h2 class="reveal">Start with a small dataset.</h2>
+  <div class="actions reveal">
+    <a href="create.html" class="btn btn-primary">Create a cohort →</a>
+    <a href="#" class="hero-link" style="color:rgba(245,243,238,0.75);border-bottom:1px solid rgba(245,243,238,0.3);">Watch a walkthrough</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="logo" style="font-size:15px;">SYNTHIA</div>
+    <div class="footer-links">
+      <a href="#">Method</a>
+      <a href="#">Validation</a>
+      <a href="#">Privacy</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="mono" style="font-size:11.5px;color:var(--text-faint);">© 2026 Synthia</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch = window.matchMedia('(hover: none)').matches;
+
+/* ===================================================================
+   HERO PARTICLE FIELD
+   - Phase A (0–1200ms): Single seed cluster at center, low opacity
+   - Phase B (~1200ms+): Pop outward to Poisson/Gaussian clusters via easeOutBack
+   - Settle: Low-frequency 2D noise flow field
+   - Cursor: Neon white glow on proximity via Canvas shadowBlur
+=================================================================== */
+(function(){
+  const canvas = document.getElementById('field');
+  const ctx = canvas.getContext('2d');
+  const heroScroll = document.getElementById('heroScroll');
+  const contentEl = document.querySelector('.hero-content');
+  const scrollCue = document.getElementById('scrollCue');
+  const revealEls = document.querySelectorAll('.reveal-el');
+
+  const VIOLET = [108,77,255];
+  const SOFT_VIOLET = [168,150,255];
+
+  let W=0, H=0, DPR=Math.min(window.devicePixelRatio||1, 2);
+  let anchors = [];
+  let particles = [];
+  let startTime = null, lastFrameTime = null, rafId = 0;
+  let scrollProgress = 0;
+  const mouse = { x: -9999, y: -9999, active: false, px: 0, py: 0 };
+
+  // 1. Gaussian (Box-Muller) distribution
+  function gaussianRandom(mean = 0, stdDev = 1) {
+    const u1 = Math.max(1e-6, Math.random());
+    const u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return mean + z * stdDev;
+  }
+
+  // 2. Non-symmetric, weighted anchor placement with guaranteed upper-hero presence
+  function generateAnchors(count, width, height, minDist = 110) {
+    const res = [];
+
+    // Dedicated upper-tier clusters framing the headline and populating the top
+    const topClusters = [
+      { x: width * 0.22 + rand(-25, 25), y: height * 0.12 + rand(-15, 15), weight: 1.5, stdDev: 46 },
+      { x: width * 0.50 + rand(-35, 35), y: height * 0.10 + rand(-10, 15), weight: 1.6, stdDev: 50 },
+      { x: width * 0.78 + rand(-25, 25), y: height * 0.13 + rand(-15, 15), weight: 1.5, stdDev: 46 },
+    ];
+    topClusters.forEach(tc => res.push(tc));
+
+    let attempts = 0;
+    while (res.length < count && attempts < 600) {
+      attempts++;
+      const candidate = {
+        x: width * 0.10 + Math.random() * (width * 0.80),
+        y: height * 0.08 + Math.random() * (height * 0.82),
+        weight: 0.5 + Math.random() * 1.3,     // uneven cluster sizes
+        stdDev: 35 + Math.random() * 55,       // uneven spread per cluster
+      };
+      const tooClose = res.some(a =>
+        Math.hypot(a.x - candidate.x, a.y - candidate.y) < minDist
+      );
+      if (!tooClose) res.push(candidate);
+    }
+    if (res.length < 3) {
+      res.push(
+        { x: width * 0.22, y: height * 0.32, weight: 1.2, stdDev: 45 },
+        { x: width * 0.74, y: height * 0.42, weight: 1.5, stdDev: 60 },
+        { x: width * 0.48, y: height * 0.76, weight: 0.9, stdDev: 50 }
+      );
+    }
+    return res;
+  }
+
+  function pickWeightedAnchor(anchorsList) {
+    const total = anchorsList.reduce((s, a) => s + a.weight, 0);
+    let r = Math.random() * total;
+    for (const a of anchorsList) {
+      if ((r -= a.weight) <= 0) return a;
+    }
+    return anchorsList[anchorsList.length - 1];
+  }
+
+  // 3. Minimal dependency-free 2D simplex-ish noise flow field
+  function makeNoise2D(seed = Math.random() * 1000) {
+    const p = new Uint8Array(512);
+    const perm = [...Array(256).keys()];
+    for (let i = 255; i > 0; i--) {
+      const j = Math.floor((Math.sin(seed + i) * 43758.5453) % 1 * (i + 1));
+      [perm[i], perm[Math.abs(j) % (i + 1)]] = [perm[Math.abs(j) % (i + 1)], perm[i]];
+    }
+    for (let i = 0; i < 512; i++) p[i] = perm[i & 255];
+
+    function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    function lerp(a, b, t) { return a + t * (b - a); }
+    function grad(hash, x, y) {
+      const h = hash & 3;
+      const u = h < 2 ? x : y, v = h < 2 ? y : x;
+      return ((h & 1) ? -u : u) + ((h & 2) ? -2 * v : 2 * v);
+    }
+
+    return function noise2D(x, y) {
+      const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+      x -= Math.floor(x); y -= Math.floor(y);
+      const u = fade(x), v = fade(y);
+      const aa = p[X + p[Y]], ab = p[X + p[Y + 1]];
+      const ba = p[X + 1 + p[Y]], bb = p[X + 1 + p[Y + 1]];
+      return lerp(
+        lerp(grad(aa, x, y), grad(ba, x - 1, y), u),
+        lerp(grad(ab, x, y - 1), grad(bb, x - 1, y - 1), u),
+        v
+      );
+    };
+  }
+
+  const noise2D = makeNoise2D();
+  const freq = 0.0025;          // lower = bigger, slower-moving currents
+  const flowStrength = 22;
+
+  function getFlowOffset(x, y, t) {
+    const angle = noise2D(x * freq, y * freq + t * 0.00015) * Math.PI * 2;
+    return {
+      dx: Math.cos(angle) * flowStrength,
+      dy: Math.sin(angle) * flowStrength,
+    };
+  }
+
+  // Overshoot easing for the "pop and spread" outward transition
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
+  // Frame-rate-independent lerp
+  function frameLerp(current, target, baseLerp, deltaMs) {
+    const factor = 1 - Math.pow(1 - baseLerp, deltaMs / 16.67);
+    return current + (target - current) * factor;
+  }
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    computeAnchors();
+  }
+
+  function computeAnchors() {
+    const anchorCount = Math.floor(rand(8, 12)); // 8 to 11 anchors
+    anchors = generateAnchors(anchorCount, W, H, Math.min(W, H) * 0.16);
+  }
+
+  // Target letter coordinates generator for SYNTHIA
+  function getSynthiaTargets(count, width, height) {
+    try {
+      const oc = document.createElement('canvas');
+      const ow = 1200;
+      const oh = 320;
+      oc.width = ow;
+      oc.height = oh;
+      const octx = oc.getContext('2d', { willReadFrequently: true });
+      if (octx) {
+        octx.fillStyle = '#000000';
+        octx.fillRect(0, 0, ow, oh);
+        octx.fillStyle = '#ffffff';
+        octx.font = '700 135px "Newsreader", "Cinzel", "Georgia", serif';
+        octx.textAlign = 'center';
+        octx.textBaseline = 'middle';
+
+        const letters = ['S', 'Y', 'N', 'T', 'H', 'I', 'A'];
+        const totalWidth = ow * 0.86;
+        const step = totalWidth / 7;
+        const startX = (ow - totalWidth) / 2 + step * 0.5;
+
+        letters.forEach((char, i) => {
+          octx.fillText(char, startX + i * step, oh * 0.52);
+        });
+
+        const imgData = octx.getImageData(0, 0, ow, oh).data;
+        const sampled = [];
+        const stride = 4;
+        for (let y = 0; y < oh; y += stride) {
+          for (let x = 0; x < ow; x += stride) {
+            const idx = (y * ow + x) * 4;
+            if (imgData[idx] > 140) {
+              sampled.push({
+                rx: (x - ow / 2) / (ow * 0.5),
+                ry: (y - oh / 2) / (oh * 0.5)
+              });
+            }
+          }
+        }
+
+        if (sampled.length >= 80) {
+          const targetW = Math.min(width * 0.78, 800) * 0.5;
+          const targetH = targetW * 0.26;
+          const cy = height * 0.50; // Centered vertically in the hero
+          const cx = width * 0.50;
+
+          sampled.sort(() => Math.random() - 0.5);
+
+          const result = [];
+          for (let i = 0; i < count; i++) {
+            const s = sampled[i % sampled.length];
+            result.push({
+              x: cx + s.rx * targetW + (Math.random() - 0.5) * 3,
+              y: cy + s.ry * targetH + (Math.random() - 0.5) * 3
+            });
+          }
+          return result;
+        }
+      }
+    } catch (err) {
+      console.warn("Offscreen canvas sampling exception, using parametric fallback:", err);
+    }
+
+    return getParametricSynthiaTargets(count, width, height);
+  }
+
+  // 7 Letter definitions for S-Y-N-T-H-I-A with ordered, continuous stroke segments
+  const LETTER_STROKES = {
+    0: [ // S
+      {x1:0.28, y1:-0.44, x2:-0.12, y2:-0.44},
+      {x1:-0.12, y1:-0.44, x2:-0.28, y2:-0.22},
+      {x1:-0.28, y1:-0.22, x2:0.0, y2:-0.02},
+      {x1:0.0, y1:-0.02, x2:0.28, y2:0.18},
+      {x1:0.28, y1:0.18, x2:0.12, y2:0.44},
+      {x1:0.12, y1:0.44, x2:-0.28, y2:0.44}
+    ],
+    1: [ // Y
+      {x1:-0.32, y1:-0.44, x2:0, y2:-0.02},
+      {x1:0.32, y1:-0.44, x2:0, y2:-0.02},
+      {x1:0, y1:-0.02, x2:0, y2:0.44}
+    ],
+    2: [ // N
+      {x1:-0.32, y1:0.44, x2:-0.32, y2:-0.44},
+      {x1:-0.32, y1:-0.44, x2:0.32, y2:0.44},
+      {x1:0.32, y1:0.44, x2:0.32, y2:-0.44}
+    ],
+    3: [ // T
+      {x1:-0.38, y1:-0.44, x2:0.38, y2:-0.44},
+      {x1:0, y1:-0.44, x2:0, y2:0.44}
+    ],
+    4: [ // H
+      {x1:-0.32, y1:-0.44, x2:-0.32, y2:0.44},
+      {x1:0.32, y1:-0.44, x2:0.32, y2:0.44},
+      {x1:-0.32, y1:0, x2:0.32, y2:0}
+    ],
+    5: [ // I
+      {x1:0, y1:-0.44, x2:0, y2:0.44},
+      {x1:-0.22, y1:-0.44, x2:0.22, y2:-0.44},
+      {x1:-0.22, y1:0.44, x2:0.22, y2:0.44}
+    ],
+    6: [ // A
+      {x1:0, y1:-0.44, x2:-0.34, y2:0.44},
+      {x1:0, y1:-0.44, x2:0.34, y2:0.44},
+      {x1:-0.20, y1:0.12, x2:0.20, y2:0.12}
+    ]
+  };
+
+  const PTS_PER_LETTER = 25;
+  const LETTER_COUNT = 7;
+  const TOTAL_LETTER_PTS = PTS_PER_LETTER * LETTER_COUNT; // 175 particles for letters
+
+  function generateSynthiaCoordinates(width, height) {
+    const targetW = Math.min(width * 0.84, 880) * 0.5;
+    const targetH = 38;
+    const cx = width * 0.50;
+    const step = (targetW * 2) / 7;
+    const startX = cx - targetW + step * 0.5;
+
+    const targets = [];
+    for (let l = 0; l < 7; l++) {
+      const segs = LETTER_STROKES[l] || [];
+      const lcx = startX + l * step;
+      for (let i = 0; i < PTS_PER_LETTER; i++) {
+        const segIdx = Math.floor((i / PTS_PER_LETTER) * segs.length);
+        const seg = segs[Math.min(segs.length - 1, segIdx)];
+        const subT = (i % Math.ceil(PTS_PER_LETTER / segs.length)) / (PTS_PER_LETTER / segs.length);
+        const lx = (seg.x1 + (seg.x2 - seg.x1) * subT) * (step * 0.85);
+        const ly = (seg.y1 + (seg.y2 - seg.y1) * subT) * (targetH * 2);
+        targets.push({
+          relX: (lcx + lx - cx) + (Math.random() - 0.5) * 1.5,
+          relY: ly + (Math.random() - 0.5) * 1.5,
+          x: lcx + lx,
+          y: height * 0.52 + ly
+        });
+      }
+    }
+    return targets;
+  }
+
+  let synthiaTargets = [];
+
+  function makeParticle(index, targets) {
+    const anchor = pickWeightedAnchor(anchors);
+    const depth = Math.random();
+    const finalX = anchor.x + gaussianRandom(0, anchor.stdDev);
+    const finalY = anchor.y + gaussianRandom(0, anchor.stdDev);
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const u = (finalX - cx) / Math.max(1, W * 0.5);
+    const v = (finalY - cy) / Math.max(1, H * 0.5);
+    const orbitRadius = Math.max(0.26, Math.min(0.96, Math.hypot(u, v)));
+    const orbitAngle = Math.atan2(v, u);
+    const orbitSpeed = 0.000075 + (1 - Math.min(1, orbitRadius)) * 0.000035 + Math.random() * 0.00002;
+
+    const centerX = cx + gaussianRandom(0, 26);
+    const centerY = cy + gaussianRandom(0, 26);
+    const popStart = 1200 + Math.random() * 250;
+
+    const isLetter = index < TOTAL_LETTER_PTS;
+    const letterIdx = isLetter ? Math.floor(index / PTS_PER_LETTER) : -1;
+    const letterOrder = isLetter ? (index % PTS_PER_LETTER) : -1;
+    const sTarget = isLetter && targets && targets[index] ? targets[index] : { x: finalX, y: finalY, relX: 0, relY: 0 };
+
+    return {
+      anchor,
+      finalX,
+      finalY,
+      centerX,
+      centerY,
+      orbitRadius,
+      orbitAngle,
+      orbitSpeed,
+      x: centerX,
+      y: centerY,
+      popFromX: centerX,
+      popFromY: centerY,
+      popStart,
+      popped: false,
+      depth,
+      baseRadius: rand(1.1, 1.8) + depth * 1.5,
+      opacity: 0,
+      targetOpacity: (0.34 + depth * 0.56),
+      color: Math.random() < 0.68 ? VIOLET : SOFT_VIOLET,
+      isLetter,
+      letterIdx,
+      letterOrder,
+      synthiaX: sTarget.x,
+      synthiaY: sTarget.y,
+      synthiaRelX: sTarget.relX || 0,
+      synthiaRelY: sTarget.relY || 0,
+      morphT: 0,
+      neighborIndices: []
+    };
+  }
+
+  const TOTAL_PARTICLES = 260; // 175 letter particles + 85 ambient flowing neurons
+
+  function linkAmbientNeighbors() {
+    for (let i = TOTAL_LETTER_PTS; i < particles.length; i++) {
+      const a = particles[i];
+      a.neighborIndices = [];
+      for (let j = TOTAL_LETTER_PTS; j < particles.length; j++) {
+        if (i !== j && Math.hypot(a.finalX - particles[j].finalX, a.finalY - particles[j].finalY) < 140) {
+          a.neighborIndices.push(j);
+          if (a.neighborIndices.length >= 2) break;
+        }
+      }
+    }
+  }
+
+  function seed(count) {
+    particles = [];
+    synthiaTargets = generateSynthiaCoordinates(W, H);
+    for (let i = 0; i < count; i++) {
+      particles.push(makeParticle(i, synthiaTargets));
+    }
+    linkAmbientNeighbors();
+  }
+
+  function runSequence() {
+    computeAnchors();
+    if (reducedMotion) {
+      seed(TOTAL_PARTICLES);
+      particles.forEach(p => {
+        p.x = p.finalX;
+        p.y = p.finalY;
+        p.opacity = p.targetOpacity;
+        p.popped = true;
+      });
+      revealEls.forEach(el => el.classList.add('in'));
+      return;
+    }
+
+    seed(TOTAL_PARTICLES);
+    setTimeout(() => {
+      revealEls.forEach((el, i) => setTimeout(() => el.classList.add('in'), i * 90));
+    }, 1500);
+  }
+
+  if (!isTouch) {
+    canvas.addEventListener('pointermove', (e) => {
+      const r = canvas.getBoundingClientRect();
+      mouse.px = ((e.clientX - r.left) / W - 0.5) * 2; // -1..1
+      mouse.py = ((e.clientY - r.top) / H - 0.5) * 2;
+      mouse.x = e.clientX - r.left;
+      mouse.y = e.clientY - r.top;
+      mouse.active = true;
+    });
+    canvas.addEventListener('pointerleave', () => { mouse.active = false; });
+  }
+
+  let targetScrollY = 0;
+  let smoothScrollY = 0;
+  function onScroll() {
+    targetScrollY = window.scrollY || document.documentElement.scrollTop;
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  window.addEventListener('resize', () => {
+    resize();
+    synthiaTargets = generateSynthiaCoordinates(W, H);
+    particles.forEach((p, i) => {
+      const anchor = pickWeightedAnchor(anchors);
+      p.anchor = anchor;
+      p.finalX = anchor.x + gaussianRandom(0, anchor.stdDev);
+      p.finalY = anchor.y + gaussianRandom(0, anchor.stdDev);
+      const cx = W / 2;
+      const cy = H / 2;
+      const u = (p.finalX - cx) / Math.max(1, W * 0.5);
+      const v = (p.finalY - cy) / Math.max(1, H * 0.5);
+      p.orbitRadius = Math.max(0.26, Math.min(0.96, Math.hypot(u, v)));
+      p.orbitAngle = Math.atan2(v, u);
+      if (p.isLetter && synthiaTargets[i]) {
+        p.synthiaX = synthiaTargets[i].x;
+        p.synthiaY = synthiaTargets[i].y;
+        p.synthiaRelX = synthiaTargets[i].relX || 0;
+        p.synthiaRelY = synthiaTargets[i].relY || 0;
+      }
+    });
+    linkAmbientNeighbors();
+  });
+
+  // Calculate gradual sequential letter and stroke activation (S -> Y -> N -> T -> H -> I -> A)
+  function getParticleActivation(p, sVal) {
+    const letterBase = 0.03 + p.letterIdx * 0.10;
+    const strokeOffset = (p.letterOrder / PTS_PER_LETTER) * 0.05;
+    const start = letterBase + strokeOffset;
+    const duration = 0.15;
+    const end = start + duration;
+    if (sVal <= start) return 0;
+    if (sVal >= end) return 1;
+    const t = (sVal - start) / duration;
+    return t * t * (3 - 2 * t);
+  }
+
+  function tick(now) {
+    if (startTime === null) startTime = now;
+    const deltaMs = lastFrameTime ? Math.min(now - lastFrameTime, 100) : 16.67;
+    lastFrameTime = now;
+    const elapsed = now - startTime;
+    const dtFactor = Math.min(deltaMs, 50) / 16.67;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Silky smooth exponential scroll interpolation (eliminates all scroll wheel stutter)
+    smoothScrollY += (targetScrollY - smoothScrollY) * (1 - Math.pow(1 - 0.08, dtFactor));
+
+    // Fade and lift headline smoothly as user scrolls
+    if (contentEl) {
+      const textOpacity = Math.max(0, 1 - smoothScrollY / 160);
+      contentEl.style.opacity = textOpacity.toFixed(3);
+      contentEl.style.transform = `translateY(${-smoothScrollY * 0.28}px)`;
+    }
+    if (scrollCue) {
+      scrollCue.style.opacity = Math.max(0, (1 - smoothScrollY / 90) * 0.6).toFixed(3);
+    }
+
+    // Continuous scroll progress without scroll locking
+    const scrollT = Math.max(0, Math.min(1, smoothScrollY / 280));
+    const cx = W / 2;
+    const cy = H / 2;
+
+    // Dynamically descend SYNTHIA into the visible dark transition zone above Section 1
+    const startCy = H * 0.48;
+    const endCy = Math.max(H * 0.55, H - 150);
+    const currentCy = startCy + scrollT * (endCy - startCy);
+
+    // 1. Update particle positions with smooth damping (NO choppy jumps)
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      if (!reducedMotion) {
+        if (elapsed < p.popStart) {
+          p.x = p.centerX;
+          p.y = p.centerY;
+          p.popFromX = p.x;
+          p.popFromY = p.y;
+          p.opacity = p.targetOpacity * Math.min(1, elapsed / 800) * 0.65;
+        } else {
+          const popT = Math.min(1, (elapsed - p.popStart) / 900);
+          const eased = easeOutBack(popT);
+          const targetX = p.popFromX + (p.finalX - p.popFromX) * eased;
+          const targetY = p.popFromY + (p.finalY - p.popFromY) * eased;
+
+          p.opacity = p.targetOpacity * Math.min(1, 0.65 + popT * 0.35);
+
+          if (popT >= 1) p.popped = true;
+
+          if (!p.popped) {
+            p.x = targetX;
+            p.y = targetY;
+          } else {
+            // Natural orbital baseline flow
+            const cycleElapsed = Math.max(0, elapsed - (p.popStart + 900));
+            const currentAngle = p.orbitAngle + (cycleElapsed * p.orbitSpeed);
+
+            const orbitX = cx + p.orbitRadius * (W * 0.5) * Math.cos(currentAngle);
+            const orbitY = cy + p.orbitRadius * (H * 0.5) * Math.sin(currentAngle);
+
+            const flow = getFlowOffset(orbitX, orbitY, elapsed);
+            const normalTargetX = orbitX + flow.dx;
+            const normalTargetY = orbitY + flow.dy;
+
+            if (p.isLetter) {
+              // Target morph for this specific letter and stroke order
+              const targetActivation = getParticleActivation(p, scrollT);
+              // Silky exponential damping (eliminates all choppy motion)
+              p.morphT += (targetActivation - p.morphT) * (1 - Math.pow(1 - 0.06, dtFactor));
+
+              // Gentle organic breathing shimmer once in position
+              const shimmerX = Math.sin(elapsed * 0.0022 + p.depth * 8) * 1.2 * p.morphT;
+              const shimmerY = Math.cos(elapsed * 0.0026 + p.depth * 7) * 1.2 * p.morphT;
+              const sTargetX = cx + (p.synthiaRelX || 0) + shimmerX;
+              const sTargetY = currentCy + (p.synthiaRelY || 0) + shimmerY;
+
+              let curTargetX = (1 - p.morphT) * normalTargetX + p.morphT * sTargetX;
+              let curTargetY = (1 - p.morphT) * normalTargetY + p.morphT * sTargetY;
+
+              if (mouse.active) {
+                const mouseDamp = 1 - p.morphT * 0.45;
+                curTargetX += mouse.px * 20 * p.depth * mouseDamp;
+                curTargetY += mouse.py * 16 * p.depth * mouseDamp;
+                const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 85) {
+                  const force = (1 - dist / 85) * 16 * mouseDamp;
+                  curTargetX += (dx / (dist || 1)) * force;
+                  curTargetY += (dy / (dist || 1)) * force;
+                }
+              }
+
+              p.x = frameLerp(p.x, curTargetX, 0.06, deltaMs);
+              p.y = frameLerp(p.y, curTargetY, 0.06, deltaMs);
+            } else {
+              // AMBIENT NEURONS: ALWAYS continuously circulating and streaming in!
+              p.morphT = 0;
+              let curTargetX = normalTargetX;
+              let curTargetY = normalTargetY;
+
+              if (mouse.active) {
+                curTargetX += mouse.px * 24 * p.depth;
+                curTargetY += mouse.py * 18 * p.depth;
+                const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 95) {
+                  const force = (1 - dist / 95) * 20;
+                  curTargetX += (dx / (dist || 1)) * force;
+                  curTargetY += (dy / (dist || 1)) * force;
+                }
+              }
+
+              p.x = frameLerp(p.x, curTargetX, 0.05, deltaMs);
+              p.y = frameLerp(p.y, curTargetY, 0.05, deltaMs);
+            }
+          }
+        }
+      } else {
+        p.opacity = p.targetOpacity;
+      }
+    }
+
+    // 2. Connecting lines pass (smooth O(1) letter strokes + ambient partner mesh, NO stutter)
+    if (!reducedMotion) {
+      ctx.lineWidth = 1;
+
+      // A: Stroke connections along the letters of SYNTHIA
+      for (let l = 0; l < 7; l++) {
+        const startIdx = l * PTS_PER_LETTER;
+        for (let k = 0; k < PTS_PER_LETTER - 1; k++) {
+          const a = particles[startIdx + k];
+          const b = particles[startIdx + k + 1];
+          if (!a || !b) continue;
+          const letterMorph = Math.min(a.morphT, b.morphT);
+          if (letterMorph > 0.04) {
+            const d = Math.hypot(a.x - b.x, a.y - b.y);
+            if (d < 58) {
+              const strokeAlpha = letterMorph * 0.38 * Math.min(a.opacity, b.opacity);
+              ctx.strokeStyle = `rgba(168,150,255,${strokeAlpha.toFixed(3)})`;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // B: Ambient flowing neuron mesh (continuously coming and drifting)
+      for (let i = TOTAL_LETTER_PTS; i < particles.length; i++) {
+        const a = particles[i];
+        if (!a || a.opacity < 0.02) continue;
+        a.neighborIndices.forEach(j => {
+          const b = particles[j];
+          if (!b || b.opacity < 0.02) return;
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 130) {
+            const alpha = (1 - d / 130) * 0.13 * Math.min(a.opacity, b.opacity);
+            if (alpha <= 0.002) return;
+            ctx.strokeStyle = `rgba(168,150,255,${alpha.toFixed(3)})`;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        });
+      }
+    }
+
+    // 3. Draw particles pass with neon white proximity glow and radiant letter stars
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      if (p.opacity > 0.01) {
+        const px = p.x;
+        const py = p.y;
+        const dist = mouse.active ? Math.hypot(px - mouse.x, py - mouse.y) : 9999;
+        const proximity = mouse.active ? Math.max(0, 1 - dist / 48) : 0;
+
+        ctx.save();
+        if (proximity > 0) {
+          ctx.shadowColor = "rgba(255,255,255,0.95)";
+          ctx.shadowBlur = 7 * proximity;
+          ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * proximity})`;
+        } else if (p.isLetter && p.morphT > 0.06) {
+          // Radiant star-like letter dots forming SYNTHIA
+          ctx.shadowColor = "rgba(168,150,255,0.95)";
+          ctx.shadowBlur = 7 * p.morphT;
+          const [r, g, b] = p.color;
+          ctx.fillStyle = `rgba(${Math.min(255, r + 55)},${Math.min(255, g + 55)},255,${(p.opacity * (0.88 + 0.25 * p.morphT)).toFixed(3)})`;
+        } else {
+          ctx.shadowBlur = 0;
+          const [r, g, b] = p.color;
+          ctx.fillStyle = `rgba(${r},${g},${b},${p.opacity.toFixed(3)})`;
+        }
+        ctx.beginPath();
+        const r = Math.max(0.1, p.baseRadius * (1 + proximity * 0.6 + p.morphT * 0.4));
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  resize();
+  runSequence();
+  rafId = requestAnimationFrame(tick);
+})();
+
+/* ===================================================================
+   SECTION 1 — Data panel spotlight tracking
+=================================================================== */
+(function(){
+  const panel = document.getElementById('dataPanel');
+  if (panel) {
+    panel.addEventListener('mousemove', (e) => {
+      const rect = panel.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      panel.style.setProperty('--spot-x', x + '%');
+      panel.style.setProperty('--spot-y', y + '%');
+    });
+  }
+})();
+
+/* ===================================================================
+   SCROLL REVEAL — sections + staggered children
+=================================================================== */
+(function(){
+  const targets = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+        onSectionRevealed(entry.target);
+      }
+    });
+  }, {threshold:0.22});
+  targets.forEach(t=>io.observe(t));
+
+  function onSectionRevealed(el){
+    // animate bars inside this element
+    el.querySelectorAll('.bar-fill, .compare-fill').forEach((bar,i)=>{
+      setTimeout(()=>{ bar.style.width = (bar.dataset.w||0)+'%'; }, 120 + i*70);
+    });
+    // number tween for section 1 expansion panel
+    if(el.querySelector('#numOrig')){
+      tweenNumber(el.querySelector('#numOrig'), 0, 512, 700);
+      tweenNumber(el.querySelector('#numSynth'), 0, 10000, 1400, 400);
+    }
+    // draw relationship diagram
+    if(el.querySelector('#diagramSvg')) drawDiagram();
+    // draw timeline paths
+    if(el.querySelector('#p1')) drawTimeline();
+  }
+
+  function tweenNumber(node, from, to, duration, delay){
+    delay = delay||0;
+    setTimeout(()=>{
+      const t0=performance.now();
+      function frame(now){
+        const p=Math.min(1,(now-t0)/duration);
+        const eased = 1-Math.pow(1-p,3);
+        const val = Math.round(from+(to-from)*eased);
+        node.textContent = val.toLocaleString('en-US');
+        if(p<1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }, delay);
+  }
+  window.tweenNumber = tweenNumber;
+})();
+
+/* ===================================================================
+   SECTION 2 — relationship diagram (hover highlight)
+=================================================================== */
+let diagramDrawn=false;
+function drawDiagram(){
+  if(diagramDrawn) return;
+  diagramDrawn=true;
+  const svg = document.getElementById('diagramSvg');
+  const nodes = [
+    {id:'age', label:'AGE', x:120, y:60},
+    {id:'bp', label:'BLOOD PRESSURE', x:420, y:50},
+    {id:'activity', label:'ACTIVITY', x:120, y:200},
+    {id:'pain', label:'PAIN SCORE', x:420, y:210},
+    {id:'adherence', label:'ADHERENCE', x:680, y:130},
+    {id:'diabetes', label:'DIABETES', x:260, y:130},
+  ];
+  const edges = [
+    ['age','bp'], ['activity','pain'], ['adherence','pain'], ['diabetes','bp'], ['age','diabetes']
+  ];
+  const byId = Object.fromEntries(nodes.map(n=>[n.id,n]));
+
+  let svgMarkup = '';
+  edges.forEach(([a,b],i)=>{
+    const na=byId[a], nb=byId[b];
+    svgMarkup += `<line class="edge" data-a="${a}" data-b="${b}" x1="${na.x}" y1="${na.y}" x2="${nb.x}" y2="${nb.y}"></line>`;
+  });
+  nodes.forEach(n=>{
+    svgMarkup += `<circle class="node-dot" data-id="${n.id}" cx="${n.x}" cy="${n.y}" r="7"></circle>`;
+    const anchor = n.x > 600 ? 'end' : (n.x < 150 ? 'start' : 'middle');
+    const dy = n.y < 100 ? -16 : 22;
+    svgMarkup += `<text class="node-label" x="${n.x}" y="${n.y+dy}" text-anchor="${anchor}">${n.label}</text>`;
+  });
+  svg.innerHTML = svgMarkup;
+
+  svg.querySelectorAll('.node-dot').forEach(dot=>{
+    dot.addEventListener('mouseenter', ()=>{
+      const id = dot.dataset.id;
+      svg.querySelectorAll('.edge').forEach(edge=>{
+        if(edge.dataset.a===id || edge.dataset.b===id){
+          edge.classList.add('active');
+        }
+      });
+      svg.querySelectorAll('.node-dot').forEach(d=>{
+        if(d.dataset.id===id) d.classList.add('hot');
+      });
+    });
+    dot.addEventListener('mouseleave', ()=>{
+      svg.querySelectorAll('.edge').forEach(edge=>edge.classList.remove('active'));
+      svg.querySelectorAll('.node-dot').forEach(d=>d.classList.remove('hot'));
+    });
+  });
+}
+
+/* ===================================================================
+   SECTION 4 — timeline stroke-draw on reveal
+=================================================================== */
+let timelineDrawn=false;
+function drawTimeline(){
+  if(timelineDrawn) return;
+  timelineDrawn=true;
+  ['p1','p2','p3','p4'].forEach((id,i)=>{
+    const path = document.getElementById(id);
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len;
+    path.style.transition = 'none';
+    requestAnimationFrame(()=>{
+      path.style.transition = `stroke-dashoffset ${reducedMotion?0:1100}ms cubic-bezier(0.16,1,0.3,1) ${i*140}ms`;
+      path.style.strokeDashoffset = '0';
+    });
+  });
+}
+
+})();
+</script>
+</body>
+</html>

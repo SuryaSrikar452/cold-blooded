@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SYNTHIA — Dataset & Cohort Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0B0D;
+    --ink-black:#111111;
+    --ivory:#F5F3EE;
+    --ivory-alt:#EFEBE2;
+    --ivory-bright:#FBF9F4;
+    --white:#FFFFFF;
+    --violet:#6C4DFF;
+    --violet-hover:#583BD6;
+    --violet-grad: linear-gradient(90deg, #6C4DFF 0%, #8F73FF 100%);
+    --violet-grad-hover: linear-gradient(90deg, #583BD6 0%, #7B5CFF 100%);
+    --soft-violet:#A896FF;
+    --lavender:#E7E3FF;
+    --hairline:#DBD8CD;
+    --hairline-soft:#E2DFD5;
+    --text-muted:#3A3847;
+    --text-faint:#787588;
+    --ease-out: cubic-bezier(0.16,1,0.3,1);
+    --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+    --panel-shadow: 0 1px 2px rgba(17,17,17,0.03), 0 8px 24px rgba(17,17,17,0.04);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ivory);
+    color:var(--ink-black);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3{margin:0;font-family:'Newsreader',serif;font-weight:600;letter-spacing:-0.015em;}
+  .accent{
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    font-style:italic;
+    font-weight:500;
+  }
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+  .label{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 3rem;width:100%;}
+  @media(max-width:900px){.wrap{padding:0 1.25rem;}}
+
+  /* Top hairline scroll progress bar */
+  .scroll-progress{
+    position:fixed;top:0;left:0;height:2.5px;
+    background:var(--violet-grad);
+    z-index:100;width:0%;
+    transition:width 50ms linear;
+    pointer-events:none;
+  }
+
+  /* ---------- scroll reveal system ---------- */
+  .reveal{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity 750ms var(--ease-out), transform 750ms var(--ease-out);
+  }
+  .reveal.in{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .reveal-el{
+    opacity:0;
+    transform:translateY(16px);
+    transition:opacity 800ms var(--ease-out), transform 800ms var(--ease-out);
+  }
+  .reveal-el.in{
+    opacity:1;
+    transform:translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .reveal, .reveal-el{transition:none; opacity:1; transform:none;}
+  }
+
+  /* ---------- nav in deep ink ---------- */
+  nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(11,11,13,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    color:var(--ivory);
+  }
+  .nav-inner{
+    max-width:1180px;margin:0 auto;padding:0 3rem;height:64px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  @media(max-width:900px){.nav-inner{padding:0 1.25rem;}}
+  .nav-left{display:flex;align-items:center;gap:2.5rem;}
+  .logo{font-family:'Newsreader',serif;font-weight:600;font-size:19px;letter-spacing:-0.01em;color:var(--ivory);}
+  
+  /* Understated workflow indicator */
+  .workflow-indicator{
+    display:flex;align-items:center;gap:1.5rem;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;
+  }
+  @media(max-width:980px){.workflow-indicator{display:none;}}
+  .wf-step{color:rgba(245,243,238,0.45);display:inline-flex;align-items:center;gap:0.35rem;transition:color 160ms var(--ease-out);}
+  .wf-step.active{color:var(--ivory);font-weight:600;}
+  .wf-step.active .wf-badge{
+    background:rgba(108,77,255,0.24);color:var(--soft-violet);
+    border:1px solid rgba(168,150,255,0.32);
+    padding:2px 6px;border-radius:3px;font-weight:600;
+  }
+  .wf-sep{color:rgba(255,255,255,0.18);}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13.5px;
+    padding:0.7rem 1.25rem;border-radius:4px;border:none;cursor:pointer;
+    transition:background 160ms var(--ease-out), transform 220ms var(--ease-spring), border-color 160ms var(--ease-out), opacity 200ms ease;
+  }
+  .btn-primary{
+    background:var(--violet-grad);
+    color:#fff;
+    border:none;
+  }
+  .btn-primary:hover{
+    background:var(--violet-grad-hover);
+    transform:scale(1.02);
+  }
+  .btn-primary:active{transform:scale(0.98);}
+  
+  .btn-ghost{background:transparent;color:var(--ink-black);border:1px solid var(--hairline);}
+  .btn-ghost:hover{border-color:var(--ink-black);background:var(--white);}
+
+  .btn-ghost-dark{
+    background:transparent;color:var(--ivory);
+    border:1px solid rgba(255,255,255,0.22);
+  }
+  .btn-ghost-dark:hover{
+    border-color:var(--ivory);background:rgba(255,255,255,0.08);color:#fff;
+  }
+
+  /* Button disabled state */
+  .btn-primary.disabled,
+  .btn-primary:disabled{
+    background:rgba(255,255,255,0.12) !important;
+    color:rgba(255,255,255,0.35) !important;
+    cursor:not-allowed;
+    transform:none !important;
+    opacity:0.6;
+    pointer-events:none;
+  }
+
+  .section-tag{display:flex;align-items:center;gap:0.6rem;margin-bottom:1.1rem;}
+  .section-tag .dot{width:5px;height:5px;border-radius:50%;background:var(--violet);}
+
+  /* ===================================================================
+     HERO DARK ZONE (Deep Ink Black with Interactive Neural Mesh)
+  =================================================================== */
+  .hero-dark-zone{
+    position:relative;
+    background:var(--ink);
+    color:var(--ivory);
+    padding:5.5rem 0 6.5rem;
+    overflow:hidden;
+    border-bottom:none;
+  }
+  .hero-dark-zone::after{
+    content:"";
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+    height:140px;
+    background:linear-gradient(180deg, 
+      rgba(11, 11, 13, 0) 0%,
+      rgba(11, 11, 13, 0.20) 25%,
+      rgba(18, 17, 21, 0.50) 50%,
+      rgba(48, 44, 54, 0.75) 70%,
+      rgba(142, 134, 130, 0.50) 85%,
+      rgba(245, 243, 238, 0.95) 96%,
+      var(--ivory) 100%
+    );
+    pointer-events:none;
+    z-index:1;
+  }
+  canvas#bgField{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+    pointer-events:none;
+    z-index:2;
+  }
+  .hero-dark-content{
+    position:relative;
+    z-index:3;
+  }
+  .page-intro h1{
+    font-size:clamp(34px,4.5vw,54px);
+    line-height:1.08;
+    color:var(--ivory);
+    margin-bottom:0.85rem;
+    max-width:18ch;
+  }
+  .intro-sub{
+    font-size:clamp(15px,1.4vw,17px);
+    color:rgba(245,243,238,0.70);
+    max-width:48ch;
+    line-height:1.6;
+  }
+
+  /* Alternating editorial sections like index.html */
+  section.block{padding:5.5rem 0 6.5rem;}
+  section.block.tight{padding:4.5rem 0;}
+  .bg-bone{background:var(--ivory-alt);}
+  .section-head{max-width:640px;margin-bottom:2.75rem;}
+  .section-head h2{font-size:clamp(26px,3.6vw,40px);line-height:1.15;color:var(--ink-black);}
+  .section-head p{margin-top:0.85rem;color:var(--text-muted);font-size:15.5px;line-height:1.7;max-width:54ch;}
+  .divider{height:1px;background:var(--hairline);border:none;margin:0;}
+
+  /* Dropzone in crisp white editorial style (Matching user screenshot) */
+  .upload-dropzone{
+    border:1.5px dashed var(--hairline);
+    background:var(--white);
+    border-radius:4px;
+    padding:3.5rem 2rem;
+    text-align:center;
+    cursor:pointer;
+    box-shadow:var(--panel-shadow);
+    transition:border-color 200ms var(--ease-out), background 200ms var(--ease-out), transform 200ms var(--ease-spring), box-shadow 200ms;
+    color:var(--ink-black);
+  }
+  .upload-dropzone:hover{
+    border-color:var(--violet);
+    background:var(--ivory-bright);
+    box-shadow:0 8px 30px rgba(108,77,255,0.08);
+  }
+  .upload-dropzone.dragover{
+    border-color:var(--violet);
+    background:rgba(231,227,255,0.3);
+    transform:scale(1.006);
+  }
+  .upload-icon{
+    width:46px;height:46px;border-radius:50%;
+    background:var(--lavender);
+    display:inline-flex;align-items:center;justify-content:center;
+    color:var(--violet);
+    margin-bottom:1.25rem;
+    transition:transform 200ms var(--ease-spring), background 200ms;
+  }
+  .upload-dropzone:hover .upload-icon{
+    transform:translateY(-2px);
+    background:rgba(108,77,255,0.22);
+  }
+  .upload-title{font-size:19px;font-weight:600;margin-bottom:0.45rem;color:var(--ink-black);}
+  .upload-sub{font-size:14px;color:var(--text-muted);margin-bottom:1.5rem;}
+  .browse-btn{
+    background:none;border:none;padding:0;color:var(--violet);
+    font-weight:600;text-decoration:underline;cursor:pointer;
+    font-family:inherit;font-size:inherit;
+  }
+  .browse-btn:hover{color:var(--violet-hover);}
+  .upload-meta{
+    font-size:11px;letter-spacing:0.06em;color:var(--text-faint);
+  }
+  .sample-load-hint{
+    margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--hairline-soft);
+    display:flex;align-items:center;justify-content:center;gap:0.75rem;
+    font-size:12.5px;color:var(--text-faint);
+  }
+  .sample-pill{
+    background:var(--ivory);border:1px solid var(--hairline);
+    padding:4px 11px;border-radius:3px;font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;color:var(--ink-black);cursor:pointer;
+    transition:background 160ms, border-color 160ms, color 160ms;
+  }
+  .sample-pill:hover{
+    background:var(--lavender);border-color:var(--violet);color:var(--violet);
+  }
+
+  /* Dataset Summary Panel in crisp white */
+  .dataset-summary-panel{
+    display:none;
+    border:1px solid var(--hairline);
+    background:var(--white);
+    border-radius:4px;
+    padding:2.25rem;
+    box-shadow:var(--panel-shadow);
+    animation:fadeSlideIn 300ms var(--ease-out);
+    color:var(--ink-black);
+  }
+  .summary-top-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-bottom:1.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--hairline-soft);
+  }
+  .status-received{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    font-size:11.5px;font-weight:600;letter-spacing:0.06em;color:var(--violet);
+  }
+  .pulse-dot{
+    width:7px;height:7px;border-radius:50%;background:var(--violet);
+    box-shadow:0 0 0 3px rgba(108,77,255,0.2);
+  }
+  .btn-replace{
+    background:none;border:1px solid var(--hairline);padding:0.4rem 0.85rem;
+    border-radius:3px;font-family:'IBM Plex Sans',sans-serif;font-size:12px;
+    color:var(--text-muted);cursor:pointer;transition:border-color 160ms, color 160ms;
+  }
+  .btn-replace:hover{border-color:var(--ink-black);color:var(--ink-black);background:var(--ivory);}
+  
+  .file-details{
+    display:flex;justify-content:space-between;align-items:baseline;
+    flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem;
+  }
+  .file-name{font-size:20px;font-weight:600;color:var(--ink-black);}
+  .file-metrics{display:flex;gap:1.5rem;color:var(--text-muted);font-size:13px;}
+  .file-metrics strong{
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+
+  .schema-table{
+    display:grid;grid-template-columns:repeat(3, 1fr);gap:0.75rem;
+    margin-top:1rem;
+  }
+  @media(max-width:850px){.schema-table{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:550px){.schema-table{grid-template-columns:1fr;}}
+  .schema-col-item{
+    border:1px solid var(--hairline-soft);background:var(--ivory);
+    border-radius:3px;padding:0.65rem 0.85rem;
+    display:flex;justify-content:space-between;align-items:center;
+    transition:background 160ms, border-color 160ms;
+  }
+  .schema-col-item:hover{
+    background:rgba(231,227,255,0.4);border-color:var(--soft-violet);
+  }
+  .schema-col-item .col-var{font-size:12px;font-weight:500;letter-spacing:0.02em;color:var(--ink-black);}
+  .schema-col-item .col-type{font-size:10.5px;letter-spacing:0.05em;color:var(--text-faint);}
+
+  /* Timeline Panel (Exact style from user's screenshot) */
+  .timeline-panel{
+    border:1px solid var(--hairline);
+    background:var(--white);
+    border-radius:4px;
+    padding:3.25rem 3.5rem 3.5rem;
+    box-shadow:var(--panel-shadow);
+    margin-top:2.75rem;
+    position:relative;
+    overflow:hidden;
+  }
+  @media(max-width:760px){
+    .timeline-panel{padding:2rem 1.5rem 2.25rem;}
+  }
+  .timeline-story-head h2{
+    font-size:clamp(32px,4.2vw,48px);
+    line-height:1.15;
+    color:var(--ink-black);
+    margin-bottom:1.15rem;
+    max-width:18ch;
+  }
+  .timeline-story-head p{
+    color:var(--text-muted);
+    font-size:16px;
+    line-height:1.72;
+    max-width:58ch;
+    margin-bottom:0;
+  }
+  .timeline-days{
+    display:flex;justify-content:space-between;
+    font-family:'JetBrains Mono',monospace;font-size:11px;
+    letter-spacing:0.08em;color:#8E8B99;
+    margin-bottom:2.25rem;
+  }
+  .timeline-row{
+    position:relative;
+    margin-bottom:2.5rem;
+  }
+  .timeline-row:last-child{margin-bottom:0.5rem;}
+  .timeline-row .t-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:500;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:#787588;
+    margin-bottom:0.85rem;
+  }
+  .timeline-row .t-svg-wrap{
+    position:relative;
+    width:100%;
+    height:28px;
+  }
+  .timeline-row svg{
+    width:100%;
+    height:100%;
+    display:block;
+    overflow:visible;
+  }
+  .timeline-row .t-path{
+    stroke:var(--violet);
+    stroke-width:2;
+    fill:none;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+  }
+  
+  /* Timeline Interactive Cursor Scrubber */
+  .timeline-scrubber{
+    position:absolute;
+    top:2.25rem;
+    bottom:2.5rem;
+    width:1px;
+    background:rgba(108,77,255,0.35);
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 160ms ease;
+    z-index:10;
+  }
+  .timeline-scrub-badge{
+    position:absolute;
+    top:1rem;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:var(--ivory);
+    padding:5px 12px;
+    border-radius:4px;
+    font-size:11px;
+    font-family:'JetBrains Mono',monospace;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 160ms ease;
+    white-space:nowrap;
+    box-shadow:0 6px 20px rgba(0,0,0,0.35);
+    border:1px solid rgba(255,255,255,0.14);
+    z-index:12;
+  }
+  .timeline-scrub-badge .badge-metric{color:var(--soft-violet);font-weight:600;}
+  .t-scrub-dot{
+    position:absolute;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--violet);
+    border:2px solid var(--white);
+    box-shadow:0 0 0 2px rgba(108,77,255,0.35);
+    transform:translate(-50%, -50%);
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 160ms ease;
+    z-index:11;
+  }
+
+  /* ===================================================================
+     STAGE 2 POPULATION DEFINITION (Warm Bone Workspace with Crisp Cards)
+  =================================================================== */
+  .assist-panel{
+    border:1px solid var(--hairline);
+    background:var(--white);
+    border-radius:4px;
+    padding:2.25rem;
+    box-shadow:var(--panel-shadow);
+    margin-bottom:2.25rem;
+    position:relative;
+  }
+  .assist-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:1rem;
+  }
+  .assist-badge{
+    display:inline-flex;align-items:center;gap:0.45rem;
+    font-size:11px;font-weight:600;letter-spacing:0.08em;color:var(--violet);
+    background:var(--lavender);padding:3px 8px;border-radius:3px;
+  }
+  .assist-prompt-row{
+    display:flex;gap:0.75rem;align-items:flex-start;
+  }
+  @media(max-width:760px){.assist-prompt-row{flex-direction:column;}}
+  .prompt-input{
+    flex:1;
+    font-family:'IBM Plex Sans',sans-serif;font-size:14.5px;
+    line-height:1.5;color:var(--ink-black);
+    padding:0.85rem 1rem;border:1px solid var(--hairline);
+    border-radius:4px;background:var(--ivory);
+    resize:none;min-height:58px;outline:none;
+    transition:border-color 160ms var(--ease-out), background 160ms var(--ease-out);
+  }
+  .prompt-input:focus{
+    border-color:var(--violet);background:var(--white);
+  }
+  .btn-interpret{
+    height:58px;padding:0 1.4rem;white-space:nowrap;
+  }
+  @media(max-width:760px){.btn-interpret{width:100%;height:46px;}}
+
+  /* Quick suggestion chips */
+  .quick-chips{
+    margin-top:0.85rem;display:flex;align-items:center;flex-wrap:wrap;gap:0.5rem;
+    font-size:12px;color:var(--text-faint);
+  }
+  .chip-btn{
+    background:none;border:1px solid var(--hairline);border-radius:12px;
+    padding:3px 9px;font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;
+    color:var(--text-muted);cursor:pointer;transition:border-color 140ms, color 140ms, background 140ms;
+  }
+  .chip-btn:hover{
+    border-color:var(--violet);color:var(--violet);background:rgba(231,227,255,0.4);
+  }
+
+  /* Synthia Understood Preview Box */
+  .interpreted-box{
+    display:none;
+    margin-top:1.5rem;padding:1.25rem 1.5rem;
+    border:1px solid var(--lavender);
+    background:rgba(231,227,255,0.25);
+    border-radius:4px;
+    animation:fadeSlideIn 240ms var(--ease-out);
+  }
+  .interp-header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:0.85rem;
+  }
+  .interp-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;
+    margin-bottom:1.1rem;
+  }
+  @media(max-width:700px){.interp-grid{grid-template-columns:repeat(2,1fr);}}
+  .interp-item{
+    background:var(--white);border:1px solid var(--hairline-soft);
+    padding:0.6rem 0.8rem;border-radius:3px;
+  }
+  .interp-item .label{
+    color:var(--text-faint);
+  }
+  .interp-val{
+    font-size:15px;font-weight:600;
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-top:2px;
+  }
+  .interp-actions{
+    display:flex;align-items:center;gap:1.25rem;
+  }
+
+  /* Working Cohort Controls & Canvas */
+  .cohort-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;}
+  @media(max-width:900px){.cohort-grid{grid-template-columns:1fr;}}
+
+  .control-panel{
+    border:1px solid var(--hairline);background:var(--white);
+    border-radius:4px;padding:2rem;box-shadow:var(--panel-shadow);
+  }
+  .control-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--hairline-soft);
+  }
+  .control-row{margin-bottom:1.6rem;}
+  .control-row:last-child{margin-bottom:0;}
+  .control-row .ctrl-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:0.6rem;}
+  .control-row .ctrl-top .val{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  input[type=range]{
+    -webkit-appearance:none;width:100%;height:2px;background:var(--hairline);border-radius:2px;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;border-radius:3px;background:var(--ink-black);cursor:pointer;
+    transition:background 160ms, transform 160ms var(--ease-spring);
+  }
+  input[type=range]:hover::-webkit-slider-thumb{background:var(--violet);transform:scale(1.15);}
+
+  /* Maintained Black Elements */
+  .viz-panel{
+    border:1px solid var(--hairline);background:var(--ink);
+    border-radius:4px;padding:2rem;display:flex;flex-direction:column;
+    justify-content:space-between;color:var(--ivory);min-height:340px;box-shadow:var(--panel-shadow);
+  }
+  .viz-panel .mono{
+    background:linear-gradient(90deg, #A896FF 0%, #D2C7FF 100%);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    font-weight:600;
+  }
+  .cluster-canvas{flex:1;position:relative;margin-top:0.75rem;}
+  canvas#cohortCanvas{width:100%;height:100%;display:block;}
+
+  .generate-dock{
+    margin-top:4rem;
+    border:1px solid rgba(255,255,255,0.12);
+    background:var(--ink);
+    color:var(--ivory);
+    border-radius:4px;
+    padding:2.75rem 3rem;
+    box-shadow:0 16px 48px rgba(0,0,0,0.35);
+    display:flex;justify-content:space-between;align-items:center;
+    gap:2rem;flex-wrap:wrap;
+  }
+  @media(max-width:760px){.generate-dock{padding:2rem 1.5rem;flex-direction:column;align-items:stretch;}}
+  .generate-info h2{font-size:28px;margin-bottom:0.35rem;color:var(--ivory);}
+  .generate-sub{color:rgba(245,243,238,0.72);font-size:14.5px;max-width:44ch;line-height:1.5;}
+  .gate-notice{
+    margin-top:0.85rem;font-size:11.5px;letter-spacing:0.04em;
+    color:rgba(245,243,238,0.48);transition:color 160ms;
+  }
+  .gate-notice.verified{color:var(--soft-violet);font-weight:600;}
+  .btn-generate-main{
+    padding:0.9rem 2.2rem;font-size:15px;white-space:nowrap;
+  }
+  @media(max-width:760px){.generate-dock{padding:2rem 1.5rem;flex-direction:column;align-items:stretch;}}
+  .generate-info h2{font-size:28px;margin-bottom:0.35rem;color:var(--ivory);}
+  .generate-sub{color:rgba(245,243,238,0.72);font-size:14.5px;max-width:44ch;line-height:1.5;}
+  .gate-notice{
+    margin-top:0.85rem;font-size:11.5px;letter-spacing:0.04em;
+    color:rgba(245,243,238,0.48);transition:color 160ms;
+  }
+  .gate-notice.verified{color:var(--soft-violet);font-weight:600;}
+  .btn-generate-main{
+    padding:0.9rem 2.2rem;font-size:15px;white-space:nowrap;
+  }
+
+  /* Generation Success Modal Simulator */
+  .gen-modal-overlay{
+    position:fixed;inset:0;background:rgba(11,11,13,0.75);backdrop-filter:blur(8px);
+    z-index:90;display:none;align-items:center;justify-content:center;padding:1.5rem;
+  }
+  .gen-modal{
+    background:var(--ink);border:1px solid rgba(255,255,255,0.14);border-radius:6px;
+    max-width:540px;width:100%;padding:2.5rem;box-shadow:0 24px 64px rgba(0,0,0,0.6);
+    animation:fadeSlideIn 240ms var(--ease-out);
+    color:var(--ivory);
+  }
+  .gen-modal h3{font-size:24px;margin-bottom:0.75rem;color:var(--ivory);}
+  .gen-modal p{font-size:14px;color:rgba(245,243,238,0.72);line-height:1.6;margin-bottom:1.5rem;}
+  .pipeline-bar-track{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-bottom:1.5rem;}
+  .pipeline-bar-fill{height:100%;width:0%;background:var(--violet-grad);transition:width 1400ms var(--ease-out);}
+
+  /* Footer in deep ink */
+  footer{border-top:1px solid rgba(255,255,255,0.08);padding:2.5rem 0;background:var(--ink);color:var(--ivory);}
+  .footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+  .footer-links{display:flex;gap:2rem;font-size:12.5px;color:rgba(245,243,238,0.55);}
+  .footer-links a:hover{color:#fff;}
+</style>
+</head>
+<body>
+
+<!-- Hidden SVG definitions for global gradient strokes -->
+<svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="violetGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6C4DFF" />
+      <stop offset="100%" stop-color="#8F73FF" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- Subtle scroll progress line at top of viewport -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Deep Ink Navigation Header -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-indicator">
+        <span class="wf-step active"><span class="wf-badge">01</span> DATASET</span>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step active"><span class="wf-badge">02</span> POPULATION</span>
+        <span class="wf-sep">&middot;</span>
+        <span class="wf-step">03 GENERATE</span>
+        <span class="wf-sep">&middot;</span>
+        <span class="wf-step">04 VALIDATE</span>
+        <span class="wf-sep">&middot;</span>
+        <span class="wf-step">05 EXPLORE</span>
+      </div>
+    </div>
+    <div>
+      <a href="index.html" class="btn btn-ghost-dark" style="padding:0.45rem 0.95rem;font-size:12.5px;">&larr; Exit to overview</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===================================================================
+     STAGE 1 HERO DARK ZONE (Deep Ink Black with Fluid Neural Dots Mesh)
+=================================================================== -->
+<section class="hero-dark-zone">
+  <!-- Interactive Neural Dot Mesh Canvas on Deep Ink -->
+  <canvas id="bgField"></canvas>
+
+  <div class="wrap hero-dark-content">
+    <div class="page-intro reveal">
+      <div class="section-tag"><span class="dot"></span><span class="label" style="color:var(--soft-violet);">STAGE 01 &middot; DATASET &amp; COHORT SETUP</span></div>
+      <h1>Start with your <span class="accent">data.</span></h1>
+      <p class="intro-sub">Upload a small healthcare dataset, inspect its 30-day longitudinal structure, then configure your target population.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     SECTION 1: SOURCE DATA (Warm Ivory #F5F3EE with Crisp White Panels)
+=================================================================== -->
+<section class="block" id="sectionSource">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-tag"><span class="dot"></span><span class="label">01 / SOURCE DATA</span></div>
+      <h2>Establish baseline <span class="accent">distributions.</span></h2>
+      <p>Drop your clinical observations file to establish non-destructive baseline distributions and extract longitudinal temporal coherence.</p>
+    </div>
+
+    <!-- State A: Empty upload dropzone on crisp white -->
+    <div class="upload-dropzone reveal" id="dropzone">
+      <input type="file" id="fileInput" accept=".csv" style="display:none;" />
+      <div class="upload-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="upload-title">Drop your CSV here</div>
+      <div class="upload-sub">or <button type="button" class="browse-btn" id="browseBtn">browse files</button> from your system</div>
+      <div class="upload-meta mono">SUPPORTED FORMAT: .CSV &nbsp;&middot;&nbsp; RECOMMENDED SAMPLE: 100&ndash;5,000 ROWS</div>
+      
+      <div class="sample-load-hint">
+        <span>Testing?</span>
+        <button type="button" class="sample-pill" id="loadSampleBtn">Load clinical_sample.csv (512 records)</button>
+      </div>
+    </div>
+
+    <!-- State B: Dataset Received Summary Panel on crisp white -->
+    <div class="dataset-summary-panel" id="datasetSummary">
+      <div class="summary-top-bar">
+        <div class="status-received mono">
+          <span class="pulse-dot"></span>
+          DATASET RECEIVED
+        </div>
+        <button type="button" class="btn-replace" id="replaceFileBtn">Replace file</button>
+      </div>
+
+      <div class="file-details">
+        <div>
+          <div class="file-name mono" id="summaryFileName">clinical_sample.csv</div>
+          <div class="file-metrics mono" style="margin-top:0.4rem;">
+            <span><strong id="statPatients">512</strong> PATIENTS</span>
+            <span><strong id="statVars">12</strong> VARIABLES</span>
+            <span><strong id="statObs">6,144</strong> OBSERVATIONS</span>
+          </div>
+        </div>
+        <div class="mono" style="font-size:12px;color:var(--violet);background:var(--lavender);border:1px solid var(--hairline-soft);padding:4px 9px;border-radius:3px;font-weight:600;">
+          FORMAT VERIFIED &check;
+        </div>
+      </div>
+
+      <div class="label" style="margin-top:1.5rem;font-size:11px;color:var(--text-faint);">DETECTED ATTRIBUTES &amp; STATISTICAL TYPES</div>
+      <div class="schema-table" id="schemaGrid">
+        <div class="schema-col-item"><span class="col-var">AGE</span><span class="col-type mono">INTEGER</span></div>
+        <div class="schema-col-item"><span class="col-var">BLOOD PRESSURE</span><span class="col-type mono">CONTINUOUS</span></div>
+        <div class="schema-col-item"><span class="col-var">ACTIVITY</span><span class="col-type mono">CONTINUOUS</span></div>
+        <div class="schema-col-item"><span class="col-var">PAIN SCORE</span><span class="col-type mono">INTEGER</span></div>
+        <div class="schema-col-item"><span class="col-var">MEDICATION ADHERENCE</span><span class="col-type mono">PERCENTAGE</span></div>
+        <div class="schema-col-item"><span class="col-var">DIABETES</span><span class="col-type mono">BOOLEAN</span></div>
+      </div>
+    </div>
+
+    <!-- ============ LONGITUDINAL TRAJECTORY SECTION (Exact style from screenshot) ============ -->
+    <div style="margin-top:5.5rem;" class="reveal">
+      <div class="timeline-story-head">
+        <h2>Every patient has <span class="accent">a story over time.</span></h2>
+        <p>Human health isn't a single snapshot. Synthia inspects individual synthetic patient records across a 30-day treatment window — blood pressure, reported pain, and activity respond and stay chronologically coherent with each other over time.</p>
+      </div>
+      <div class="timeline-panel" id="timelinePanel">
+        <div class="timeline-scrubber" id="timelineScrubber"></div>
+        <div class="timeline-scrub-badge" id="timelineScrubBadge">
+          <span id="scrubDayText">DAY 14</span> &middot; <span class="badge-metric" id="scrubMetricsText">BP 124/82 &bull; PAIN 2.8 &bull; ACT 6,400 &bull; ADH 99%</span>
+        </div>
+        <div class="t-scrub-dot" id="dotBP"></div>
+        <div class="t-scrub-dot" id="dotPain"></div>
+        <div class="t-scrub-dot" id="dotAct"></div>
+        <div class="t-scrub-dot" id="dotAdh"></div>
+
+        <div class="timeline-days">
+          <span>DAY 1</span>
+          <span>DAY 7</span>
+          <span>DAY 14</span>
+          <span>DAY 21</span>
+          <span>DAY 30</span>
+        </div>
+        <div class="timeline-row" id="rowBP">
+          <div class="t-label">Blood pressure</div>
+          <div class="t-svg-wrap">
+            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
+              <path class="t-path" id="p1" d="M 0,18 C 140,18 240,13 360,13 C 480,13 560,19 680,18 C 780,17 880,14 1000,12" />
+            </svg>
+          </div>
+        </div>
+        <div class="timeline-row" id="rowPain">
+          <div class="t-label">Reported pain</div>
+          <div class="t-svg-wrap">
+            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
+              <path class="t-path" id="p2" d="M 0,11 C 140,13 260,18 400,23 C 520,27 640,26 760,22 C 860,19 930,20 1000,20" />
+            </svg>
+          </div>
+        </div>
+        <div class="timeline-row" id="rowAct">
+          <div class="t-label">Activity level</div>
+          <div class="t-svg-wrap">
+            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
+              <path class="t-path" id="p3" d="M 0,28 C 160,24 300,20 450,17 C 600,14 740,12 880,11 C 940,10 980,9 1000,9" />
+            </svg>
+          </div>
+        </div>
+        <div class="timeline-row" id="rowAdh">
+          <div class="t-label">Medication adherence</div>
+          <div class="t-svg-wrap">
+            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
+              <path class="t-path" id="p4" d="M 0,16 C 180,16 340,16 500,16 C 680,16 840,16 1000,16" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ===================================================================
+     SECTION 2: POPULATION DEFINITION (Warm Bone #EFEBE2 Workspace)
+=================================================================== -->
+<section class="block bg-bone" id="sectionPopulation">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-tag"><span class="dot"></span><span class="label">02 / POPULATION DEFINITION</span></div>
+      <h2>Define your <span class="accent">population.</span></h2>
+      <p>Tell Synthia what kind of population you need using natural language or precision sliders.</p>
+    </div>
+
+    <!-- Natural Language Cohort Builder (Synthia Assist in Crisp White Card) -->
+    <div class="assist-panel reveal">
+      <div class="assist-head">
+        <div class="assist-badge mono">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          SYNTHIA ASSIST &middot; NATURAL LANGUAGE COHORT
+        </div>
+        <span class="mono" style="font-size:11px;color:var(--text-faint);">EXPERIMENTAL LLM INTERFACE</span>
+      </div>
+
+      <div class="assist-prompt-row">
+        <textarea id="promptInput" class="prompt-input" rows="2" placeholder="Describe the population you want (e.g. &ldquo;I want 10,000 patients, with more patients over 60 and around 30% diabetic.&rdquo;)"></textarea>
+        <button type="button" class="btn btn-primary btn-interpret" id="interpretBtn">
+          Interpret with Synthia &rarr;
+        </button>
+      </div>
+
+      <div class="quick-chips">
+        <span>Try prompt:</span>
+        <button type="button" class="chip-btn" data-text="I want 10,000 patients, with 45% over age 60 and around 30% diabetic.">&ldquo;10k patients, 45% over 60, 30% diabetes&rdquo;</button>
+        <button type="button" class="chip-btn" data-text="Generate 20,000 patients with 55% elderly and high activity.">&ldquo;20k patients, 55% elderly, high activity&rdquo;</button>
+        <button type="button" class="chip-btn" data-text="I need 8,000 patients with 40% diabetes and moderate activity.">&ldquo;8k patients, 40% diabetes, moderate activity&rdquo;</button>
+      </div>
+
+      <!-- Synthia Understood Preview Box -->
+      <div class="interpreted-box" id="interpretedBox">
+        <div class="interp-header">
+          <div class="mono" style="font-size:11.5px;font-weight:600;color:var(--violet);letter-spacing:0.06em;">
+            SYNTHIA UNDERSTOOD
+          </div>
+          <span class="mono" style="font-size:11px;color:var(--text-faint);">INTENT PARSED &check;</span>
+        </div>
+        <div class="interp-grid">
+          <div class="interp-item">
+            <div class="label">TARGET COHORT</div>
+            <div class="interp-val mono" id="interpSize">10,000</div>
+          </div>
+          <div class="interp-item">
+            <div class="label">AGE 60+</div>
+            <div class="interp-val mono" id="interpAge">45%</div>
+          </div>
+          <div class="interp-item">
+            <div class="label">DIABETES</div>
+            <div class="interp-val mono" id="interpDiabetes">30%</div>
+          </div>
+          <div class="interp-item">
+            <div class="label">LOW ACTIVITY</div>
+            <div class="interp-val mono" id="interpActivity">35%</div>
+          </div>
+        </div>
+        <div class="interp-actions">
+          <button type="button" class="btn btn-primary" id="applyInterpBtn" style="padding:0.5rem 1.1rem;font-size:12.5px;">
+            Apply to cohort &rarr;
+          </button>
+          <span style="font-size:12.5px;color:var(--text-faint);">Applies directly to manual sliders and live simulation.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Working Manual Sliders (White Card) + Live Cluster Canvas (Black Viz Panel) -->
+    <div class="cohort-grid reveal">
+      <div class="control-panel">
+        <div class="control-head">
+          <span class="label">Target parameters</span>
+          <span class="mono" style="font-size:12px;color:var(--text-faint);">auto-applied</span>
+        </div>
+        <div class="control-row">
+          <div class="ctrl-top"><span>Target cohort size</span><span class="val mono" id="valSize">10,000</span></div>
+          <input type="range" min="1000" max="20000" step="500" value="10000" id="sliderSize" />
+        </div>
+        <div class="control-row">
+          <div class="ctrl-top"><span>Age 60+</span><span class="val mono" id="valAge">40%</span></div>
+          <input type="range" min="0" max="100" value="40" id="sliderAge" />
+        </div>
+        <div class="control-row">
+          <div class="ctrl-top"><span>Type 2 diabetes</span><span class="val mono" id="valDiabetes">30%</span></div>
+          <input type="range" min="0" max="100" value="30" id="sliderDiabetes" />
+        </div>
+        <div class="control-row">
+          <div class="ctrl-top"><span>Low activity baseline</span><span class="val mono" id="valActivity">35%</span></div>
+          <input type="range" min="0" max="100" value="35" id="sliderActivity" />
+        </div>
+      </div>
+
+      <!-- Maintained Black Element: Cluster Viz Panel -->
+      <div class="viz-panel">
+        <div class="control-head" style="border-bottom-color:rgba(245,243,238,0.14);">
+          <span class="label" style="color:rgba(245,243,238,0.5);">Generated cluster preview</span>
+          <span class="mono" id="cohortCount">10,000</span>
+        </div>
+        <div class="cluster-canvas"><canvas id="cohortCanvas"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Maintained Black Element: Primary Action Dock -->
+    <div class="generate-dock reveal" id="generateDock">
+      <div class="generate-info">
+        <div class="section-tag"><span class="dot"></span><span class="label" style="color:var(--soft-violet);">PIPELINE STAGE 03</span></div>
+        <h2>Cohort ready.</h2>
+        <p class="generate-sub">Your source data and population parameters are calibrated for statistical projection.</p>
+        <div class="gate-notice mono" id="gateNotice">
+          &bull; Upload a source CSV above to unlock the generation pipeline.
+        </div>
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary btn-generate-main disabled" id="generateBtn" disabled>
+          Generate cohort &rarr;
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Generation Modal Simulator -->
+<div class="gen-modal-overlay" id="genModalOverlay">
+  <div class="gen-modal">
+    <div class="section-tag"><span class="dot"></span><span class="label" style="color:var(--soft-violet);">GENERATION PIPELINE</span></div>
+    <h3>Synthesizing population...</h3>
+    <p id="modalDesc">Synthia is projecting 10,000 mathematically representative synthetic patient records based on your uploaded sample.</p>
+    <div class="pipeline-bar-track">
+      <div class="pipeline-bar-fill" id="modalBar"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="mono" id="modalProgressText" style="font-size:12px;color:var(--soft-violet);">INITIALIZING MULTIVARIATE KERNEL...</span>
+      <button type="button" class="btn btn-ghost-dark" id="closeModalBtn" style="padding:0.4rem 0.8rem;font-size:12px;display:none;">Close</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="logo" style="font-size:15px;">SYNTHIA</div>
+    <div class="footer-links">
+      <a href="index.html#structure">Method</a>
+      <a href="index.html#validate">Validation</a>
+      <a href="index.html#timeline">Timeline</a>
+      <a href="index.html">Overview</a>
+    </div>
+    <div class="mono" style="font-size:11.5px;color:rgba(245,243,238,0.45);">&copy; 2026 Synthia</div>
+  </div>
+</footer>
+
+<script src="src/config.js"></script>
+<script src="src/services/cohortApi.js"></script>
+<script>
+(function(){
+"use strict";
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch = window.matchMedia('(hover: none)').matches;
+
+/* ===================================================================
+   SCROLL PROGRESS & REVEAL SYSTEM
+=================================================================== */
+const scrollProgressBar = document.getElementById('scrollProgress');
+function updateScrollProgress() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 0;
+  if (scrollProgressBar) {
+    scrollProgressBar.style.width = progress + '%';
+  }
+}
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
+
+// Reveal on scroll
+const revealTargets = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+      }
+    });
+  }, { threshold: 0.1 });
+  revealTargets.forEach(el => io.observe(el));
+} else {
+  revealTargets.forEach(el => el.classList.add('in'));
+}
+
+/* ===================================================================
+   FLUID BACKGROUND NEURAL DOT FIELD (On Deep Ink #0B0B0D)
+   - Exact parity with index.html hero
+   - Poisson-disc anchors
+   - Opening seed + easeOutBack pop
+   - Continuous orbital circulation around the canvas center
+   - 2D simplex noise flow currents
+   - Capped 3 nearest neighbors mesh, recomputed every 6 frames
+   - Interactive cursor proximity highlight (neon white, shadowBlur: 7)
+   - Vertical scroll parallax drift
+=================================================================== */
+(function(){
+  const canvas = document.getElementById('bgField');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const container = document.querySelector('.hero-dark-zone');
+
+  const VIOLET = [108, 77, 255];
+  const SOFT_VIOLET = [168, 150, 255];
+
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let anchors = [];
+  let particles = [];
+  let startTime = null, lastFrameTime = null;
+  let currentScrollY = 0;
+  const mouse = { x: -9999, y: -9999, active: false, px: 0, py: 0 };
+
+  function gaussianRandom(mean = 0, stdDev = 1) {
+    const u1 = Math.max(1e-6, Math.random());
+    const u2 = Math.random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return mean + z * stdDev;
+  }
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  function generateAnchors(count, width, height, minDist = 110) {
+    const res = [];
+    const topClusters = [
+      { x: width * 0.20 + rand(-25, 25), y: height * 0.18 + rand(-15, 15), weight: 1.5, stdDev: 50 },
+      { x: width * 0.50 + rand(-35, 35), y: height * 0.15 + rand(-10, 15), weight: 1.6, stdDev: 54 },
+      { x: width * 0.80 + rand(-25, 25), y: height * 0.20 + rand(-15, 15), weight: 1.5, stdDev: 50 },
+      { x: width * 0.30 + rand(-25, 25), y: height * 0.70 + rand(-15, 15), weight: 1.3, stdDev: 48 },
+      { x: width * 0.70 + rand(-25, 25), y: height * 0.72 + rand(-15, 15), weight: 1.3, stdDev: 48 },
+    ];
+    topClusters.forEach(tc => res.push(tc));
+
+    let attempts = 0;
+    while (res.length < count && attempts < 600) {
+      attempts++;
+      const candidate = {
+        x: width * 0.08 + Math.random() * (width * 0.84),
+        y: height * 0.08 + Math.random() * (height * 0.84),
+        weight: 0.5 + Math.random() * 1.3,
+        stdDev: 35 + Math.random() * 55,
+      };
+      const tooClose = res.some(a =>
+        Math.hypot(a.x - candidate.x, a.y - candidate.y) < minDist
+      );
+      if (!tooClose) res.push(candidate);
+    }
+    return res;
+  }
+
+  function pickWeightedAnchor(anchorsList) {
+    const total = anchorsList.reduce((s, a) => s + a.weight, 0);
+    let r = Math.random() * total;
+    for (const a of anchorsList) {
+      if ((r -= a.weight) <= 0) return a;
+    }
+    return anchorsList[anchorsList.length - 1];
+  }
+
+  function makeNoise2D(seed = Math.random() * 1000) {
+    const p = new Uint8Array(512);
+    const perm = [...Array(256).keys()];
+    for (let i = 255; i > 0; i--) {
+      const j = Math.floor((Math.sin(seed + i) * 43758.5453) % 1 * (i + 1));
+      [perm[i], perm[Math.abs(j) % (i + 1)]] = [perm[Math.abs(j) % (i + 1)], perm[i]];
+    }
+    for (let i = 0; i < 512; i++) p[i] = perm[i & 255];
+
+    function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+    function lerp(a, b, t) { return a + t * (b - a); }
+    function grad(hash, x, y) {
+      const h = hash & 3;
+      const u = h < 2 ? x : y, v = h < 2 ? y : x;
+      return ((h & 1) ? -u : u) + ((h & 2) ? -2 * v : 2 * v);
+    }
+
+    return function noise2D(x, y) {
+      const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+      x -= Math.floor(x); y -= Math.floor(y);
+      const u = fade(x), v = fade(y);
+      const aa = p[X + p[Y]], ab = p[X + p[Y + 1]];
+      const ba = p[X + 1 + p[Y]], bb = p[X + 1 + p[Y + 1]];
+      return lerp(
+        lerp(grad(aa, x, y), grad(ba, x - 1, y), u),
+        lerp(grad(ab, x, y - 1), grad(bb, x - 1, y - 1), u),
+        v
+      );
+    };
+  }
+
+  const noise2D = makeNoise2D();
+  const freq = 0.0022;
+  const flowStrength = 22;
+
+  function getFlowOffset(x, y, t) {
+    const angle = noise2D(x * freq, y * freq + t * 0.00014) * Math.PI * 2;
+    return {
+      dx: Math.cos(angle) * flowStrength,
+      dy: Math.sin(angle) * flowStrength,
+    };
+  }
+
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
+  function frameLerp(current, target, baseLerp, deltaMs) {
+    const factor = 1 - Math.pow(1 - baseLerp, deltaMs / 16.67);
+    return current + (target - current) * factor;
+  }
+
+  function resize() {
+    const rect = container ? container.getBoundingClientRect() : { width: window.innerWidth, height: 440 };
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const anchorCount = Math.floor(rand(8, 12));
+    anchors = generateAnchors(anchorCount, W, H, Math.min(W, H) * 0.16);
+  }
+
+  // Target letter coordinates generator for SYNTHIA
+  function getSynthiaTargets(count, width, height) {
+    try {
+      const oc = document.createElement('canvas');
+      const ow = 1200;
+      const oh = 320;
+      oc.width = ow;
+      oc.height = oh;
+      const octx = oc.getContext('2d', { willReadFrequently: true });
+      if (octx) {
+        octx.fillStyle = '#000000';
+        octx.fillRect(0, 0, ow, oh);
+        octx.fillStyle = '#ffffff';
+        octx.font = '700 135px "Newsreader", "Cinzel", "Georgia", serif';
+        octx.textAlign = 'center';
+        octx.textBaseline = 'middle';
+
+        const letters = ['S', 'Y', 'N', 'T', 'H', 'I', 'A'];
+        const totalWidth = ow * 0.86;
+        const step = totalWidth / 7;
+        const startX = (ow - totalWidth) / 2 + step * 0.5;
+
+        letters.forEach((char, i) => {
+          octx.fillText(char, startX + i * step, oh * 0.52);
+        });
+
+        const imgData = octx.getImageData(0, 0, ow, oh).data;
+        const sampled = [];
+        const stride = 4;
+        for (let y = 0; y < oh; y += stride) {
+          for (let x = 0; x < ow; x += stride) {
+            const idx = (y * ow + x) * 4;
+            if (imgData[idx] > 140) {
+              sampled.push({
+                rx: (x - ow / 2) / (ow * 0.5),
+                ry: (y - oh / 2) / (oh * 0.5)
+              });
+            }
+          }
+        }
+
+        if (sampled.length >= 80) {
+          const targetW = Math.min(width * 0.78, 800) * 0.5;
+          const targetH = targetW * 0.26;
+          const cy = height * 0.54; // Vertically positioned gracefully in the hero
+          const cx = width * 0.50;
+
+          sampled.sort(() => Math.random() - 0.5);
+
+          const result = [];
+          for (let i = 0; i < count; i++) {
+            const s = sampled[i % sampled.length];
+            result.push({
+              x: cx + s.rx * targetW + (Math.random() - 0.5) * 3,
+              y: cy + s.ry * targetH + (Math.random() - 0.5) * 3
+            });
+          }
+          return result;
+        }
+      }
+    } catch (err) {
+      console.warn("Offscreen canvas sampling exception, using parametric fallback:", err);
+    }
+
+    return getParametricSynthiaTargets(count, width, height);
+  }
+
+  // 7 Letter definitions for S-Y-N-T-H-I-A with ordered, continuous stroke segments
+  const LETTER_STROKES = {
+    0: [ // S
+      {x1:0.28, y1:-0.44, x2:-0.12, y2:-0.44},
+      {x1:-0.12, y1:-0.44, x2:-0.28, y2:-0.22},
+      {x1:-0.28, y1:-0.22, x2:0.0, y2:-0.02},
+      {x1:0.0, y1:-0.02, x2:0.28, y2:0.18},
+      {x1:0.28, y1:0.18, x2:0.12, y2:0.44},
+      {x1:0.12, y1:0.44, x2:-0.28, y2:0.44}
+    ],
+    1: [ // Y
+      {x1:-0.32, y1:-0.44, x2:0, y2:-0.02},
+      {x1:0.32, y1:-0.44, x2:0, y2:-0.02},
+      {x1:0, y1:-0.02, x2:0, y2:0.44}
+    ],
+    2: [ // N
+      {x1:-0.32, y1:0.44, x2:-0.32, y2:-0.44},
+      {x1:-0.32, y1:-0.44, x2:0.32, y2:0.44},
+      {x1:0.32, y1:0.44, x2:0.32, y2:-0.44}
+    ],
+    3: [ // T
+      {x1:-0.38, y1:-0.44, x2:0.38, y2:-0.44},
+      {x1:0, y1:-0.44, x2:0, y2:0.44}
+    ],
+    4: [ // H
+      {x1:-0.32, y1:-0.44, x2:-0.32, y2:0.44},
+      {x1:0.32, y1:-0.44, x2:0.32, y2:0.44},
+      {x1:-0.32, y1:0, x2:0.32, y2:0}
+    ],
+    5: [ // I
+      {x1:0, y1:-0.44, x2:0, y2:0.44},
+      {x1:-0.22, y1:-0.44, x2:0.22, y2:-0.44},
+      {x1:-0.22, y1:0.44, x2:0.22, y2:0.44}
+    ],
+    6: [ // A
+      {x1:0, y1:-0.44, x2:-0.34, y2:0.44},
+      {x1:0, y1:-0.44, x2:0.34, y2:0.44},
+      {x1:-0.20, y1:0.12, x2:0.20, y2:0.12}
+    ]
+  };
+
+  const PTS_PER_LETTER = 25;
+  const LETTER_COUNT = 7;
+  const TOTAL_LETTER_PTS = PTS_PER_LETTER * LETTER_COUNT; // 175 particles for letters
+
+  function generateSynthiaCoordinates(width, height) {
+    const targetW = Math.min(width * 0.84, 880) * 0.5;
+    const targetH = 38;
+    const cx = width * 0.50;
+    const step = (targetW * 2) / 7;
+    const startX = cx - targetW + step * 0.5;
+
+    const targets = [];
+    for (let l = 0; l < 7; l++) {
+      const segs = LETTER_STROKES[l] || [];
+      const lcx = startX + l * step;
+      for (let i = 0; i < PTS_PER_LETTER; i++) {
+        const segIdx = Math.floor((i / PTS_PER_LETTER) * segs.length);
+        const seg = segs[Math.min(segs.length - 1, segIdx)];
+        const subT = (i % Math.ceil(PTS_PER_LETTER / segs.length)) / (PTS_PER_LETTER / segs.length);
+        const lx = (seg.x1 + (seg.x2 - seg.x1) * subT) * (step * 0.85);
+        const ly = (seg.y1 + (seg.y2 - seg.y1) * subT) * (targetH * 2);
+        targets.push({
+          relX: (lcx + lx - cx) + (Math.random() - 0.5) * 1.5,
+          relY: ly + (Math.random() - 0.5) * 1.5,
+          x: lcx + lx,
+          y: height * 0.52 + ly
+        });
+      }
+    }
+    return targets;
+  }
+
+  let synthiaTargets = [];
+
+  function makeParticle(index, targets) {
+    const anchor = pickWeightedAnchor(anchors);
+    const depth = Math.random();
+    const finalX = anchor.x + gaussianRandom(0, anchor.stdDev);
+    const finalY = anchor.y + gaussianRandom(0, anchor.stdDev);
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const u = (finalX - cx) / Math.max(1, W * 0.5);
+    const v = (finalY - cy) / Math.max(1, H * 0.5);
+    const orbitRadius = Math.max(0.26, Math.min(0.96, Math.hypot(u, v)));
+    const orbitAngle = Math.atan2(v, u);
+    const orbitSpeed = 0.000075 + (1 - Math.min(1, orbitRadius)) * 0.000035 + Math.random() * 0.00002;
+
+    const centerX = cx + gaussianRandom(0, 26);
+    const centerY = cy + gaussianRandom(0, 26);
+    const popStart = 800 + Math.random() * 250;
+
+    const isLetter = index < TOTAL_LETTER_PTS;
+    const letterIdx = isLetter ? Math.floor(index / PTS_PER_LETTER) : -1;
+    const letterOrder = isLetter ? (index % PTS_PER_LETTER) : -1;
+    const sTarget = isLetter && targets && targets[index] ? targets[index] : { x: finalX, y: finalY, relX: 0, relY: 0 };
+
+    return {
+      anchor,
+      finalX,
+      finalY,
+      centerX,
+      centerY,
+      orbitRadius,
+      orbitAngle,
+      orbitSpeed,
+      x: centerX,
+      y: centerY,
+      popFromX: centerX,
+      popFromY: centerY,
+      popStart,
+      popped: false,
+      depth,
+      baseRadius: rand(1.1, 1.8) + depth * 1.5,
+      opacity: 0,
+      targetOpacity: (0.34 + depth * 0.56),
+      color: Math.random() < 0.68 ? VIOLET : SOFT_VIOLET,
+      isLetter,
+      letterIdx,
+      letterOrder,
+      synthiaX: sTarget.x,
+      synthiaY: sTarget.y,
+      synthiaRelX: sTarget.relX || 0,
+      synthiaRelY: sTarget.relY || 0,
+      morphT: 0,
+      neighborIndices: []
+    };
+  }
+
+  const TOTAL_PARTICLES = 260; // 175 letter particles + 85 ambient flowing neurons
+
+  function linkAmbientNeighbors() {
+    for (let i = TOTAL_LETTER_PTS; i < particles.length; i++) {
+      const a = particles[i];
+      a.neighborIndices = [];
+      for (let j = TOTAL_LETTER_PTS; j < particles.length; j++) {
+        if (i !== j && Math.hypot(a.finalX - particles[j].finalX, a.finalY - particles[j].finalY) < 140) {
+          a.neighborIndices.push(j);
+          if (a.neighborIndices.length >= 2) break;
+        }
+      }
+    }
+  }
+
+  function seed(count) {
+    particles = [];
+    synthiaTargets = generateSynthiaCoordinates(W, H);
+    for (let i = 0; i < count; i++) {
+      particles.push(makeParticle(i, synthiaTargets));
+    }
+    linkAmbientNeighbors();
+  }
+
+  if (!isTouch && container) {
+    container.addEventListener('pointermove', (e) => {
+      const r = container.getBoundingClientRect();
+      mouse.px = ((e.clientX - r.left) / W - 0.5) * 2;
+      mouse.py = ((e.clientY - r.top) / H - 0.5) * 2;
+      mouse.x = e.clientX - r.left;
+      mouse.y = e.clientY - r.top;
+      mouse.active = true;
+    });
+    container.addEventListener('pointerleave', () => { mouse.active = false; });
+  }
+
+  let targetScrollY = 0;
+  let smoothScrollY = 0;
+  window.addEventListener('scroll', () => {
+    targetScrollY = window.scrollY || document.documentElement.scrollTop;
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    resize();
+    synthiaTargets = generateSynthiaCoordinates(W, H);
+    particles.forEach((p, i) => {
+      const anchor = pickWeightedAnchor(anchors);
+      p.anchor = anchor;
+      p.finalX = anchor.x + gaussianRandom(0, anchor.stdDev);
+      p.finalY = anchor.y + gaussianRandom(0, anchor.stdDev);
+      const cx = W / 2;
+      const cy = H / 2;
+      const u = (p.finalX - cx) / Math.max(1, W * 0.5);
+      const v = (p.finalY - cy) / Math.max(1, H * 0.5);
+      p.orbitRadius = Math.max(0.26, Math.min(0.96, Math.hypot(u, v)));
+      p.orbitAngle = Math.atan2(v, u);
+      if (p.isLetter && synthiaTargets[i]) {
+        p.synthiaX = synthiaTargets[i].x;
+        p.synthiaY = synthiaTargets[i].y;
+        p.synthiaRelX = synthiaTargets[i].relX || 0;
+        p.synthiaRelY = synthiaTargets[i].relY || 0;
+      }
+    });
+    linkAmbientNeighbors();
+  });
+
+  // Calculate gradual sequential letter and stroke activation
+  function getParticleActivation(p, sVal) {
+    const letterBase = 0.03 + p.letterIdx * 0.10;
+    const strokeOffset = (p.letterOrder / PTS_PER_LETTER) * 0.05;
+    const start = letterBase + strokeOffset;
+    const duration = 0.15;
+    const end = start + duration;
+    if (sVal <= start) return 0;
+    if (sVal >= end) return 1;
+    const t = (sVal - start) / duration;
+    return t * t * (3 - 2 * t);
+  }
+
+  function tick(now) {
+    if (startTime === null) startTime = now;
+    const deltaMs = lastFrameTime ? Math.min(now - lastFrameTime, 100) : 16.67;
+    lastFrameTime = now;
+    const elapsed = now - startTime;
+    const dtFactor = Math.min(deltaMs, 50) / 16.67;
+
+    ctx.clearRect(0, 0, W, H);
+
+    smoothScrollY += (targetScrollY - smoothScrollY) * (1 - Math.pow(1 - 0.08, dtFactor));
+    const scrollT = Math.max(0, Math.min(1, smoothScrollY / 240));
+    const cx = W / 2;
+    const cy = H / 2;
+
+    const startCy = H * 0.48;
+    const endCy = Math.max(H * 0.55, H - 150);
+    const currentCy = startCy + scrollT * (endCy - startCy);
+
+    // 1. Update particle positions with smooth damping
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      if (!reducedMotion) {
+        if (elapsed < p.popStart) {
+          p.x = p.centerX;
+          p.y = p.centerY;
+          p.popFromX = p.x;
+          p.popFromY = p.y;
+          p.opacity = p.targetOpacity * Math.min(1, elapsed / 800) * 0.65;
+        } else {
+          const popT = Math.min(1, (elapsed - p.popStart) / 850);
+          const eased = easeOutBack(popT);
+          const targetX = p.popFromX + (p.finalX - p.popFromX) * eased;
+          const targetY = p.popFromY + (p.finalY - p.popFromY) * eased;
+
+          p.opacity = p.targetOpacity * Math.min(1, 0.65 + popT * 0.35);
+
+          if (popT >= 1) p.popped = true;
+
+          if (!p.popped) {
+            p.x = targetX;
+            p.y = targetY;
+          } else {
+            const cycleElapsed = Math.max(0, elapsed - (p.popStart + 850));
+            const currentAngle = p.orbitAngle + (cycleElapsed * p.orbitSpeed);
+
+            const orbitX = cx + p.orbitRadius * (W * 0.5) * Math.cos(currentAngle);
+            const orbitY = cy + p.orbitRadius * (H * 0.5) * Math.sin(currentAngle);
+
+            const flow = getFlowOffset(orbitX, orbitY, elapsed);
+            const normalTargetX = orbitX + flow.dx;
+            const normalTargetY = orbitY + flow.dy;
+
+            if (p.isLetter) {
+              const targetActivation = getParticleActivation(p, scrollT);
+              p.morphT += (targetActivation - p.morphT) * (1 - Math.pow(1 - 0.06, dtFactor));
+
+              const shimmerX = Math.sin(elapsed * 0.0022 + p.depth * 8) * 1.2 * p.morphT;
+              const shimmerY = Math.cos(elapsed * 0.0026 + p.depth * 7) * 1.2 * p.morphT;
+              const sTargetX = cx + (p.synthiaRelX || 0) + shimmerX;
+              const sTargetY = currentCy + (p.synthiaRelY || 0) + shimmerY;
+
+              let curTargetX = (1 - p.morphT) * normalTargetX + p.morphT * sTargetX;
+              let curTargetY = (1 - p.morphT) * normalTargetY + p.morphT * sTargetY;
+
+              if (mouse.active) {
+                const mouseDamp = 1 - p.morphT * 0.45;
+                curTargetX += mouse.px * 20 * p.depth * mouseDamp;
+                curTargetY += mouse.py * 16 * p.depth * mouseDamp;
+                const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 85) {
+                  const force = (1 - dist / 85) * 16 * mouseDamp;
+                  curTargetX += (dx / (dist || 1)) * force;
+                  curTargetY += (dy / (dist || 1)) * force;
+                }
+              }
+
+              p.x = frameLerp(p.x, curTargetX, 0.06, deltaMs);
+              p.y = frameLerp(p.y, curTargetY, 0.06, deltaMs);
+            } else {
+              p.morphT = 0;
+              let curTargetX = normalTargetX;
+              let curTargetY = normalTargetY;
+
+              if (mouse.active) {
+                curTargetX += mouse.px * 24 * p.depth;
+                curTargetY += mouse.py * 18 * p.depth;
+                const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 95) {
+                  const force = (1 - dist / 95) * 20;
+                  curTargetX += (dx / (dist || 1)) * force;
+                  curTargetY += (dy / (dist || 1)) * force;
+                }
+              }
+
+              p.x = frameLerp(p.x, curTargetX, 0.05, deltaMs);
+              p.y = frameLerp(p.y, curTargetY, 0.05, deltaMs);
+            }
+          }
+        }
+      } else {
+        p.opacity = p.targetOpacity;
+      }
+    }
+
+    // 2. Connecting lines pass
+    if (!reducedMotion) {
+      ctx.lineWidth = 1;
+
+      // Letter strokes
+      for (let l = 0; l < 7; l++) {
+        const startIdx = l * PTS_PER_LETTER;
+        for (let k = 0; k < PTS_PER_LETTER - 1; k++) {
+          const a = particles[startIdx + k];
+          const b = particles[startIdx + k + 1];
+          if (!a || !b) continue;
+          const letterMorph = Math.min(a.morphT, b.morphT);
+          if (letterMorph > 0.05) {
+            const d = Math.hypot(a.x - b.x, a.y - b.y);
+            if (d < 52) {
+              const strokeAlpha = letterMorph * 0.32 * Math.min(a.opacity, b.opacity);
+              ctx.strokeStyle = `rgba(168,150,255,${strokeAlpha.toFixed(3)})`;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // Ambient neuron links
+      for (let i = TOTAL_LETTER_PTS; i < particles.length; i++) {
+        const a = particles[i];
+        if (!a || a.opacity < 0.02) continue;
+        a.neighborIndices.forEach(j => {
+          const b = particles[j];
+          if (!b || b.opacity < 0.02) return;
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 130) {
+            const alpha = (1 - d / 130) * 0.13 * Math.min(a.opacity, b.opacity);
+            if (alpha <= 0.002) return;
+            ctx.strokeStyle = `rgba(168,150,255,${alpha.toFixed(3)})`;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        });
+      }
+    }
+
+    // 3. Draw particles pass
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      if (p.opacity > 0.01) {
+        const px = p.x;
+        const py = p.y;
+        const dist = mouse.active ? Math.hypot(px - mouse.x, py - mouse.y) : 9999;
+        const proximity = mouse.active ? Math.max(0, 1 - dist / 48) : 0;
+
+        ctx.save();
+        if (proximity > 0) {
+          ctx.shadowColor = "rgba(255,255,255,0.95)";
+          ctx.shadowBlur = 7 * proximity;
+          ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * proximity})`;
+        } else if (p.isLetter && p.morphT > 0.15) {
+          ctx.shadowColor = "rgba(168,150,255,0.9)";
+          ctx.shadowBlur = 5 * p.morphT;
+          const [r, g, b] = p.color;
+          ctx.fillStyle = `rgba(${Math.min(255, r + 45)},${Math.min(255, g + 45)},255,${(p.opacity * (0.85 + 0.25 * p.morphT)).toFixed(3)})`;
+        } else {
+          ctx.shadowBlur = 0;
+          const [r, g, b] = p.color;
+          ctx.fillStyle = `rgba(${r},${g},${b},${p.opacity.toFixed(3)})`;
+        }
+        ctx.beginPath();
+        const r = Math.max(0.1, p.baseRadius * (1 + proximity * 0.6 + p.morphT * 0.35));
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  resize();
+  seed(TOTAL_PARTICLES);
+  requestAnimationFrame(tick);
+})();
+
+/* ===================================================================
+   SHARED COHORT STATE (Single source of truth)
+=================================================================== */
+const cohortState = {
+  size: 10000,
+  ageOver60: 40,
+  diabetes: 30,
+  lowActivity: 35,
+  hasCsv: false,
+  fileName: "clinical_sample.csv"
+};
+
+/* ===================================================================
+   SECTION 1 — CSV UPLOAD / DROPZONE
+=================================================================== */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const browseBtn = document.getElementById('browseBtn');
+const loadSampleBtn = document.getElementById('loadSampleBtn');
+const datasetSummary = document.getElementById('datasetSummary');
+const replaceFileBtn = document.getElementById('replaceFileBtn');
+const summaryFileName = document.getElementById('summaryFileName');
+const statPatients = document.getElementById('statPatients');
+const statVars = document.getElementById('statVars');
+const statObs = document.getElementById('statObs');
+const gateNotice = document.getElementById('gateNotice');
+const generateBtn = document.getElementById('generateBtn');
+
+// Open system file picker
+browseBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  fileInput.click();
+});
+dropzone.addEventListener('click', () => fileInput.click());
+
+// Drag & drop handlers
+['dragenter', 'dragover'].forEach(name => {
+  dropzone.addEventListener(name, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.add('dragover');
+  });
+});
+['dragleave', 'drop'].forEach(name => {
+  dropzone.addEventListener(name, (e) => {
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.remove('dragover');
+  });
+});
+
+dropzone.addEventListener('drop', (e) => {
+  const files = e.dataTransfer.files;
+  if (files && files.length > 0) {
+    handleFile(files[0]);
+  }
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files && e.target.files.length > 0) {
+    handleFile(e.target.files[0]);
+  }
+});
+
+loadSampleBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  setDatasetState({
+    name: "clinical_sample.csv",
+    patients: 512,
+    variables: 12,
+    observations: 6144
+  });
+});
+
+replaceFileBtn.addEventListener('click', () => {
+  cohortState.hasCsv = false;
+  dropzone.style.display = 'block';
+  datasetSummary.style.display = 'none';
+  updateGenerateGate();
+});
+
+function handleFile(file) {
+  if (!file) return;
+  const name = file.name;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const text = evt.target.result;
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    const nRows = Math.max(1, lines.length - 1);
+    const headers = lines[0] ? lines[0].split(',') : [];
+    cohortState.schema = headers.map(h => h.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+    const nCols = Math.max(1, headers.length);
+    setDatasetState({
+      name: name,
+      patients: nRows,
+      variables: nCols,
+      observations: nRows * nCols
+    });
+  };
+  reader.readAsText(file);
+}
+
+function setDatasetState(info) {
+  cohortState.hasCsv = true;
+  cohortState.fileName = info.name;
+  summaryFileName.textContent = info.name;
+  statPatients.textContent = info.patients.toLocaleString('en-US');
+  statVars.textContent = info.variables.toLocaleString('en-US');
+  statObs.textContent = info.observations.toLocaleString('en-US');
+
+  dropzone.style.display = 'none';
+  datasetSummary.style.display = 'block';
+  updateGenerateGate();
+}
+
+function updateGenerateGate() {
+  if (cohortState.hasCsv) {
+    generateBtn.disabled = false;
+    generateBtn.classList.remove('disabled');
+    gateNotice.classList.add('verified');
+    gateNotice.innerHTML = `&check; Source dataset &ldquo;${cohortState.fileName}&rdquo; verified &middot; Pipeline unlocked.`;
+  } else {
+    generateBtn.disabled = true;
+    generateBtn.classList.add('disabled');
+    gateNotice.classList.remove('verified');
+    gateNotice.innerHTML = `&bull; Upload a source CSV above to unlock the generation pipeline.`;
+  }
+}
+
+/* ===================================================================
+   SECTION 3 — NATURAL LANGUAGE COHORT ASSIST (LLM PLACEHOLDER)
+=================================================================== */
+const promptInput = document.getElementById('promptInput');
+const interpretBtn = document.getElementById('interpretBtn');
+const interpretedBox = document.getElementById('interpretedBox');
+const interpSize = document.getElementById('interpSize');
+const interpAge = document.getElementById('interpAge');
+const interpDiabetes = document.getElementById('interpDiabetes');
+const interpActivity = document.getElementById('interpActivity');
+const applyInterpBtn = document.getElementById('applyInterpBtn');
+
+let parsedCandidate = null;
+
+// Prompt suggestion chips
+document.querySelectorAll('.chip-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    promptInput.value = btn.dataset.text;
+    interpretPrompt(promptInput.value);
+  });
+});
+
+interpretBtn.addEventListener('click', () => {
+  if (!promptInput.value.trim()) {
+    promptInput.focus();
+    return;
+  }
+  interpretPrompt(promptInput.value);
+});
+
+async function interpretPrompt(text) {
+  if (!text || !text.trim()) return;
+
+  const originalBtnText = interpretBtn.textContent;
+  interpretBtn.textContent = "Interpreting...";
+  interpretBtn.disabled = true;
+
+  try {
+    let result = null;
+    if (window.SYNTHIA_COHORT_API && typeof window.SYNTHIA_COHORT_API.interpretCohort === 'function') {
+      result = await window.SYNTHIA_COHORT_API.interpretCohort(text, cohortState, cohortState.schema || []);
+    }
+
+    let size = cohortState.size;
+    let age = cohortState.ageOver60;
+    let diabetes = cohortState.diabetes;
+    let activity = cohortState.lowActivity;
+
+    if (result && result.success && result.requirements) {
+      const req = result.requirements;
+      if (req.targetSize != null && !isNaN(req.targetSize)) {
+        size = Math.min(20000, Math.max(1000, Math.round(req.targetSize)));
+      }
+      if (req.ageOver60 != null && !isNaN(req.ageOver60)) {
+        age = Math.min(100, Math.max(0, Math.round(req.ageOver60)));
+      }
+      if (req.diabetes != null && !isNaN(req.diabetes)) {
+        diabetes = Math.min(100, Math.max(0, Math.round(req.diabetes)));
+      }
+      if (req.lowActivity != null && !isNaN(req.lowActivity)) {
+        activity = Math.min(100, Math.max(0, Math.round(req.lowActivity)));
+      }
+    } else if (window.SYNTHIA_COHORT_API && typeof window.SYNTHIA_COHORT_API.fallbackLocalInterpretation === 'function') {
+      const fb = window.SYNTHIA_COHORT_API.fallbackLocalInterpretation(text, cohortState);
+      size = fb.requirements.targetSize;
+      age = fb.requirements.ageOver60;
+      diabetes = fb.requirements.diabetes;
+      activity = fb.requirements.lowActivity;
+    }
+
+    parsedCandidate = { size, age, diabetes, activity };
+
+    interpSize.textContent = size.toLocaleString('en-US');
+    interpAge.textContent = age + '%';
+    interpDiabetes.textContent = diabetes + '%';
+    interpActivity.textContent = activity + '%';
+
+    interpretedBox.style.display = 'block';
+  } catch (err) {
+    console.error('Error during cohort interpretation:', err);
+  } finally {
+    interpretBtn.textContent = originalBtnText;
+    interpretBtn.disabled = false;
+  }
+}
+
+applyInterpBtn.addEventListener('click', () => {
+  if (!parsedCandidate) return;
+  sliderSize.value = parsedCandidate.size;
+  sliderAge.value = parsedCandidate.age;
+  sliderDiabetes.value = parsedCandidate.diabetes;
+  sliderActivity.value = parsedCandidate.activity;
+
+  syncFromSliders();
+  applyInterpBtn.textContent = "Applied \u2713";
+  setTimeout(() => { applyInterpBtn.textContent = "Apply to cohort \u2192"; }, 1400);
+});
+
+/* ===================================================================
+   SECTION 2 — WORKING COHORT CONTROLS & LIVE CLUSTER CANVAS
+=================================================================== */
+const sliderSize = document.getElementById('sliderSize');
+const sliderAge = document.getElementById('sliderAge');
+const sliderDiabetes = document.getElementById('sliderDiabetes');
+const sliderActivity = document.getElementById('sliderActivity');
+const valSize = document.getElementById('valSize');
+const valAge = document.getElementById('valAge');
+const valDiabetes = document.getElementById('valDiabetes');
+const valActivity = document.getElementById('valActivity');
+const cohortCount = document.getElementById('cohortCount');
+const canvas = document.getElementById('cohortCanvas');
+const ctx = canvas.getContext('2d');
+
+let W=0, H=0, DPR=Math.min(window.devicePixelRatio||1, 2);
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  canvas.width = W * DPR; canvas.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+let dots = [];
+const N = 90;
+
+function seedDots(){
+  dots = [];
+  for(let i=0; i<N; i++){
+    dots.push({
+      x: Math.random() * W, y: Math.random() * H,
+      tx: Math.random() * W, ty: Math.random() * H,
+      r: 1.4 + Math.random() * 1.6,
+      hot: Math.random() < 0.3,
+    });
+  }
+}
+
+function retarget(){
+  const age = cohortState.ageOver60 / 100;
+  const diabetes = cohortState.diabetes / 100;
+  const activity = cohortState.lowActivity / 100;
+  dots.forEach((d, i)=>{
+    const cx = W * (0.3 + age * 0.4);
+    const cy = H * (0.35 + diabetes * 0.3);
+    const spread = 60 + (1 - activity) * 70;
+    d.tx = cx + (Math.random() - 0.5) * spread * 2;
+    d.ty = cy + (Math.random() - 0.5) * spread * 2;
+  });
+}
+
+function renderLoop(){
+  ctx.clearRect(0, 0, W, H);
+  dots.forEach(d=>{
+    d.x += (d.tx - d.x) * 0.045;
+    d.y += (d.ty - d.y) * 0.045;
+    ctx.beginPath();
+    ctx.fillStyle = d.hot ? 'rgba(108,77,255,0.85)' : 'rgba(168,150,255,0.5)';
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  requestAnimationFrame(renderLoop);
+}
+
+function syncFromSliders(){
+  cohortState.size = +sliderSize.value;
+  cohortState.ageOver60 = +sliderAge.value;
+  cohortState.diabetes = +sliderDiabetes.value;
+  cohortState.lowActivity = +sliderActivity.value;
+
+  valSize.textContent = cohortState.size.toLocaleString('en-US');
+  cohortCount.textContent = cohortState.size.toLocaleString('en-US');
+  valAge.textContent = cohortState.ageOver60 + '%';
+  valDiabetes.textContent = cohortState.diabetes + '%';
+  valActivity.textContent = cohortState.lowActivity + '%';
+
+  retarget();
+}
+
+[sliderSize, sliderAge, sliderDiabetes, sliderActivity].forEach(s => {
+  s.addEventListener('input', syncFromSliders);
+});
+
+resizeCanvas();
+seedDots();
+syncFromSliders();
+if(!reducedMotion) requestAnimationFrame(renderLoop);
+
+/* ===================================================================
+   LONGITUDINAL 30-DAY TRAJECTORY INTERACTIVE SCRUBBER
+=================================================================== */
+const timelinePanel = document.getElementById('timelinePanel');
+const timelineScrubber = document.getElementById('timelineScrubber');
+const timelineScrubBadge = document.getElementById('timelineScrubBadge');
+const scrubDayText = document.getElementById('scrubDayText');
+const scrubMetricsText = document.getElementById('scrubMetricsText');
+const dotBP = document.getElementById('dotBP');
+const dotPain = document.getElementById('dotPain');
+const dotAct = document.getElementById('dotAct');
+const dotAdh = document.getElementById('dotAdh');
+
+const rowBP = document.getElementById('rowBP');
+const rowPain = document.getElementById('rowPain');
+const rowAct = document.getElementById('rowAct');
+const rowAdh = document.getElementById('rowAdh');
+
+if (timelinePanel && timelineScrubber && timelineScrubBadge) {
+  function handleTimelineMove(e) {
+    const rect = timelinePanel.getBoundingClientRect();
+    const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const day = Math.round(1 + relX * 29);
+    const pctX = relX * 100;
+
+    timelineScrubber.style.left = pctX + '%';
+    timelineScrubber.style.opacity = '1';
+
+    const badgeLeft = Math.max(12, Math.min(88, pctX));
+    timelineScrubBadge.style.left = badgeLeft + '%';
+    timelineScrubBadge.style.opacity = '1';
+
+    scrubDayText.textContent = 'DAY ' + day;
+
+    const sys = Math.round(136 - relX * 18 + Math.sin(relX * Math.PI * 3.5) * 3);
+    const dia = Math.round(86 - relX * 8 + Math.sin(relX * Math.PI * 3.5) * 2);
+    const pain = (7.2 - relX * 5.4 + Math.cos(relX * Math.PI * 2.8) * 0.3).toFixed(1);
+    const act = Math.round(2800 + relX * 7100).toLocaleString('en-US');
+    const adh = (99 - Math.round(relX * 1.5)) + '%';
+
+    scrubMetricsText.textContent = `BP ${sys}/${dia} \u2022 PAIN ${pain}/10 \u2022 ACT ${act} \u2022 ADH ${adh}`;
+
+    function updateRowDot(rowEl, dotEl, yOffsetFactor) {
+      if (!rowEl || !dotEl) return;
+      const wrapEl = rowEl.querySelector('.t-svg-wrap');
+      if (!wrapEl) return;
+      const wRect = wrapEl.getBoundingClientRect();
+      const dotX = relX * wRect.width + (wRect.left - rect.left);
+      const dotY = (wRect.top - rect.top) + (wRect.height * yOffsetFactor);
+      dotEl.style.left = dotX + 'px';
+      dotEl.style.top = dotY + 'px';
+      dotEl.style.opacity = '1';
+    }
+
+    const bpY = 0.5 + Math.sin(relX * Math.PI * 3) * 0.15;
+    const painY = 0.3 + relX * 0.4;
+    const actY = 0.8 - relX * 0.55;
+    const adhY = 0.5;
+
+    updateRowDot(rowBP, dotBP, bpY);
+    updateRowDot(rowPain, dotPain, painY);
+    updateRowDot(rowAct, dotAct, actY);
+    updateRowDot(rowAdh, dotAdh, adhY);
+  }
+
+  function handleTimelineLeave() {
+    timelineScrubber.style.opacity = '0';
+    timelineScrubBadge.style.opacity = '0';
+    [dotBP, dotPain, dotAct, dotAdh].forEach(d => { if (d) d.style.opacity = '0'; });
+  }
+
+  timelinePanel.addEventListener('mousemove', handleTimelineMove);
+  timelinePanel.addEventListener('mouseleave', handleTimelineLeave);
+}
+
+/* ===================================================================
+   PRIMARY ACTION — GENERATE COHORT SIMULATOR
+=================================================================== */
+const genModalOverlay = document.getElementById('genModalOverlay');
+const modalBar = document.getElementById('modalBar');
+const modalDesc = document.getElementById('modalDesc');
+const modalProgressText = document.getElementById('modalProgressText');
+const closeModalBtn = document.getElementById('closeModalBtn');
+
+generateBtn.addEventListener('click', () => {
+  if (generateBtn.disabled) return;
+  genModalOverlay.style.display = 'flex';
+  modalDesc.textContent = `Synthia is projecting ${cohortState.size.toLocaleString('en-US')} mathematically representative synthetic patient records based on "${cohortState.fileName}".`;
+  modalBar.style.width = '0%';
+  modalProgressText.textContent = "INITIALIZING MULTIVARIATE CORRELATION KERNEL...";
+  closeModalBtn.style.display = 'none';
+
+  setTimeout(() => {
+    modalBar.style.width = '65%';
+    modalProgressText.textContent = `CALIBRATING ${cohortState.ageOver60}% AGE 60+, ${cohortState.diabetes}% DIABETES COVARIANCE...`;
+  }, 400);
+
+  setTimeout(() => {
+    modalBar.style.width = '100%';
+    modalProgressText.textContent = "COHORT SYNTHESIZED \u2713 READY FOR FIDELITY VALIDATION.";
+    closeModalBtn.style.display = 'inline-block';
+  }, 1600);
+});
+
+closeModalBtn.addEventListener('click', () => {
+  genModalOverlay.style.display = 'none';
+});
+genModalOverlay.addEventListener('click', (e) => {
+  if (e.target === genModalOverlay && closeModalBtn.style.display !== 'none') {
+    genModalOverlay.style.display = 'none';
+  }
+});
+
+})();
+</script>
+</body>
+</html>
