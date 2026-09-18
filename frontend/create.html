@@ -502,8 +502,43 @@
   }
   .btn-interpret{
     height:58px;padding:0 1.4rem;white-space:nowrap;
+    transition:background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
   }
   @media(max-width:760px){.btn-interpret{width:100%;height:46px;}}
+  .btn-interpret.is-analysing{
+    opacity:0.94;
+    cursor:wait;
+    background:linear-gradient(135deg, #573AC7 0%, #6C4DFF 100%);
+    position:relative;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .btn-interpret.is-analysing::after{
+    content:'';
+    position:absolute;
+    top:0;left:-100%;width:100%;height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    animation:shimmerSlide 1.2s infinite;
+  }
+  @keyframes shimmerSlide{
+    100%{left:100%;}
+  }
+  .analysing-dots{
+    display:inline-block;
+    letter-spacing:1px;
+    animation:pulseDots 1.2s infinite;
+  }
+  @keyframes pulseDots{
+    0%, 20%{opacity:0.25;}
+    50%{opacity:1;}
+    100%{opacity:0.25;}
+  }
+  .btn-interpret.is-complete{
+    background:#10B981 !important;
+    border-color:#059669 !important;
+    color:#FFFFFF !important;
+    box-shadow:0 0 16px rgba(16,185,129,0.25);
+  }
 
   /* Quick suggestion chips */
   .quick-chips{
@@ -892,7 +927,7 @@
           <div class="mono" style="font-size:11.5px;font-weight:600;color:var(--violet);letter-spacing:0.06em;">
             SYNTHIA UNDERSTOOD
           </div>
-          <span class="mono" style="font-size:11px;color:var(--text-faint);">INTENT PARSED &check;</span>
+          <span class="mono" id="interpStatusBadge" style="font-size:11px;color:var(--text-faint);transition:color 160ms;">INTENT PARSED &check;</span>
         </div>
         <div class="interp-grid">
           <div class="interp-item">
@@ -1811,11 +1846,25 @@ interpretBtn.addEventListener('click', () => {
   interpretPrompt(promptInput.value);
 });
 
+promptInput.addEventListener('input', () => {
+  if (interpretBtn.classList.contains('is-complete') || interpretBtn.classList.contains('is-analysing')) {
+    interpretBtn.classList.remove('is-complete', 'is-analysing');
+    interpretBtn.innerHTML = 'Interpret with Synthia &rarr;';
+    interpretBtn.disabled = false;
+    const badge = document.getElementById('interpStatusBadge');
+    if (badge) {
+      badge.textContent = 'INTENT PARSED \u2713';
+      badge.style.color = 'var(--text-faint)';
+    }
+  }
+});
+
 async function interpretPrompt(text) {
   if (!text || !text.trim()) return;
 
-  const originalBtnText = interpretBtn.textContent;
-  interpretBtn.textContent = "Interpreting...";
+  interpretBtn.classList.remove('is-complete');
+  interpretBtn.classList.add('is-analysing');
+  interpretBtn.innerHTML = `<span>Analysing <span class="analysing-dots">...</span></span>`;
   interpretBtn.disabled = true;
 
   try {
@@ -1897,12 +1946,29 @@ async function interpretPrompt(text) {
       }
     }
 
+    const badge = document.getElementById('interpStatusBadge');
+    if (badge) {
+      badge.textContent = 'ANALYSIS COMPLETE \u2713';
+      badge.style.color = 'var(--violet)';
+      badge.style.fontWeight = '600';
+    }
+
     interpretedBox.style.display = 'block';
+
+    // Transition button to completed status
+    interpretBtn.classList.remove('is-analysing');
+    interpretBtn.classList.add('is-complete');
+    interpretBtn.innerHTML = `<span>Analysis Complete &check;</span>`;
+    interpretBtn.disabled = false;
+
   } catch (err) {
     console.error('Error during cohort interpretation:', err);
-  } finally {
-    interpretBtn.textContent = originalBtnText;
-    interpretBtn.disabled = false;
+    interpretBtn.classList.remove('is-analysing');
+    interpretBtn.innerHTML = `<span>Analysis Failed &times;</span>`;
+    setTimeout(() => {
+      interpretBtn.innerHTML = `Interpret with Synthia &rarr;`;
+      interpretBtn.disabled = false;
+    }, 2000);
   }
 }
 
@@ -1913,7 +1979,7 @@ applyInterpBtn.addEventListener('click', () => {
   sliderDiabetes.value = parsedCandidate.diabetes;
   sliderActivity.value = parsedCandidate.activity;
 
-  syncFromSliders();
+  syncFromSliders(true);
   applyInterpBtn.textContent = "Applied \u2713";
   setTimeout(() => { applyInterpBtn.textContent = "Apply to cohort \u2192"; }, 1400);
 });
@@ -1984,14 +2050,43 @@ function renderLoop(){
   requestAnimationFrame(renderLoop);
 }
 
-function syncFromSliders(){
+let currentCohortDisplay = 10000;
+let cohortCountTweenAnim = null;
+
+function animateCohortPreviewCount(targetVal) {
+  if (cohortCountTweenAnim) cancelAnimationFrame(cohortCountTweenAnim);
+  const startVal = currentCohortDisplay;
+  const startTime = performance.now();
+  const duration = 650;
+
+  function step(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    currentCohortDisplay = Math.round(startVal + (targetVal - startVal) * ease);
+    cohortCount.textContent = currentCohortDisplay.toLocaleString('en-US');
+    if (p < 1) {
+      cohortCountTweenAnim = requestAnimationFrame(step);
+    } else {
+      currentCohortDisplay = targetVal;
+      cohortCount.textContent = targetVal.toLocaleString('en-US');
+    }
+  }
+  cohortCountTweenAnim = requestAnimationFrame(step);
+}
+
+function syncFromSliders(shouldAnimate = false){
   cohortState.size = +sliderSize.value;
   cohortState.ageOver60 = +sliderAge.value;
   cohortState.diabetes = +sliderDiabetes.value;
   cohortState.lowActivity = +sliderActivity.value;
 
   valSize.textContent = cohortState.size.toLocaleString('en-US');
-  cohortCount.textContent = cohortState.size.toLocaleString('en-US');
+  if (shouldAnimate) {
+    animateCohortPreviewCount(cohortState.size);
+  } else {
+    currentCohortDisplay = cohortState.size;
+    cohortCount.textContent = cohortState.size.toLocaleString('en-US');
+  }
   valAge.textContent = cohortState.ageOver60 + '%';
   valDiabetes.textContent = cohortState.diabetes + '%';
   valActivity.textContent = cohortState.lowActivity + '%';

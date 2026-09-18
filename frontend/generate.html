@@ -818,19 +818,12 @@
 
   let startTime = performance.now();
   let populationProgress = 0;
-  let targetProgress = 0;
-
-  // Time-based counter animation state
-  let counterAnimStartTime = null;   // when the final count-up animation began
-  let counterAnimStartVal = 0;       // counter value when animation started
-  let counterAnimEndVal = 0;         // target final value
-  let counterAnimDuration = 3000;    // ms for the count-up
-  let counterAnimDone = false;       // true once count-up finished
-  let pendingResult = null;          // stores API result until animation completes
-
-  function easeOutQuart(t) {
-    return 1 - Math.pow(1 - t, 4);
-  }
+  let pipelineActive = false;
+  let pipelineStartTime = performance.now();
+  let lastFrameTime = performance.now();
+  let currentCount = 0;
+  let apiCompleted = false;
+  let apiResult = null;
 
   function updateDotProgress(fraction) {
     const dots = document.querySelectorAll('#counterDots .dot');
@@ -843,16 +836,17 @@
   }
 
   function finalizeGeneration(result) {
-    const actualCount = result.generated_count || targetSizeNum;
+    const actualCount = result?.generated_count || targetSizeNum;
     setStatus(STATUS.COMPLETE);
     metaGenerated.textContent = actualCount.toLocaleString('en-US');
     metaStatus.textContent = 'Synthesized \u2713';
     counterGenerated.textContent = actualCount.toLocaleString('en-US');
     document.getElementById('counterDots').classList.add('done');
     document.getElementById('counterSlash').classList.add('done');
+    updateDotProgress(1.0);
 
-    const m = result.summary_metrics || {};
-    document.getElementById('cohortIdBadge').textContent = result.cohort_id || 'SYN-COHORT';
+    const m = (result && result.summary_metrics) || {};
+    document.getElementById('cohortIdBadge').textContent = (result && result.cohort_id) || 'SYN-COHORT';
     document.getElementById('metricAge').textContent = (m.age_over_60_pct != null ? m.age_over_60_pct + '%' : cohortState.ageOver60 + '%');
     document.getElementById('metricDiabetes').textContent = (m.diabetes_pct != null ? m.diabetes_pct + '%' : cohortState.diabetes + '%');
     document.getElementById('metricActivity').textContent = (m.low_activity_pct != null ? m.low_activity_pct + '%' : cohortState.lowActivity + '%');
@@ -865,7 +859,7 @@
     if (downloadCsvBtn) {
       downloadCsvBtn.classList.remove('disabled');
       downloadCsvBtn.onclick = () => {
-        const cohortId = result.cohort_id || 'SYN-GC-BDF99F07';
+        const cohortId = (result && result.cohort_id) || 'SYN-GC-BDF99F07';
         const backendUrl = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
         window.open(`${backendUrl}/api/generate/download/${cohortId}`, '_blank');
       };
@@ -1026,29 +1020,74 @@
       ctx.fill();
     });
 
-    // 6. Time-based Counter Animation
-    if (counterAnimStartTime !== null && !counterAnimDone) {
-      const elapsed = time - counterAnimStartTime;
-      const t = Math.min(elapsed / counterAnimDuration, 1);
-      const eased = easeOutQuart(t);
-      const currentVal = Math.round(counterAnimStartVal + (counterAnimEndVal - counterAnimStartVal) * eased);
-      populationProgress = currentVal;
-      counterGenerated.textContent = currentVal.toLocaleString('en-US');
-      updateDotProgress(eased);
+    // 6. Smooth, Gradual Real-Time Generation Counter Progression
+    if (pipelineActive) {
+      const dt = Math.min(64, Math.max(10, time - lastFrameTime));
+      lastFrameTime = time;
 
-      if (t >= 1) {
-        counterAnimDone = true;
-        if (pendingResult) {
-          finalizeGeneration(pendingResult);
-          pendingResult = null;
+      const totalTarget = targetSizeNum;
+      const elapsedMs = time - pipelineStartTime;
+
+      if (!apiCompleted) {
+        // Multi-stage organic growth
+        if (elapsedMs < 750) {
+          if (currentState !== STATUS.ANALYZING) setStatus(STATUS.ANALYZING);
+          // Initial ramp-up towards ~14%
+          currentCount += (totalTarget * 0.14 / 750) * dt;
+        } else if (elapsedMs < 1650) {
+          if (currentState !== STATUS.LEARNING) setStatus(STATUS.LEARNING);
+          // Learning covariance structure towards ~40%
+          currentCount += (totalTarget * 0.26 / 900) * dt;
+        } else {
+          if (currentState !== STATUS.SYNTHESIZING) setStatus(STATUS.SYNTHESIZING);
+          // Active synthesis phase: generate records smoothly (~2,400 rec/sec)
+          const softCeiling = totalTarget * 0.92;
+          if (currentCount < softCeiling) {
+            currentCount += (totalTarget * 0.52 / 2100) * dt;
+          } else {
+            // Approaching target while awaiting API response: never freeze!
+            currentCount += Math.max(1, (totalTarget * 0.04 / 1800) * dt);
+          }
+        }
+        // Cap pre-API at 96% so it doesn't prematurely finish before the backend returns
+        if (currentCount > totalTarget * 0.96) {
+          currentCount = totalTarget * 0.96;
+        }
+      } else {
+        // API has completed! Smoothly accelerate/glide remaining distance to exact actualCount
+        const finalTarget = apiResult?.generated_count || totalTarget;
+        if (currentState !== STATUS.APPLYING_CONSTRAINTS && currentCount < finalTarget * 0.96) {
+          setStatus(STATUS.APPLYING_CONSTRAINTS);
+        }
+
+        const remaining = finalTarget - currentCount;
+        if (remaining > 0) {
+          // Finish off smoothly in ~400-600ms
+          const step = Math.max(14, remaining * (dt / 320));
+          currentCount = Math.min(finalTarget, currentCount + step);
         }
       }
-    } else if (populationProgress < targetProgress && counterAnimStartTime === null) {
-      // Pre-API staged progress (analyzing, learning, etc.)
-      const step = Math.max(3, Math.round((targetProgress - populationProgress) * 0.05));
-      populationProgress = Math.min(targetProgress, populationProgress + step);
+
+      populationProgress = Math.floor(currentCount);
       counterGenerated.textContent = populationProgress.toLocaleString('en-US');
-      updateDotProgress(populationProgress / targetSizeNum);
+      updateDotProgress(Math.min(1, populationProgress / totalTarget));
+
+      // Dynamically add synthetic particles to match population progress
+      const targetSynthParticles = Math.floor((populationProgress / totalTarget) * maxSynthDisplay);
+      while (synthParticles.length < targetSynthParticles) {
+        addSynthParticle();
+      }
+
+      // Completion check
+      const finalCountTarget = apiResult?.generated_count || totalTarget;
+      if (apiCompleted && currentCount >= finalCountTarget) {
+        pipelineActive = false;
+        currentCount = finalCountTarget;
+        populationProgress = finalCountTarget;
+        counterGenerated.textContent = finalCountTarget.toLocaleString('en-US');
+        updateDotProgress(1.0);
+        finalizeGeneration(apiResult);
+      }
     }
 
     if (!reducedMotion) {
@@ -1070,14 +1109,15 @@
     metaGenerated.textContent = '\u2014';
     metaStatus.textContent = 'Processing...';
 
-    // Reset counter animation state
+    // Reset counter & pipeline state
+    currentCount = 0;
     populationProgress = 0;
-    targetProgress = 0;
-    counterAnimStartTime = null;
-    counterAnimStartVal = 0;
-    counterAnimEndVal = 0;
-    counterAnimDone = false;
-    pendingResult = null;
+    apiCompleted = false;
+    apiResult = null;
+    pipelineStartTime = performance.now();
+    lastFrameTime = performance.now();
+    pipelineActive = true;
+
     counterGenerated.textContent = '0';
     document.getElementById('counterDots').classList.remove('done');
     document.getElementById('counterSlash').classList.remove('done');
@@ -1085,30 +1125,7 @@
       d.classList.remove('lit', 'pulse');
     });
 
-    // Step 1: Analyzing
     setStatus(STATUS.ANALYZING);
-    targetProgress = Math.round(targetSizeNum * 0.12);
-
-    setTimeout(() => {
-      if (currentState === STATUS.ANALYZING) {
-        setStatus(STATUS.LEARNING);
-        targetProgress = Math.round(targetSizeNum * 0.35);
-      }
-    }, 700);
-
-    setTimeout(() => {
-      if (currentState === STATUS.LEARNING) {
-        setStatus(STATUS.SYNTHESIZING);
-        targetProgress = Math.round(targetSizeNum * 0.70);
-      }
-    }, 1500);
-
-    setTimeout(() => {
-      if (currentState === STATUS.SYNTHESIZING) {
-        setStatus(STATUS.APPLYING_CONSTRAINTS);
-        targetProgress = Math.round(targetSizeNum * 0.88);
-      }
-    }, 2200);
 
     try {
       // Execute real API call to POST /api/generate/conditional
@@ -1133,27 +1150,17 @@
         throw new Error(result?.error || 'Synthetic generation failed on the server.');
       }
 
-      // Success — kick off the time-based count-up animation
-      const actualCount = result.generated_count || targetSizeNum;
-      targetProgress = actualCount;
+      // Mark API as completed: the animation loop will smoothly glide the counter to the finish!
+      apiResult = result;
+      apiCompleted = true;
 
-      // Start the smooth count-up from current populationProgress to actualCount
-      counterAnimStartVal = populationProgress;
-      counterAnimEndVal = actualCount;
-      counterAnimStartTime = performance.now();
-      counterAnimDone = false;
-
-      // Change status to SYNTHESIZING during count-up for visual feedback
-      setStatus(STATUS.APPLYING_CONSTRAINTS);
-
-      // Store result + cohort for after animation completes
-      pendingResult = result;
       try {
         sessionStorage.setItem('synthia_generated_cohort', JSON.stringify(result));
       } catch (e) {}
 
     } catch (err) {
       console.error('[Generation Pipeline Error]:', err);
+      pipelineActive = false;
       setStatus(STATUS.ERROR);
       metaStatus.textContent = 'Failed';
       errorMessage.textContent = err.message || 'Unable to generate the requested cohort.';
