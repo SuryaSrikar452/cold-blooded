@@ -889,64 +889,7 @@
       </div>
     </div>
 
-    <!-- ============ LONGITUDINAL TRAJECTORY SECTION (Exact style from screenshot) ============ -->
-    <div style="margin-top:5.5rem;" class="reveal">
-      <div class="timeline-story-head">
-        <h2>Every patient has <span class="accent">a story over time.</span></h2>
-        <p>Human health isn't a single snapshot. Synthia inspects individual synthetic patient records across a 30-day treatment window — blood pressure, reported pain, and activity respond and stay chronologically coherent with each other over time.</p>
-        <span class="clarity-hint" style="font-size:12px;margin-top:0.4rem;">(Simulated changes across a 30-day treatment window)</span>
-      </div>
-      <div class="timeline-panel" id="timelinePanel">
-        <div class="timeline-scrubber" id="timelineScrubber" title="Drag scrubber to inspect daily values"></div>
-        <div class="timeline-scrub-badge" id="timelineScrubBadge">
-          <span id="scrubDayText">DAY 14</span> &middot; <span class="badge-metric" id="scrubMetricsText">BP 124/82 &bull; PAIN 2.8 &bull; ACT 6,400 &bull; ADH 99%</span>
-        </div>
-        <div class="t-scrub-dot" id="dotBP"></div>
-        <div class="t-scrub-dot" id="dotPain"></div>
-        <div class="t-scrub-dot" id="dotAct"></div>
-        <div class="t-scrub-dot" id="dotAdh"></div>
 
-        <div class="timeline-days">
-          <span>DAY 1</span>
-          <span>DAY 7</span>
-          <span>DAY 14</span>
-          <span>DAY 21</span>
-          <span>DAY 30</span>
-        </div>
-        <div class="timeline-row" id="rowBP">
-          <div class="t-label">Blood pressure <span class="clarity-hint" style="font-size:10px;">(Daily blood pressure)</span></div>
-          <div class="t-svg-wrap">
-            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
-              <path class="t-path" id="p1" d="M 0,18 C 140,18 240,13 360,13 C 480,13 560,19 680,18 C 780,17 880,14 1000,12" />
-            </svg>
-          </div>
-        </div>
-        <div class="timeline-row" id="rowPain">
-          <div class="t-label">Reported pain <span class="clarity-hint" style="font-size:10px;">(Daily pain rating)</span></div>
-          <div class="t-svg-wrap">
-            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
-              <path class="t-path" id="p2" d="M 0,11 C 140,13 260,18 400,23 C 520,27 640,26 760,22 C 860,19 930,20 1000,20" />
-            </svg>
-          </div>
-        </div>
-        <div class="timeline-row" id="rowAct">
-          <div class="t-label">Activity level <span class="clarity-hint" style="font-size:10px;">(Daily activity level)</span></div>
-          <div class="t-svg-wrap">
-            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
-              <path class="t-path" id="p3" d="M 0,28 C 160,24 300,20 450,17 C 600,14 740,12 880,11 C 940,10 980,9 1000,9" />
-            </svg>
-          </div>
-        </div>
-        <div class="timeline-row" id="rowAdh">
-          <div class="t-label">Medication adherence <span class="clarity-hint" style="font-size:10px;">(Daily adherence level)</span></div>
-          <div class="t-svg-wrap">
-            <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
-              <path class="t-path" id="p4" d="M 0,16 C 180,16 340,16 500,16 C 680,16 840,16 1000,16" />
-            </svg>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -2219,80 +2162,7 @@ seedDots();
 syncFromSliders();
 if(!reducedMotion) requestAnimationFrame(renderLoop);
 
-/* ===================================================================
-   LONGITUDINAL 30-DAY TRAJECTORY INTERACTIVE SCRUBBER
-=================================================================== */
-const timelinePanel = document.getElementById('timelinePanel');
-const timelineScrubber = document.getElementById('timelineScrubber');
-const timelineScrubBadge = document.getElementById('timelineScrubBadge');
-const scrubDayText = document.getElementById('scrubDayText');
-const scrubMetricsText = document.getElementById('scrubMetricsText');
-const dotBP = document.getElementById('dotBP');
-const dotPain = document.getElementById('dotPain');
-const dotAct = document.getElementById('dotAct');
-const dotAdh = document.getElementById('dotAdh');
 
-const rowBP = document.getElementById('rowBP');
-const rowPain = document.getElementById('rowPain');
-const rowAct = document.getElementById('rowAct');
-const rowAdh = document.getElementById('rowAdh');
-
-if (timelinePanel && timelineScrubber && timelineScrubBadge) {
-  function handleTimelineMove(e) {
-    const rect = timelinePanel.getBoundingClientRect();
-    const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const day = Math.round(1 + relX * 29);
-    const pctX = relX * 100;
-
-    timelineScrubber.style.left = pctX + '%';
-    timelineScrubber.style.opacity = '1';
-
-    const badgeLeft = Math.max(12, Math.min(88, pctX));
-    timelineScrubBadge.style.left = badgeLeft + '%';
-    timelineScrubBadge.style.opacity = '1';
-
-    scrubDayText.textContent = 'DAY ' + day;
-
-    const sys = Math.round(136 - relX * 18 + Math.sin(relX * Math.PI * 3.5) * 3);
-    const dia = Math.round(86 - relX * 8 + Math.sin(relX * Math.PI * 3.5) * 2);
-    const pain = (7.2 - relX * 5.4 + Math.cos(relX * Math.PI * 2.8) * 0.3).toFixed(1);
-    const act = Math.round(2800 + relX * 7100).toLocaleString('en-US');
-    const adh = (99 - Math.round(relX * 1.5)) + '%';
-
-    scrubMetricsText.textContent = `BP ${sys}/${dia} \u2022 PAIN ${pain}/10 \u2022 ACT ${act} \u2022 ADH ${adh}`;
-
-    function updateRowDot(rowEl, dotEl, yOffsetFactor) {
-      if (!rowEl || !dotEl) return;
-      const wrapEl = rowEl.querySelector('.t-svg-wrap');
-      if (!wrapEl) return;
-      const wRect = wrapEl.getBoundingClientRect();
-      const dotX = relX * wRect.width + (wRect.left - rect.left);
-      const dotY = (wRect.top - rect.top) + (wRect.height * yOffsetFactor);
-      dotEl.style.left = dotX + 'px';
-      dotEl.style.top = dotY + 'px';
-      dotEl.style.opacity = '1';
-    }
-
-    const bpY = 0.5 + Math.sin(relX * Math.PI * 3) * 0.15;
-    const painY = 0.3 + relX * 0.4;
-    const actY = 0.8 - relX * 0.55;
-    const adhY = 0.5;
-
-    updateRowDot(rowBP, dotBP, bpY);
-    updateRowDot(rowPain, dotPain, painY);
-    updateRowDot(rowAct, dotAct, actY);
-    updateRowDot(rowAdh, dotAdh, adhY);
-  }
-
-  function handleTimelineLeave() {
-    timelineScrubber.style.opacity = '0';
-    timelineScrubBadge.style.opacity = '0';
-    [dotBP, dotPain, dotAct, dotAdh].forEach(d => { if (d) d.style.opacity = '0'; });
-  }
-
-  timelinePanel.addEventListener('mousemove', handleTimelineMove);
-  timelinePanel.addEventListener('mouseleave', handleTimelineLeave);
-}
 
 /* ===================================================================
    PRIMARY ACTION — GENERATE COHORT SIMULATOR
