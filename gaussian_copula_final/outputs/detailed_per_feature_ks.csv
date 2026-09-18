@@ -1,0 +1,8 @@
+,Real_Train,Real_Holdout,Gaussian_Copula_V1,Gaussian_Copula_V2,CTGAN,Gaussian_Copula_Final
+age,0.039,0.0,0.0863,0.1055,0.1103,0.0359
+systolic_bp,0.0301,0.0,0.0617,0.0279,0.0768,0.0285
+diastolic_bp,0.0263,0.0,0.0557,0.0563,0.1049,0.0568
+activity_mims,0.0256,0.0,0.0439,0.0275,0.307,0.0287
+n_medications,0.0113,0.0,0.1925,0.0209,0.1579,0.0181
+adherence_pct,0.0274,0.0,0.0355,0.0205,0.2407,0.0248
+pain_score,0.0113,0.0,0.3918,0.059,0.4228,0.0656

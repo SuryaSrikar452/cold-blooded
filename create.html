@@ -697,7 +697,7 @@
         <a href="api-hub.html" class="wf-step" style="text-decoration:none;color:inherit;">API HUB</a>
       </div>
     </div>
-    <div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
       <a href="generate.html" class="btn btn-primary" style="padding:0.45rem 0.95rem;font-size:12.5px;">Generation &rarr;</a>
     </div>
   </div>
@@ -2114,6 +2114,15 @@ genModalOverlay.addEventListener('click', (e) => {
 });
 
 })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/config.js"></script>
+<script src="src/services/authService.js"></script>
+<script>
+  if (window.synthiaAuth) {
+    window.synthiaAuth.requireAuth();
+    window.synthiaAuth.renderNavAuth();
+  }
 </script>
 </body>
 </html>

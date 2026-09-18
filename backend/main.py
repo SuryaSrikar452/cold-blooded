@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import json
 import uuid
@@ -28,6 +29,8 @@ from backend.services.validationEngine import run_full_validation
 
 # Absolute Path Resolution via pathlib
 BASE_DIR = Path(__file__).resolve().parent.parent
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / "backend" / ".env")
 TRAIN_CSV = BASE_DIR / "final_training_data" / "nhanes_generative_train.csv"
 HOLDOUT_CSV = BASE_DIR / "final_training_data" / "nhanes_real_holdout.csv"
 HURDLE_MODEL_CACHE = BASE_DIR / "backend" / "models" / "hurdle_copula" / "hurdle_model.pkl"
@@ -72,13 +75,16 @@ from backend.services.generator_service import (
     get_latest_cohort_id
 )
 
+FINAL_MODEL_PKL = BASE_DIR / "gaussian_copula_final" / "models" / "model.pkl"
+HURDLE_MODEL_CACHE = FINAL_MODEL_PKL
+
 @app.on_event("startup")
 def startup_event():
-    # Pre-warm Hurdle model in memory on startup so subsequent requests are instantaneous
+    # Pre-warm GaussianCopulaFinal model in memory on startup so subsequent requests are instantaneous
     try:
         get_generator()
     except Exception as e:
-        print(f"[SYNTHIA WARNING] Failed to pre-warm Hurdle model at startup: {e}")
+        print(f"[SYNTHIA WARNING] Failed to pre-warm GaussianCopulaFinal model at startup: {e}")
 
 # Helper function to load synthetic dataset (dynamically from active cohort)
 def get_synthetic_dataframe(cohort_id: Optional[str] = None):
@@ -122,7 +128,11 @@ class BiasAuditRequest(BaseModel):
     tolerance_pct: float = 2.5
 
 class NLParseRequest(BaseModel):
-    query: str
+    query: Optional[str] = None
+    text: Optional[str] = None
+    prompt: Optional[str] = None
+    currentCohort: Optional[Dict[str, Any]] = None
+    datasetSchema: Optional[List[str]] = None
 
 class ExportRequest(BaseModel):
     format: str = "csv"  # csv, parquet, json
@@ -135,19 +145,28 @@ class APIKeyCreateRequest(BaseModel):
 # SYSTEM & HEALTH ENDPOINTS
 # ------------------------------------------------------------------
 @app.get("/health")
+@app.get("/api/health")
 def health_check():
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    is_gemini_set = bool(gemini_key and gemini_key not in ["YOUR_REAL_KEY_HERE", "your_gemini_api_key_here"])
     return {
         "status": "online",
+        "service": "SYNTHIA Backend",
         "training_dataset_ready": TRAIN_CSV.exists(),
         "holdout_dataset_ready": HOLDOUT_CSV.exists(),
-        "synthetic_baseline_ready": HURDLE_MODEL_CACHE.exists() or TRAIN_CSV.exists(),
+        "synthetic_baseline_ready": FINAL_MODEL_PKL.exists() or TRAIN_CSV.exists(),
+        "model_type": "GaussianCopulaFinal",
+        "model_package": "SH405_GAUSSIAN_COPULA_FINAL_REVIEW_PACKAGE",
+        "gemini_configured": is_gemini_set,
+        "geminiConfigured": is_gemini_set,
         "random_seed": 42
     }
 
 @app.get("/metrics/baseline")
 def get_baseline_metrics():
     return {
-        "model_type": "HurdleConditionalCopulaModel",
+        "model_type": "GaussianCopulaFinal",
+        "model_package": "SH405_GAUSSIAN_COPULA_FINAL_REVIEW_PACKAGE",
         "random_seed": 42,
         "synthetic_rows": 4826,
         "clinical_constraint_validity": "100.00%",
@@ -228,7 +247,7 @@ def generate_synthetic_cohort(payload: Optional[GenerateRequest] = None):
     n = payload_dict.get("n") or payload_dict.get("targetSize") or payload_dict.get("size") or 1000
     targets = payload_dict.get("targets") or payload_dict.get("conditions") or {}
     
-    # 1. Execute live Hurdle Conditional Copula Model
+    # 1. Execute live GaussianCopulaFinal model from review package
     gen = get_generator()
     t_start = datetime.datetime.now()
     df_syn = gen.sample(num_rows=n, targets=targets)
@@ -236,7 +255,7 @@ def generate_synthetic_cohort(payload: Optional[GenerateRequest] = None):
     gen_time_sec = round((t_end - t_start).total_seconds(), 3)
     
     # 2. Assign unique patient IDs
-    cohort_id = f"SYN-HC-{uuid.uuid4().hex[:8].upper()}"
+    cohort_id = f"SYN-GC-{uuid.uuid4().hex[:8].upper()}"
     df_syn.insert(0, "patient_id", [f"SYN-{i+1:06d}" for i in range(len(df_syn))])
     
     # 3. Cache cohort in memory & save to disk
@@ -535,16 +554,29 @@ class NLParseRequest(BaseModel):
 @app.post("/cohort/parse-nl")
 @app.post("/api/cohort/parse")
 @app.post("/api/cohort/interpret")
-def parse_nl_cohort_endpoint(payload: NLParseRequest):
-    q = payload.query or payload.text or ""
+def parse_nl_cohort_endpoint(payload: Optional[NLParseRequest] = None):
+    payload_dict = payload.model_dump() if payload else {}
+    q = (
+        payload_dict.get("text")
+        or payload_dict.get("query")
+        or payload_dict.get("prompt")
+        or ""
+    )
     result = parse_natural_language_cohort_query(q)
-    # Also support requirements key for frontend compatibility
+    # Support requirements key for frontend compatibility
     result["requirements"] = {
         "targetSize": result["canonical_state"]["size"],
         "ageOver60": result["canonical_state"]["ageOver60"],
         "diabetes": result["canonical_state"]["diabetes"],
         "lowActivity": result["canonical_state"]["lowActivity"]
     }
+    result["summary"] = (
+        f"Cohort interpreted via {result['parser_backend']}: "
+        f"N={result['canonical_state']['size']:,}, "
+        f"Age>60={result['canonical_state']['ageOver60']}%, "
+        f"Diabetes={result['canonical_state']['diabetes']}%, "
+        f"LowActivity={result['canonical_state']['lowActivity']}%"
+    )
     result["success"] = True
     return result
 

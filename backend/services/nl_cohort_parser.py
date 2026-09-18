@@ -3,6 +3,7 @@ import re
 import json
 import urllib.request
 import urllib.error
+from pathlib import Path
 from typing import Dict, Any
 
 from backend.services.feasibility_engine import evaluate_feasibility
@@ -118,43 +119,79 @@ def parse_natural_language_cohort_query(query: str) -> Dict[str, Any]:
 
     # Backend-only Gemini integration if GEMINI_API_KEY is present
     gemini_key = os.getenv("GEMINI_API_KEY")
-    if gemini_key:
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
-            payload_data = {
-                "contents": [{
-                    "parts": [{
-                        "text": (
-                            f"Extract cohort criteria from: '{query}'. "
-                            "Return valid JSON ONLY with possible keys: targetSize (int), diabetes (0 or 1), "
-                            "age_gt (int), age_lt (int), ageOver60 (int 0-100), lowActivity (int 0-100), "
-                            "systolic_bp_gt (int), activity_mims_lt (float), pain_score_gt (float), n_medications_ge (int)."
-                        )
-                    }]
-                }]
-            }
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload_data).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=4) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                text = result["candidates"][0]["content"]["parts"][0]["text"]
-                # Extract JSON block
-                clean_json = re.search(r'\{[\s\S]*\}', text)
-                if clean_json:
-                    parsed = json.loads(clean_json.group(0))
-                    targets.update(parsed)
-                    for k in ["size", "targetSize"]:
-                        if k in parsed: canonical_state["size"] = int(parsed[k])
-                    if "ageOver60" in parsed: canonical_state["ageOver60"] = int(parsed["ageOver60"])
-                    if "diabetes" in parsed:
-                        canonical_state["diabetes"] = int(parsed["diabetes"]) if parsed["diabetes"] > 1 else (100 if parsed["diabetes"] == 1 else 0)
-                    if "lowActivity" in parsed: canonical_state["lowActivity"] = int(parsed["lowActivity"])
-                    parser_backend = "gemini_flash_backend"
-        except Exception:
-            pass  # Seamless fallback to deterministic regex
+    if not gemini_key:
+        # Check backend/.env
+        env_path = Path(__file__).resolve().parent.parent / ".env"
+        if env_path.exists():
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip().startswith("GEMINI_API_KEY="):
+                        gemini_key = line.strip().split("=", 1)[1].strip().strip('"').strip("'")
+                        break
+
+    if gemini_key and gemini_key not in ["YOUR_REAL_KEY_HERE", "your_gemini_api_key_here"]:
+        candidate_models = ["gemini-3-flash-preview", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-2.5-flash"]
+        for model_name in candidate_models:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={gemini_key}"
+                payload_data = {
+                    "contents": [{
+                        "parts": [{
+                            "text": (
+                                f"You are a clinical cohort criteria extractor. Extract parameters from this prompt: '{query}'.\n"
+                                "Return JSON ONLY with any identified keys:\n"
+                                "- targetSize (int between 1000 and 50000)\n"
+                                "- ageOver60 (int 0-100 representing percentage of cohort >=60 years old)\n"
+                                "- diabetes (int 0-100 representing percentage prevalence of diabetes)\n"
+                                "- lowActivity (int 0-100 representing percentage with low physical activity)\n"
+                                "- age_gt (int threshold)\n"
+                                "- systolic_bp_gt (int threshold)\n"
+                                "- activity_mims_lt (float)\n"
+                                "- pain_score_gt (float)\n"
+                                "- n_medications_ge (int)\n"
+                            )
+                        }]
+                    }],
+                    "generationConfig": {
+                        "responseMimeType": "application/json",
+                        "temperature": 0.1
+                    }
+                }
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload_data).encode("utf-8"),
+                    headers={"Content-Type": "application/json"}
+                )
+                with urllib.request.urlopen(req, timeout=12) as resp:
+                    result = json.loads(resp.read().decode("utf-8"))
+                    text = result["candidates"][0]["content"]["parts"][0]["text"]
+                    clean_json = re.search(r'\{[\s\S]*\}', text)
+                    if clean_json:
+                        raw_parsed = json.loads(clean_json.group(0))
+                        parsed = {k: v for k, v in raw_parsed.items() if v is not None}
+                        targets.update(parsed)
+                        for k in ["size", "targetSize"]:
+                            if k in parsed and parsed[k] is not None:
+                                canonical_state["size"] = int(parsed[k])
+                        if "ageOver60" in parsed and parsed["ageOver60"] is not None:
+                            canonical_state["ageOver60"] = int(parsed["ageOver60"])
+                        if "diabetes" in parsed and parsed["diabetes"] is not None:
+                            v = float(parsed["diabetes"])
+                            canonical_state["diabetes"] = int(v) if v > 1 else (100 if v == 1.0 else 0)
+                            targets["diabetes"] = 1 if v > 0 else 0
+                        if "lowActivity" in parsed and parsed["lowActivity"] is not None:
+                            canonical_state["lowActivity"] = int(parsed["lowActivity"])
+                        parser_backend = f"gemini_api_{model_name}"
+                        break
+            except Exception as e:
+                print(f"[NL_COHORT_PARSER] Gemini model '{model_name}' failed: {e}")
+                continue  # Try next candidate Gemini model
+        print(f"[NL_COHORT_PARSER] All Gemini candidate models failed. Using deterministic regex fallback.")
+    else:
+        if not gemini_key:
+            print("[NL_COHORT_PARSER] No GEMINI_API_KEY found in env or backend/.env — using deterministic regex.")
+        else:
+            print(f"[NL_COHORT_PARSER] GEMINI_API_KEY is a placeholder value — using deterministic regex.")
 
     # Run empirical feasibility check
     warning, prev_pct, explanation = evaluate_feasibility(targets)

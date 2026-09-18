@@ -262,6 +262,37 @@
   .counter-display span.sub{
     font-size:11px;color:rgba(245,243,238,0.45);font-weight:400;
   }
+  /* Animated dot bridge between current count and target */
+  .counter-dots{
+    display:inline-flex;gap:4px;align-items:center;margin:0 4px;
+  }
+  .counter-dots .dot{
+    width:3.5px;height:3.5px;border-radius:50%;
+    background:rgba(168,150,255,0.2);
+    transition:background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .counter-dots .dot.lit{
+    background:var(--soft-violet);
+    box-shadow:0 0 6px rgba(108,77,255,0.6);
+    transform:scale(1.15);
+  }
+  .counter-dots .dot.pulse{
+    animation:dotWave 0.8s infinite ease-in-out;
+  }
+  @keyframes dotWave{
+    0%,100%{opacity:0.35;transform:scale(0.9);}
+    50%{opacity:1;transform:scale(1.3);}
+  }
+  .counter-dots.done{
+    display:none;
+  }
+  .counter-slash{
+    display:none;
+    font-size:11px;color:rgba(245,243,238,0.45);font-weight:400;
+  }
+  .counter-slash.done{
+    display:inline;
+  }
 
   /* Technical Metadata Grid */
   .meta-grid{
@@ -445,7 +476,9 @@
         <div class="counter-display mono">
           <span class="sub">GENERATED:</span>
           <span id="counterGenerated">0</span>
-          <span class="sub" id="counterTargetLabel">/ 10,000</span>
+          <span class="counter-dots" id="counterDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+          <span class="counter-slash" id="counterSlash">/</span>
+          <span class="sub" id="counterTargetLabel">10,000</span>
         </div>
       </div>
     </div>
@@ -600,7 +633,7 @@
 
   document.getElementById('labelTargetOutput').textContent = `SYNTHETIC \u00B7 ${targetFormatted} TARGET`;
   document.getElementById('metaTarget').textContent = targetFormatted;
-  document.getElementById('counterTargetLabel').textContent = `/ ${targetFormatted}`;
+  document.getElementById('counterTargetLabel').textContent = targetFormatted;
   if (cohortState.fileName) {
     document.getElementById('metaSourceFile').textContent = cohortState.fileName;
   }
@@ -785,6 +818,62 @@
   let populationProgress = 0;
   let targetProgress = 0;
 
+  // Time-based counter animation state
+  let counterAnimStartTime = null;   // when the final count-up animation began
+  let counterAnimStartVal = 0;       // counter value when animation started
+  let counterAnimEndVal = 0;         // target final value
+  let counterAnimDuration = 3000;    // ms for the count-up
+  let counterAnimDone = false;       // true once count-up finished
+  let pendingResult = null;          // stores API result until animation completes
+
+  function easeOutQuart(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function updateDotProgress(fraction) {
+    const dots = document.querySelectorAll('#counterDots .dot');
+    const litCount = Math.floor(fraction * dots.length);
+    const pulseIdx = litCount < dots.length ? litCount : -1;
+    dots.forEach((d, i) => {
+      d.classList.toggle('lit', i < litCount);
+      d.classList.toggle('pulse', i === pulseIdx && fraction < 1);
+    });
+  }
+
+  function finalizeGeneration(result) {
+    const actualCount = result.generated_count || targetSizeNum;
+    setStatus(STATUS.COMPLETE);
+    metaGenerated.textContent = actualCount.toLocaleString('en-US');
+    metaStatus.textContent = 'Synthesized \u2713';
+    counterGenerated.textContent = actualCount.toLocaleString('en-US');
+    document.getElementById('counterDots').classList.add('done');
+    document.getElementById('counterSlash').classList.add('done');
+
+    const m = result.summary_metrics || {};
+    document.getElementById('cohortIdBadge').textContent = result.cohort_id || 'SYN-COHORT';
+    document.getElementById('metricAge').textContent = (m.age_over_60_pct != null ? m.age_over_60_pct + '%' : cohortState.ageOver60 + '%');
+    document.getElementById('metricDiabetes').textContent = (m.diabetes_pct != null ? m.diabetes_pct + '%' : cohortState.diabetes + '%');
+    document.getElementById('metricActivity').textContent = (m.low_activity_pct != null ? m.low_activity_pct + '%' : cohortState.lowActivity + '%');
+    document.getElementById('metricBP').textContent = (m.mean_systolic_bp ? m.mean_systolic_bp + ' mmHg' : '118 mmHg');
+
+    resultsPanel.style.display = 'block';
+    viewValidationBtn.classList.remove('disabled');
+
+    const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+    if (downloadCsvBtn) {
+      downloadCsvBtn.classList.remove('disabled');
+      downloadCsvBtn.onclick = () => {
+        const cohortId = result.cohort_id || 'SYN-GC-BDF99F07';
+        const backendUrl = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
+        window.open(`${backendUrl}/api/generate/download/${cohortId}`, '_blank');
+      };
+    }
+
+    for (let k = synthParticles.length; k < maxSynthDisplay; k++) {
+      addSynthParticle();
+    }
+  }
+
   function renderLoop(time) {
     if (!isRunning) return;
 
@@ -935,11 +1024,29 @@
       ctx.fill();
     });
 
-    // 6. Smooth Population Counter Interpolation
-    if (populationProgress < targetProgress) {
-      const step = Math.max(12, Math.round((targetProgress - populationProgress) * 0.12));
+    // 6. Time-based Counter Animation
+    if (counterAnimStartTime !== null && !counterAnimDone) {
+      const elapsed = time - counterAnimStartTime;
+      const t = Math.min(elapsed / counterAnimDuration, 1);
+      const eased = easeOutQuart(t);
+      const currentVal = Math.round(counterAnimStartVal + (counterAnimEndVal - counterAnimStartVal) * eased);
+      populationProgress = currentVal;
+      counterGenerated.textContent = currentVal.toLocaleString('en-US');
+      updateDotProgress(eased);
+
+      if (t >= 1) {
+        counterAnimDone = true;
+        if (pendingResult) {
+          finalizeGeneration(pendingResult);
+          pendingResult = null;
+        }
+      }
+    } else if (populationProgress < targetProgress && counterAnimStartTime === null) {
+      // Pre-API staged progress (analyzing, learning, etc.)
+      const step = Math.max(3, Math.round((targetProgress - populationProgress) * 0.05));
       populationProgress = Math.min(targetProgress, populationProgress + step);
       counterGenerated.textContent = populationProgress.toLocaleString('en-US');
+      updateDotProgress(populationProgress / targetSizeNum);
     }
 
     if (!reducedMotion) {
@@ -960,6 +1067,21 @@
     viewValidationBtn.classList.add('disabled');
     metaGenerated.textContent = '\u2014';
     metaStatus.textContent = 'Processing...';
+
+    // Reset counter animation state
+    populationProgress = 0;
+    targetProgress = 0;
+    counterAnimStartTime = null;
+    counterAnimStartVal = 0;
+    counterAnimEndVal = 0;
+    counterAnimDone = false;
+    pendingResult = null;
+    counterGenerated.textContent = '0';
+    document.getElementById('counterDots').classList.remove('done');
+    document.getElementById('counterSlash').classList.remove('done');
+    document.querySelectorAll('#counterDots .dot').forEach(d => {
+      d.classList.remove('lit', 'pulse');
+    });
 
     // Step 1: Analyzing
     setStatus(STATUS.ANALYZING);
@@ -1009,46 +1131,24 @@
         throw new Error(result?.error || 'Synthetic generation failed on the server.');
       }
 
-      // Success achieved
+      // Success — kick off the time-based count-up animation
       const actualCount = result.generated_count || targetSizeNum;
       targetProgress = actualCount;
-      populationProgress = actualCount;
-      counterGenerated.textContent = actualCount.toLocaleString('en-US');
 
-      setStatus(STATUS.COMPLETE);
-      metaGenerated.textContent = actualCount.toLocaleString('en-US');
-      metaStatus.textContent = 'Synthesized \u2713';
+      // Start the smooth count-up from current populationProgress to actualCount
+      counterAnimStartVal = populationProgress;
+      counterAnimEndVal = actualCount;
+      counterAnimStartTime = performance.now();
+      counterAnimDone = false;
 
-      // Store generated cohort for Validation stage
+      // Change status to SYNTHESIZING during count-up for visual feedback
+      setStatus(STATUS.APPLYING_CONSTRAINTS);
+
+      // Store result + cohort for after animation completes
+      pendingResult = result;
       try {
         sessionStorage.setItem('synthia_generated_cohort', JSON.stringify(result));
       } catch (e) {}
-
-      // Display achieved distribution metrics
-      const m = result.summary_metrics || {};
-      document.getElementById('cohortIdBadge').textContent = result.cohort_id || 'SYN-COHORT';
-      document.getElementById('metricAge').textContent = (m.age_over_60_pct != null ? m.age_over_60_pct + '%' : cohortState.ageOver60 + '%');
-      document.getElementById('metricDiabetes').textContent = (m.diabetes_pct != null ? m.diabetes_pct + '%' : cohortState.diabetes + '%');
-      document.getElementById('metricActivity').textContent = (m.low_activity_pct != null ? m.low_activity_pct + '%' : cohortState.lowActivity + '%');
-      document.getElementById('metricBP').textContent = (m.mean_systolic_bp ? m.mean_systolic_bp + ' mmHg' : '118 mmHg');
-
-      resultsPanel.style.display = 'block';
-      viewValidationBtn.classList.remove('disabled');
-
-      const downloadCsvBtn = document.getElementById('downloadCsvBtn');
-      if (downloadCsvBtn) {
-        downloadCsvBtn.classList.remove('disabled');
-        downloadCsvBtn.onclick = () => {
-          const cohortId = result.cohort_id || 'SYN-GC-BDF99F07';
-          const backendUrl = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
-          window.open(`${backendUrl}/api/generate/download/${cohortId}`, '_blank');
-        };
-      }
-
-      // Populate right-side particle cluster to capacity
-      for (let k = synthParticles.length; k < maxSynthDisplay; k++) {
-        addSynthParticle();
-      }
 
     } catch (err) {
       console.error('[Generation Pipeline Error]:', err);
@@ -1081,6 +1181,15 @@
   });
 
 })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/config.js"></script>
+<script src="src/services/authService.js"></script>
+<script>
+  if (window.synthiaAuth) {
+    window.synthiaAuth.requireAuth();
+    window.synthiaAuth.renderNavAuth();
+  }
 </script>
 </body>
 </html>

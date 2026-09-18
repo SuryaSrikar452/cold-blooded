@@ -1,0 +1,98 @@
+{
+  "model_name": "GaussianCopulaFinal",
+  "version": "final_hardened",
+  "description": "Hardened Hybrid Gaussian-Copula/Hurdle Generative Architecture for SH-405",
+  "random_seed": 42,
+  "n_synthetic_samples": 4826,
+  "features": [
+    "age",
+    "sex",
+    "diabetes",
+    "systolic_bp",
+    "diastolic_bp",
+    "activity_mims",
+    "n_medications",
+    "adherence_pct",
+    "pain_score"
+  ],
+  "marginal_specifications": {
+    "age": {
+      "type": "empirical_discrete",
+      "support": [8, 80],
+      "data_type": "integer",
+      "rationale": "Empirical survey sampling distribution over ages 8-80; captures multi-modal survey demographics without boundary violations."
+    },
+    "sex": {
+      "type": "bernoulli",
+      "categories": [1, 2],
+      "data_type": "integer",
+      "rationale": "Binary indicator for male (1) vs female (2)."
+    },
+    "diabetes": {
+      "type": "latent_gaussian_threshold",
+      "categories": [0, 1],
+      "data_type": "integer",
+      "target_prevalence": 0.09946125155408205,
+      "biserial_calibrated": true,
+      "rationale": "Latent thresholding at Phi^{-1}(1 - p) with biserial correlation calibration to prevent correlation attenuation without ad-hoc rank forcing."
+    },
+    "systolic_bp": {
+      "type": "lognorm",
+      "floc": 0.0,
+      "data_type": "integer",
+      "rationale": "Strictly positive, right-skewed physiological blood pressure distribution."
+    },
+    "diastolic_bp": {
+      "type": "truncnorm",
+      "lower_bound": 10.0,
+      "upper_bound": null,
+      "data_type": "integer",
+      "rationale": "Truncated Normal ensuring strictly positive diastolic blood pressure."
+    },
+    "activity_mims": {
+      "type": "truncnorm",
+      "lower_bound": 0.0,
+      "upper_bound": null,
+      "data_type": "integer",
+      "rationale": "Truncated Normal ensuring non-negative physical activity monitor counts."
+    },
+    "n_medications": {
+      "type": "empirical_discrete_count",
+      "data_type": "integer",
+      "zero_mass": 0.5220,
+      "support": [0, 19],
+      "rationale": "Discrete count distribution preserving exact zero-inflation (52.2%) and integer support."
+    },
+    "adherence_pct": {
+      "type": "truncnorm",
+      "lower_bound": 0.0,
+      "upper_bound": 100.0,
+      "data_type": "float",
+      "decimals": 1,
+      "rationale": "Truncated Normal on [0, 100]; empirical data spans [5.0, 95.0] with zero boundary masses."
+    },
+    "pain_score": {
+      "type": "two_part_hurdle",
+      "zero_mass": 0.6950,
+      "positive_distribution": "truncnorm",
+      "positive_bounds": [1.0, 10.0],
+      "data_type": "float",
+      "decimals": 1,
+      "conditional_copula_linked": true,
+      "rationale": "Two-part hurdle with conditional PIT mapping positive pain magnitude through the joint latent Gaussian copula."
+    }
+  },
+  "dependence_specification": {
+    "estimation_method": "spearman_rank_inversion_with_polyserial_calibration",
+    "formula": "R_jk = 2 * sin(pi / 6 * rho_s)",
+    "psd_projection": "spectral_clipping_and_diagonal_renormalization",
+    "min_eigenvalue_threshold": 0.001
+  },
+  "clinical_validity_constraints": {
+    "sbp_min": 1,
+    "dbp_min": 1,
+    "min_pulse_pressure": 5,
+    "rejection_sampling": true,
+    "max_rejection_attempts": 30
+  }
+}

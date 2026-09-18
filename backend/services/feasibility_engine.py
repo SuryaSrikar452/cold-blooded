@@ -40,46 +40,46 @@ def evaluate_feasibility(filters: Dict[str, Any]) -> Tuple[bool, float, str]:
             constraints_described.append("Diabetes = No (baseline: 90.0%)")
 
     # 2. Age
-    if "age_gt" in filters:
+    if filters.get("age_gt") is not None:
         gt = int(filters["age_gt"])
         mask &= (df["age"] > gt)
         constraints_described.append(f"Age > {gt}")
-    elif "ageOver60" in filters:
+    elif filters.get("ageOver60") is not None:
         pct = float(filters["ageOver60"])
         if pct > 75.0:
             mask &= (df["age"] >= 60)
             constraints_described.append("Age >= 60 (high prevalence target)")
 
-    if "age_lt" in filters:
+    if filters.get("age_lt") is not None:
         lt = int(filters["age_lt"])
         mask &= (df["age"] < lt)
         constraints_described.append(f"Age < {lt}")
 
     # 3. Blood pressure
-    if "systolic_bp_gt" in filters:
+    if filters.get("systolic_bp_gt") is not None:
         sbp = int(filters["systolic_bp_gt"])
         mask &= (df["systolic_bp"] > sbp)
         constraints_described.append(f"Systolic BP > {sbp} mmHg")
 
     # 4. Physical Activity
-    if "activity_mims_lt" in filters:
+    if filters.get("activity_mims_lt") is not None:
         mims = float(filters["activity_mims_lt"])
         mask &= (df["activity_mims"] < mims)
         constraints_described.append(f"Physical Activity < {int(mims)} MIMS")
-    elif "lowActivity" in filters:
+    elif filters.get("lowActivity") is not None:
         pct = float(filters["lowActivity"])
         if pct > 65.0:
             mask &= (df["activity_mims"] < 8500)
             constraints_described.append("Low Physical Activity (high prevalence target)")
 
     # 5. Pain score
-    if "pain_score_gt" in filters:
+    if filters.get("pain_score_gt") is not None:
         p = float(filters["pain_score_gt"])
         mask &= (df["pain_score"] > p)
         constraints_described.append(f"Pain Score > {p}")
 
     # 6. Medications
-    if "n_medications_ge" in filters:
+    if filters.get("n_medications_ge") is not None:
         meds = int(filters["n_medications_ge"])
         mask &= (df["n_medications"] >= meds)
         constraints_described.append(f"Medications >= {meds}")

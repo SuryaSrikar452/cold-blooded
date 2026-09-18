@@ -79,7 +79,7 @@ def synthesize_cohort(params):
     df = gen.sample(num_rows=target_size, targets=targets)
     t_end = time.time()
 
-    cohort_id = f"SYN-HC-{uuid.uuid4().hex[:8].upper()}"
+    cohort_id = f"SYN-GC-{uuid.uuid4().hex[:8].upper()}"
     if 'patient_id' not in df.columns:
         df.insert(0, "patient_id", [f"SYN-{i+1:06d}" for i in range(len(df))])
 
@@ -127,9 +127,9 @@ def synthesize_cohort(params):
         "cohort_id": cohort_id,
         "csv_filename": csv_filename,
         "csv_path": csv_path,
-        "model": "Hurdle Conditional Copula",
-        "model_type": "HurdleConditionalCopulaModel",
-        "provenance": "NHANES 2011-2012 Generative Benchmark (4,826 records)",
+        "model": "Gaussian Copula Final (SH-405)",
+        "model_type": "GaussianCopulaFinal",
+        "provenance": "GaussianCopulaFinal trained on 4,826 NHANES records (SH405_GAUSSIAN_COPULA_FINAL_REVIEW_PACKAGE)",
         "source_records": 4826,
         "generated_count": len(df),
         "target_size": target_size,

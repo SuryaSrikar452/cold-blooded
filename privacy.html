@@ -315,7 +315,7 @@
         <a href="api-hub.html" class="wf-step">API HUB</a>
       </div>
     </div>
-    <div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
       <a href="patient.html" class="btn btn-ghost" style="color:var(--ivory);border-color:rgba(245,243,238,0.18);padding:0.4rem 0.85rem;font-size:12px;">Next: Patient Stories &rarr;</a>
     </div>
   </div>
@@ -744,6 +744,15 @@
   loadNearestNeighbor('SYN-000001');
 
 })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/config.js"></script>
+<script src="src/services/authService.js"></script>
+<script>
+  if (window.synthiaAuth) {
+    window.synthiaAuth.requireAuth();
+    window.synthiaAuth.renderNavAuth();
+  }
 </script>
 </body>
 </html>

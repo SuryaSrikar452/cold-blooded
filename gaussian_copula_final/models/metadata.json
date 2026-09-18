@@ -1,0 +1,94 @@
+{
+  "model_name": "GaussianCopulaFinal",
+  "version": "final_hardened",
+  "training_dataset": "final_training_data/nhanes_generative_train.csv",
+  "training_rows": 4826,
+  "holdout_accessed_during_training": false,
+  "synthetic_rows": 4826,
+  "random_seed": 42,
+  "training_runtime_seconds": 0.0065,
+  "generation_runtime_seconds": 0.0184,
+  "model_sha256": "80d1d6542d3c25c906544ec693bcb362e0130e5b96b3c76db7c8062fbdb76e43",
+  "synthetic_csv_sha256": "e37779c2f6e7324b5feda31fb7c78d8b0f8026ad71653540eb0542d51733739c",
+  "synthetic_parquet_sha256": "c5d6f6e4c17b857073de13858ad8cf1862ce13d313b1f0c748aed89d2552c446",
+  "psd_diagnostics": {
+    "min_eigenvalue_before": -0.030018913910381983,
+    "n_negative_eigenvalues_before": 1,
+    "frobenius_norm_correction": 0.040880069757766486,
+    "max_element_correction": 0.014720767726407624,
+    "min_eigenvalue_after": 0.0009886939069254695,
+    "all_eigenvalues_after": [
+      0.0009886939069254695,
+      0.2477567001824784,
+      0.40401305973019397,
+      0.6491115436240992,
+      0.8404931042700922,
+      0.9078889222153458,
+      1.0550602772379871,
+      1.757377873011051,
+      3.137309825821825
+    ]
+  },
+  "marginal_summary": {
+    "age": {
+      "type": "empirical_discrete",
+      "min": 8,
+      "max": 80,
+      "n_unique": 73
+    },
+    "sex": {
+      "type": "bernoulli",
+      "p_male": 0.5002072109407377
+    },
+    "diabetes": {
+      "type": "latent_gaussian_threshold",
+      "prevalence": 0.09946125155408206,
+      "threshold": 1.2846274457193005,
+      "biserial_factor": 0.5840914262981409,
+      "multiplier": 1.7120607407949944
+    },
+    "systolic_bp": {
+      "type": "lognorm",
+      "s": 0.14618989213184305,
+      "loc": 0.0,
+      "scale": 117.05762127458328
+    },
+    "diastolic_bp": {
+      "type": "truncnorm",
+      "mu": 66.86199751346871,
+      "std": 13.191880768336416,
+      "a": -4.310378369242901,
+      "b": Infinity
+    },
+    "activity_mims": {
+      "type": "truncnorm",
+      "mu": 11037.706796518856,
+      "std": 3987.9123764836295,
+      "a": -2.7677907021245622,
+      "b": Infinity
+    },
+    "n_medications": {
+      "type": "empirical_discrete_count",
+      "zero_mass": 0.5219643597181931,
+      "min": 0,
+      "max": 19
+    },
+    "adherence_pct": {
+      "type": "truncnorm",
+      "mu": 43.507728968089516,
+      "std": 17.329634396996756,
+      "a": -2.510597048465688,
+      "b": 3.2598651383955715
+    },
+    "pain_score": {
+      "type": "two_part_hurdle",
+      "p0": 0.6949854952341483,
+      "pos_mu": 3.286073369565217,
+      "pos_std": 1.7707090863634123,
+      "a": -1.2910496631946653,
+      "b": 3.791659896106077,
+      "hurdle_factor": 0.7608076192986403,
+      "multiplier": 1.3143927250910843
+    }
+  }
+}

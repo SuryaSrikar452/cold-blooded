@@ -393,9 +393,9 @@ def run_full_validation(params):
     avg_ks = float(np.mean(ks_stats)) if ks_stats else 0.0
     quality_status = "High Statistical Fidelity" if avg_ks < 0.12 else "Moderate Statistical Fidelity"
 
-    is_hurdle = "SYN-HC" in cohort_id or "hurdle" in syn_path.lower()
-    model_name = "Hurdle Conditional Copula" if is_hurdle else "Gaussian Copula"
-    provenance = "HurdleConditionalCopulaModel trained on 4,826 NHANES clinical records" if is_hurdle else "GaussianCopulaSynthesizer trained on 4,826 NHANES clinical records"
+    is_gc_final = "SYN-GC" in cohort_id or "copula_final" in syn_path.lower() or "gaussian" in syn_path.lower()
+    model_name = "Gaussian Copula Final (SH-405)" if is_gc_final else ("Hurdle Conditional Copula" if "SYN-HC" in cohort_id else "Gaussian Copula")
+    provenance = "GaussianCopulaFinal trained on 4,826 NHANES clinical records (SH405_GAUSSIAN_COPULA_FINAL_REVIEW_PACKAGE)" if is_gc_final else "Trained on 4,826 NHANES clinical records"
 
     report = {
         "success": True,
