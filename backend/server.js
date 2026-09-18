@@ -43,6 +43,9 @@ app.use(express.json({ limit: '2mb' }));
 
 const generateRoutes = require('./routes/generateRoutes');
 const validationRoutes = require('./routes/validationRoutes');
+const privacyRoutes = require('./routes/privacyRoutes');
+const auditRoutes = require('./routes/auditRoutes');
+const privacyController = require('./controllers/privacyController');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -65,6 +68,23 @@ app.use('/api/generate', generateRoutes);
 
 // Statistical & privacy validation API
 app.use('/api/validate', validationRoutes);
+
+// Privacy API (Nearest real reference record, MIA attack)
+app.use('/api/privacy', privacyRoutes);
+app.use('/privacy', privacyRoutes);
+
+// Bias audit API
+app.use('/api/audit', auditRoutes);
+
+// Edge-cases alias
+app.get('/api/edge-cases/scenarios', privacyController.getEdgeCaseScenarios);
+app.post('/api/edge-cases', privacyController.generateEdgeCases);
+
+// Patient trajectory & counterfactual APIs
+app.get('/patient/:patient_id/longitudinal', privacyController.getLongitudinalTrajectory);
+app.get('/patient/:patient_id', privacyController.getLongitudinalTrajectory);
+app.post('/api/copula/counterfactual', privacyController.getCounterfactual);
+app.post('/cohort/:cohort_id/counterfactual', privacyController.getCounterfactual);
 
 // Optional: Serve frontend static files if accessed directly through backend port
 const frontendDir = path.join(__dirname, '../frontend');
