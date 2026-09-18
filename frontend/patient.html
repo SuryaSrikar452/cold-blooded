@@ -294,6 +294,8 @@
       padding: 1.5rem 0; font-size: 12px; color: var(--text-faint);
       margin-top: auto;
     }
+    /* Contextual Clarity Hints */
+    .clarity-hint{display:block;font-size:11px;font-weight:400;color:var(--text-faint);line-height:1.4;margin-top:3px;letter-spacing:normal;text-transform:none;}
   </style>
 </head>
 <body>
@@ -343,6 +345,9 @@
     <p class="subtitle">
       Modelled 12-month individual clinical trajectories using an AR(1) Ornstein-Uhlenbeck mean-reverting process with physiological boundaries and conditional covariance.
     </p>
+    <p style="font-size:12.5px;color:var(--text-faint);margin-top:0.6rem;max-width:680px;line-height:1.5;">
+      <strong style="color:var(--ink);">What this page does:</strong> Pick any synthetic patient to see how their health metrics (blood pressure, activity, pain) evolve month-by-month. Use the What-If explorer to see how changing one factor affects the others.
+    </p>
 
     <div class="header-actions-row">
       <div style="display:flex;align-items:center;gap:0.75rem;">
@@ -372,12 +377,16 @@
           <option value="SYN-000007">SYN-000007</option>
           <option value="SYN-000008">SYN-000008</option>
         </select>
+        <span class="clarity-hint" style="margin-top:4px;">Select a synthetic patient ID to load their profile and 12-month health trajectory.</span>
       </div>
 
-      <div style="display:flex;align-items:center;gap:1rem;">
-        <span class="mono" style="font-size:12px;color:var(--text-faint);">CADENCE:</span>
-        <button type="button" class="btn btn-ghost" id="cadenceMonthlyBtn" style="padding:0.35rem 0.75rem;font-size:12px;background:var(--ink);color:var(--ivory);">Monthly (12)</button>
-        <button type="button" class="btn btn-ghost" id="cadenceWeeklyBtn" style="padding:0.35rem 0.75rem;font-size:12px;">Weekly (48)</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <span class="mono" style="font-size:12px;color:var(--text-faint);">CADENCE:</span>
+          <button type="button" class="btn btn-ghost" id="cadenceMonthlyBtn" style="padding:0.35rem 0.75rem;font-size:12px;background:var(--ink);color:var(--ivory);">Monthly (12)</button>
+          <button type="button" class="btn btn-ghost" id="cadenceWeeklyBtn" style="padding:0.35rem 0.75rem;font-size:12px;">Weekly (48)</button>
+        </div>
+        <span class="clarity-hint">Choose how often trajectory data points are recorded: monthly (12 timepoints) or weekly (48 timepoints).</span>
       </div>
     </div>
 
@@ -386,26 +395,32 @@
       <div class="b-card">
         <div class="lbl">AGE / SEX</div>
         <div class="val mono" id="bAgeSex">58 / M</div>
+        <span class="clarity-hint">Patient's age in years and biological sex (M/F).</span>
       </div>
       <div class="b-card">
         <div class="lbl">DIABETES</div>
         <div class="val mono" id="bDiab">Yes (1)</div>
+        <span class="clarity-hint">Whether the patient has a diabetes diagnosis (Yes=1, No=0).</span>
       </div>
       <div class="b-card">
         <div class="lbl">BASELINE BP</div>
         <div class="val mono" id="bBP">138 / 84</div>
+        <span class="clarity-hint">Starting blood pressure: Systolic / Diastolic (mmHg).</span>
       </div>
       <div class="b-card">
         <div class="lbl">ACTIVITY</div>
         <div class="val mono" id="bAct">7,420</div>
+        <span class="clarity-hint">Physical activity in MIMS units (accelerometer-measured). ~10,000 = moderate activity.</span>
       </div>
       <div class="b-card">
         <div class="lbl">MEDICATIONS</div>
         <div class="val mono" id="bMeds">3 Rx</div>
+        <span class="clarity-hint">Number of prescription medications the patient takes concurrently.</span>
       </div>
       <div class="b-card">
         <div class="lbl">PAIN SCORE</div>
         <div class="val mono" id="bPain">0.0 NRS</div>
+        <span class="clarity-hint">Self-reported pain on the Numeric Rating Scale: 0 = no pain, 10 = worst pain.</span>
       </div>
     </div>
 
@@ -415,6 +430,7 @@
         <div>
           <h3 style="font-size:18px;font-weight:600;color:var(--ink);">12-Month Multi-Parametric Trajectory</h3>
           <span style="font-size:12.5px;color:var(--text-faint);">Mean-reverting stochastic trajectory with patient baseline setpoint parameters.</span>
+          <span class="clarity-hint" style="margin-top:4px;">This chart simulates potential health changes over 12 months from the patient's baseline setpoints. <strong style="color:var(--ink);">AR(1) / Ornstein-Uhlenbeck</strong> (Models possible changes over time &mdash; these are mathematical projections, not real patient histories).</span>
         </div>
         <span class="mono" style="font-size:12px;color:var(--violet);" id="trajectoryStatus">Simulated Trajectory Active &check;</span>
       </div>
@@ -465,6 +481,7 @@
     <!-- Scientific Disclaimer -->
     <div class="disclaimer-alert">
       <strong>CROSS-SECTIONAL BASELINE DISCLAIMER:</strong> NHANES Cycle G is an observational cross-sectional health survey. This 12-month trajectory is a mathematical simulation generated via an AR(1) Ornstein-Uhlenbeck process with literature-derived clinical drift parameters. It does NOT represent longitudinal real-world patient tracking data.
+      <span class="clarity-hint" style="margin-top:6px;">In short: these simulated health journeys are based on statistical patterns, not actual patient records tracked over time.</span>
     </div>
 
     <!-- Section 2: Counterfactual What-If Lab -->
@@ -476,6 +493,9 @@
       <h2 class="serif" style="font-size:24px;font-weight:400;color:var(--ink);">Statistical "What-If" Explorer</h2>
       <p style="font-size:13.5px;color:var(--text-muted);margin-top:2px;">
         Explore conditional shifts across correlated clinical variables when a primary driver is altered in Gaussian Copula latent space.
+      </p>
+      <p style="font-size:12.5px;color:var(--text-faint);margin-top:0.5rem;max-width:680px;line-height:1.5;">
+        <strong style="color:var(--ink);">Plain language:</strong> Drag the slider to alter a feature. The model recalculates expected values across correlated variables based on learned joint distributions. <strong style="color:var(--ink);">Gaussian Copula conditional resampling</strong> (Tests statistical what-if scenarios &mdash; not a causal prediction).
       </p>
 
       <div class="cf-slider-row">

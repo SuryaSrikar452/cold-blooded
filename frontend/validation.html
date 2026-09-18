@@ -244,6 +244,11 @@
   .val-section{
     margin-bottom:3.5rem;
   }
+  /* Contextual Clarity Hints */
+  .clarity-hint{display:block;font-size:11px;font-weight:400;color:var(--text-faint);line-height:1.4;margin-top:2px;letter-spacing:normal;text-transform:none;}
+  .clarity-hint-dark{display:block;font-size:11px;font-weight:400;color:rgba(245,243,238,0.55);line-height:1.4;margin-top:2px;letter-spacing:normal;text-transform:none;}
+  .clarity-inline{font-size:11px;font-weight:400;color:var(--text-faint);margin-left:4px;letter-spacing:normal;text-transform:none;}
+  .clarity-inline-dark{font-size:11px;font-weight:400;color:rgba(245,243,238,0.55);margin-left:4px;letter-spacing:normal;text-transform:none;}
 
   /* Analytical Dark Stage Panel (SYNTHIA Aesthetic) */
   .dark-stage-panel{
@@ -583,19 +588,19 @@
     <div class="nav-left">
       <a href="index.html" class="logo">SYNTHIA</a>
       <div class="workflow-stepper">
-        <a href="index.html" class="step-item"><span class="step-badge">01</span> INDEX</a>
+        <a href="index.html" class="step-item" title="Platform overview &amp; methodology"><span class="step-badge">01</span> INDEX</a>
         <span class="step-track"></span>
-        <a href="create.html" class="step-item"><span class="step-badge">02</span> SETUP</a>
+        <a href="create.html" class="step-item" title="Upload data &amp; configure target cohort"><span class="step-badge">02</span> SETUP</a>
         <span class="step-track"></span>
-        <a href="generate.html" class="step-item"><span class="step-badge">03</span> GENERATE</a>
+        <a href="generate.html" class="step-item" title="Create new synthetic patients"><span class="step-badge">03</span> GENERATE</a>
         <span class="step-track"></span>
-        <span class="step-item active"><span class="step-badge">04</span> VALIDATE</span>
+        <span class="step-item active" title="Check synthetic data quality"><span class="step-badge">04</span> VALIDATE</span>
         <span class="step-track"></span>
-        <a href="privacy.html" class="step-item"><span class="step-badge">05</span> PRIVACY</a>
+        <a href="privacy.html" class="step-item" title="Test real vs synthetic distinguishability"><span class="step-badge">05</span> PRIVACY</a>
         <span class="step-track"></span>
-        <a href="patient.html" class="step-item"><span class="step-badge">06</span> PATIENTS</a>
+        <a href="patient.html" class="step-item" title="Inspect individual patient profiles"><span class="step-badge">06</span> PATIENTS</a>
         <span class="step-track"></span>
-        <a href="stress-test.html" class="step-item"><span class="step-badge">07</span> STRESS TEST</a>
+        <a href="stress-test.html" class="step-item" title="Test challenging clinical cases"><span class="step-badge">07</span> STRESS TEST</a>
       </div>
       <div class="mobile-stepper-compact">
         <span>STEP 04 / 07</span>
@@ -603,10 +608,10 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
-      <a href="generate.html" class="btn btn-ghost-dark" style="height:34px;padding:0 14px;border-radius:999px;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
+      <a href="generate.html" class="btn btn-ghost-dark" style="height:34px;padding:0 14px;border-radius:999px;font-size:12px;display:inline-flex;align-items:center;gap:4px;" title="Return to generation stage">
         &larr; Generation
       </a>
-      <a href="privacy.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);">
+      <a href="privacy.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);" title="Proceed to privacy assessment">
         <span>Privacy</span>
         <span style="font-size:13px;line-height:1;">&rarr;</span>
       </a>
@@ -619,12 +624,13 @@
   <div class="wrap">
     <div class="section-tag">
       <span class="dot"></span>
-      <span class="label">PIPELINE STAGE 05 / VALIDATION</span>
+      <span class="label">PIPELINE STAGE 04 &middot; VALIDATION</span>
     </div>
     <h1>Statistical &amp; <span class="accent">fidelity validation.</span></h1>
     <p class="subtitle">
       Does the synthetic population preserve the mathematical structure, distribution moments, and multivariate correlations of the source?
     </p>
+    <span class="clarity-hint" style="margin-top:0.4rem;font-size:12px;">(Checks whether generated synthetic data accurately mirrors source data)</span>
   </div>
 </header>
 
@@ -638,6 +644,7 @@
       <p style="font-size:13.5px;color:var(--text-faint);max-width:540px;margin:0 auto;line-height:1.5;" id="loadingSubtitle">
         Executing two-sample Kolmogorov-Smirnov tests, Wasserstein optimal transport distances, and pairwise covariance matrix alignment on the server...
       </p>
+      <span class="clarity-hint" style="margin-top:0.4rem;">(Checking your data and measuring distributions)</span>
     </div>
 
     <!-- Empty State View -->
@@ -646,7 +653,8 @@
       <p>
         No generated cohort reference was found in your current session. Generate a synthetic cohort first before evaluating statistical fidelity.
       </p>
-      <a href="create.html" class="btn btn-primary">
+      <span class="clarity-hint" style="margin-bottom:1rem;">(Create a cohort to see results)</span>
+      <a href="create.html" class="btn btn-primary" title="Return to setup to build a cohort">
         Go to Cohort Builder &rarr;
       </a>
     </div>
@@ -655,11 +663,12 @@
     <div class="error-box" id="errorView">
       <h3>VALIDATION FAILED</h3>
       <p id="errorDescription">Unable to compute statistical comparison metrics.</p>
+      <span class="clarity-hint" style="color:#B91C1C;margin-bottom:0.75rem;">(We couldn't compute validation metrics. Try again.)</span>
       <div class="error-actions">
-        <button type="button" class="btn btn-primary" id="retryValidationBtn" style="font-size:12.5px;padding:0.5rem 1rem;">
+        <button type="button" class="btn btn-primary" id="retryValidationBtn" style="font-size:12.5px;padding:0.5rem 1rem;" title="Try the operation again">
           Retry validation &rarr;
         </button>
-        <a href="generate.html" class="btn btn-ghost" style="font-size:12.5px;padding:0.5rem 1rem;background:#fff;">
+        <a href="generate.html" class="btn btn-ghost" style="font-size:12.5px;padding:0.5rem 1rem;background:#fff;" title="Return to previous step">
           &larr; Back to generation
         </a>
       </div>
@@ -674,26 +683,31 @@
           <span class="label">Source Population</span>
           <div class="overview-val mono" id="statSourceCount">1,000</div>
           <div class="overview-sub" id="statSourceSub">source_benchmark_1000.csv (Baseline)</div>
+          <span class="clarity-hint">(Starting patient data)</span>
         </div>
         <div class="overview-card">
           <span class="label">Synthetic Cohort</span>
           <div class="overview-val mono" id="statSyntheticCount">2,500</div>
           <div class="overview-sub" id="statSyntheticSub">Evaluated sample</div>
+          <span class="clarity-hint">(Generated patient sample)</span>
         </div>
         <div class="overview-card">
           <span class="label">Variables</span>
           <div class="overview-val mono" id="statVarCount">9</div>
           <div class="overview-sub">Clinical features</div>
+          <span class="clarity-hint">(Features evaluated)</span>
         </div>
         <div class="overview-card">
           <span class="label">Model</span>
-          <div class="overview-val mono" id="statModelName" style="font-size:15px;">Hurdle Conditional Copula</div>
-          <div class="overview-sub" id="statModelProvenance">Model trained on 4,826 NHANES records</div>
+          <div class="overview-val mono" id="statModelName" style="font-size:15px;">GaussianCopulaFinal</div>
+          <div class="overview-sub" id="statModelProvenance">Learns relationships between patient features</div>
+          <span class="clarity-hint">(Model: <strong style="color:var(--ink);">GaussianCopulaFinal</strong> &mdash; Learns relationships between patient features)</span>
         </div>
         <div class="overview-card">
           <span class="label">Overall Fidelity</span>
           <div class="overview-val mono" id="statOverallStatus" style="font-size:15px;color:var(--teal);">High Fidelity</div>
           <div class="overview-sub mono" id="statMeanKs">Mean KS: 0.0916</div>
+          <span class="clarity-hint">(Distributions closely matched)</span>
         </div>
       </div>
 
@@ -703,6 +717,7 @@
           <div>
             <h3>01 / Continuous Variable Distributions</h3>
             <span class="section-subtext">Two-sample Kolmogorov-Smirnov and Wasserstein distance tests between source and synthetic distributions.</span>
+            <span class="clarity-hint">(Compares continuous numerical distributions between source and synthetic)</span>
           </div>
           <span class="mono" style="font-size:11.5px;color:var(--text-faint);">7 CONTINUOUS FEATURES</span>
         </div>
@@ -733,21 +748,25 @@
               <span class="label">KS STATISTIC</span>
               <div class="val mono" id="statActiveKs">--</div>
               <div class="note mono" id="statActiveKsP">p-value: --</div>
+              <span class="clarity-hint">(Compares two data distributions)</span>
             </div>
             <div class="stat-card">
               <span class="label">WASSERSTEIN DISTANCE</span>
               <div class="val mono" id="statActiveWass">--</div>
               <div class="note">Optimal transport cost</div>
+              <span class="clarity-hint">(Shows how far distributions differ)</span>
             </div>
             <div class="stat-card">
               <span class="label">SOURCE MEAN &plusmn; STD</span>
               <div class="val mono" id="statActiveSrcMean">--</div>
               <div class="note mono" id="statActiveSrcRange">Range: --</div>
+              <span class="clarity-hint">(Source average and spread)</span>
             </div>
             <div class="stat-card">
               <span class="label">SYNTHETIC MEAN &plusmn; STD</span>
               <div class="val mono" id="statActiveSynMean">--</div>
               <div class="note mono" id="statActiveSynRange">Range: --</div>
+              <span class="clarity-hint">(Synthetic average and spread)</span>
             </div>
           </div>
         </div>
@@ -759,6 +778,7 @@
           <div>
             <h3>02 / Categorical Distribution Alignment</h3>
             <span class="section-subtext">Chi-square test of independence and Jensen-Shannon divergence across discrete categories.</span>
+            <span class="clarity-hint">(Checks differences in categories between real and synthetic data)</span>
           </div>
           <span class="mono" style="font-size:11.5px;color:var(--text-faint);">2 CATEGORICAL FEATURES</span>
         </div>
@@ -774,6 +794,7 @@
           <div>
             <h3>03 / Cohort Target Adherence</h3>
             <span class="section-subtext">Evaluating actual synthetic cohort parameters against requested user constraints and source baseline.</span>
+            <span class="clarity-hint">(Shows how closely requested targets were met)</span>
           </div>
           <span class="mono" style="font-size:11.5px;color:var(--text-faint);">TARGET CONSTRAINTS</span>
         </div>
@@ -803,6 +824,7 @@
           <div>
             <h3>04 / Multivariate Correlation Preservation</h3>
             <span class="section-subtext">Preservation of bivariate relationship structures and covariance dependencies between clinical variables.</span>
+            <span class="clarity-hint">(Shows how two variables relate across the synthetic cohort)</span>
           </div>
           <span class="mono" style="font-size:11.5px;color:var(--text-faint);">PEARSON COVARIANCE</span>
         </div>
@@ -812,14 +834,16 @@
             <div>
               <span class="label">CORRELATION FIDELITY</span>
               <div class="mono" style="font-size:20px;font-weight:600;color:var(--violet);" id="corrFidelityScore">98.6%</div>
+              <span class="clarity-hint">(Preservation of relationships)</span>
             </div>
             <div>
               <span class="label">MEAN ABSOLUTE CORRELATION ERROR</span>
               <div class="mono" style="font-size:20px;font-weight:600;color:var(--ink);" id="corrMaceScore">0.014</div>
+              <span class="clarity-hint">(Measures correlation differences)</span>
             </div>
           </div>
 
-          <div class="label" style="margin-bottom:0.6rem;">Key Clinical Pairwise Correlations</div>
+          <div class="label" style="margin-bottom:0.6rem;">Key Clinical Pairwise Correlations <span class="clarity-inline" style="text-transform:none;letter-spacing:normal;">(Pairwise relationships between clinical features)</span></div>
           <div class="key-pairs-grid" id="keyPairsGrid">
             <!-- Rendered by JS -->
           </div>
@@ -832,6 +856,7 @@
           <div>
             <h3>05 / Empirical Privacy &amp; Deduplication Assessment</h3>
             <span class="section-subtext">Evaluation of record memorization risk via exact-match deduplication and Distance to Closest Record (DCR).</span>
+            <span class="clarity-hint">(Tests privacy using observed results — checks for duplicate records)</span>
           </div>
           <span class="mono" style="font-size:11.5px;color:var(--text-faint);">EMPIRICAL PRIVACY</span>
         </div>
@@ -842,21 +867,25 @@
               <span class="label">EXACT MATCHES</span>
               <div class="val mono" id="privExactMatches">0</div>
               <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Zero 1:1 duplicate records</div>
+              <span class="clarity-hint">(Counts identical records)</span>
             </div>
             <div class="priv-box">
               <span class="label">MINIMUM DCR</span>
               <div class="val mono" id="privMinDcr">0.084</div>
               <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Nearest neighbor distance</div>
+              <span class="clarity-hint">(Distance to closest real record)</span>
             </div>
             <div class="priv-box">
               <span class="label">5TH PERCENTILE DCR</span>
               <div class="val mono" id="priv5thDcr">0.142</div>
               <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Tail proximity threshold</div>
+              <span class="clarity-hint">(Closest 5% proximity limit)</span>
             </div>
             <div class="priv-box">
               <span class="label">MEDIAN DCR</span>
               <div class="val mono" id="privMedianDcr">0.315</div>
               <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Typical spatial distance</div>
+              <span class="clarity-hint">(Typical distance from real records)</span>
             </div>
           </div>
 
@@ -872,10 +901,11 @@
           <div>
             <h3>06 / Subgroup Representativeness &amp; Demographic Bias Audit</h3>
             <span class="section-subtext">Neutral empirical audit evaluating synthetic subgroup proportions against 4,826 real NHANES benchmark records across demographic, clinical, and intersectional categories.</span>
+            <span class="clarity-hint">(Checks performance and representation across patient groups)</span>
           </div>
           <div style="display:flex;align-items:center;gap:0.75rem;">
             <label class="mono" style="font-size:11px;color:var(--text-faint);">TOLERANCE:</label>
-            <select id="biasToleranceSelect" class="mono" style="padding:0.25rem 0.6rem;font-size:11.5px;border:1px solid var(--hairline);border-radius:3px;background:#fff;cursor:pointer;">
+            <select id="biasToleranceSelect" class="mono" style="padding:0.25rem 0.6rem;font-size:11.5px;border:1px solid var(--hairline);border-radius:3px;background:#fff;cursor:pointer;" title="Permissible deviation tolerance">
               <option value="2.5" selected>&plusmn;2.5% points</option>
               <option value="5.0">&plusmn;5.0% points</option>
               <option value="1.0">&plusmn;1.0% points</option>
@@ -889,21 +919,25 @@
               <span class="label">SUBGROUPS AUDITED</span>
               <div class="val mono" id="biasTotalSubgroups">12</div>
               <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Age, sex &amp; comorbidities</div>
+              <span class="clarity-hint">(Patient groups checked)</span>
             </div>
             <div class="priv-box safe">
               <span class="label">WITHIN TOLERANCE</span>
               <div class="val mono" id="biasWithinTol">--</div>
               <div class="mono" style="font-size:11px;color:var(--teal);margin-top:0.2rem;" id="biasWithinTolPct">Empirically balanced</div>
+              <span class="clarity-hint">(Fairly represented groups)</span>
             </div>
             <div class="priv-box">
               <span class="label">FLAGGED DEVIATIONS</span>
               <div class="val mono" id="biasFlagged">--</div>
               <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Outside delta boundary</div>
+              <span class="clarity-hint">(Groups needing review)</span>
             </div>
             <div class="priv-box">
               <span class="label">REFERENCE BENCHMARK</span>
               <div class="val mono" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">NHANES 2011-12</div>
-              <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">4,826 real patients</div>
+              <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">4,826 NHANES source records</div>
+              <span class="clarity-hint">(Source reference data)</span>
             </div>
           </div>
 
@@ -932,15 +966,15 @@
 
       <!-- Bottom Action Bar -->
       <div class="action-bar">
-        <a href="generate.html" class="btn btn-ghost">
+        <a href="generate.html" class="btn btn-ghost" title="Return to generation stage">
           &larr; Back to generation stage
         </a>
         <div style="display:flex;gap:0.8rem;align-items:center;">
-          <button type="button" class="btn btn-ghost" id="downloadReportBtn" style="background:#fff;font-weight:600;">
+          <button type="button" class="btn btn-ghost" id="downloadReportBtn" style="background:#fff;font-weight:600;" title="Save validation metrics file">
             Download validation report (JSON) &darr;
           </button>
-          <a href="privacy.html" class="btn btn-primary">
-            Proceed to Privacy &amp; MIA Audit (Stage 06) &rarr;
+          <a href="privacy.html" class="btn btn-primary" title="Test whether real and synthetic data are distinguishable">
+            Proceed to Privacy &amp; MIA Audit (Stage 05) &rarr;
           </a>
         </div>
       </div>

@@ -127,7 +127,7 @@ def synthesize_cohort(params):
         "cohort_id": cohort_id,
         "csv_filename": csv_filename,
         "csv_path": csv_path,
-        "model": "Gaussian Copula Final (SH-405)",
+        "model": "GaussianCopulaFinal",
         "model_type": "GaussianCopulaFinal",
         "provenance": "GaussianCopulaFinal trained on 4,826 NHANES records (SH405_GAUSSIAN_COPULA_FINAL_REVIEW_PACKAGE)",
         "source_records": 4826,

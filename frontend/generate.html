@@ -242,6 +242,11 @@
     border-radius:3px;
     font-weight:600;
   }
+  /* Contextual Clarity Hints */
+  .clarity-hint{display:block;font-size:11px;font-weight:400;color:var(--text-faint);line-height:1.4;margin-top:2px;letter-spacing:normal;text-transform:none;}
+  .clarity-hint-dark{display:block;font-size:11px;font-weight:400;color:rgba(245,243,238,0.55);line-height:1.4;margin-top:2px;letter-spacing:normal;text-transform:none;}
+  .clarity-inline{font-size:11px;font-weight:400;color:var(--text-faint);margin-left:4px;letter-spacing:normal;text-transform:none;}
+  .clarity-inline-dark{font-size:11px;font-weight:400;color:rgba(245,243,238,0.55);margin-left:4px;letter-spacing:normal;text-transform:none;}
 
   /* Canvas Container */
   .canvas-stage-wrap{
@@ -450,19 +455,19 @@
     <div class="nav-left">
       <a href="index.html" class="logo">SYNTHIA</a>
       <div class="workflow-stepper">
-        <a href="index.html" class="step-item"><span class="step-badge">01</span> INDEX</a>
+        <a href="index.html" class="step-item" title="Platform overview &amp; methodology"><span class="step-badge">01</span> INDEX</a>
         <span class="step-track"></span>
-        <a href="create.html" class="step-item"><span class="step-badge">02</span> SETUP</a>
+        <a href="create.html" class="step-item" title="Upload data &amp; configure target cohort"><span class="step-badge">02</span> SETUP</a>
         <span class="step-track"></span>
-        <span class="step-item active"><span class="step-badge">03</span> GENERATE</span>
+        <span class="step-item active" title="Create new synthetic patients"><span class="step-badge">03</span> GENERATE</span>
         <span class="step-track"></span>
-        <a href="validation.html" class="step-item"><span class="step-badge">04</span> VALIDATE</a>
+        <a href="validation.html" class="step-item" title="Check synthetic data quality"><span class="step-badge">04</span> VALIDATE</a>
         <span class="step-track"></span>
-        <a href="privacy.html" class="step-item"><span class="step-badge">05</span> PRIVACY</a>
+        <a href="privacy.html" class="step-item" title="Test real vs synthetic distinguishability"><span class="step-badge">05</span> PRIVACY</a>
         <span class="step-track"></span>
-        <a href="patient.html" class="step-item"><span class="step-badge">06</span> PATIENTS</a>
+        <a href="patient.html" class="step-item" title="Inspect individual patient profiles"><span class="step-badge">06</span> PATIENTS</a>
         <span class="step-track"></span>
-        <a href="stress-test.html" class="step-item"><span class="step-badge">07</span> STRESS TEST</a>
+        <a href="stress-test.html" class="step-item" title="Test challenging clinical cases"><span class="step-badge">07</span> STRESS TEST</a>
       </div>
       <div class="mobile-stepper-compact">
         <span>STEP 03 / 07</span>
@@ -470,10 +475,10 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
-      <a href="create.html" class="btn btn-ghost-dark" style="height:34px;padding:0 14px;border-radius:999px;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
+      <a href="create.html" class="btn btn-ghost-dark" style="height:34px;padding:0 14px;border-radius:999px;font-size:12px;display:inline-flex;align-items:center;gap:4px;" title="Return to cohort setup">
         &larr; Setup
       </a>
-      <a href="validation.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);">
+      <a href="validation.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);" title="Proceed to validation">
         <span>Validation</span>
         <span style="font-size:13px;line-height:1;">&rarr;</span>
       </a>
@@ -486,12 +491,13 @@
   <div class="wrap">
     <div class="section-tag">
       <span class="dot"></span>
-      <span class="label">PIPELINE STAGE 04</span>
+      <span class="label">PIPELINE STAGE 03 &middot; GENERATION</span>
     </div>
     <h1>Synthetic <span class="accent">population.</span></h1>
     <p class="subtitle">
       SYNTHIA is learning the structure of your source population and projecting a new synthetic cohort.
     </p>
+    <span class="clarity-hint" style="margin-top:0.4rem;font-size:12px;">(Generation: <strong style="color:rgba(245,243,238,0.85);">GaussianCopulaFinal</strong> &mdash; Creates new synthetic patient records)</span>
   </div>
 </header>
 
@@ -506,18 +512,23 @@
         <div class="stage-col-label col-source">
           <span class="col-indicator"></span>
           <span id="labelSourceRecords">SOURCE &middot; 4,826 RECORDS</span>
+          <span class="clarity-hint-dark">(Starting patient information)</span>
         </div>
 
-        <div class="badge-core">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-          <span>SYNTHIA CORE &middot; HURDLE CONDITIONAL COPULA ENGINE</span>
+        <div style="text-align:center;">
+          <div class="badge-core">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span>SYNTHIA CORE &middot; GAUSSIAN COPULA FINAL</span>
+          </div>
+          <span class="clarity-hint-dark">(SYNTHIA CORE: <strong style="color:rgba(245,243,238,0.85);">GaussianCopulaFinal</strong> &mdash; Models relationships between patient features)</span>
         </div>
 
         <div class="stage-col-label col-synth">
           <span class="col-indicator"></span>
           <span id="labelTargetOutput">SYNTHETIC &middot; 10,000 TARGET</span>
+          <span class="clarity-hint-dark">(Requested cohort size to generate)</span>
         </div>
       </div>
 
@@ -530,7 +541,10 @@
       <div class="stage-foot-bar">
         <div class="status-block">
           <span class="status-pulse" id="statusPulse"></span>
-          <span class="status-text mono" id="statusText">ANALYZING SOURCE DISTRIBUTION</span>
+          <div>
+            <span class="status-text mono" id="statusText">ANALYZING SOURCE DISTRIBUTION</span>
+            <span class="clarity-hint-dark">(Shows current synthesis stage)</span>
+          </div>
         </div>
         <div class="counter-display mono">
           <span class="sub">GENERATED:</span>
@@ -538,6 +552,7 @@
           <span class="counter-dots" id="counterDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
           <span class="counter-slash" id="counterSlash">/</span>
           <span class="sub" id="counterTargetLabel">10,000</span>
+          <span class="clarity-hint-dark" style="font-size:10px;font-family:'IBM Plex Sans',sans-serif;margin-left:6px;">(Synthetic patients created)</span>
         </div>
       </div>
     </div>
@@ -546,11 +561,12 @@
     <div class="error-box" id="errorBox">
       <h4>GENERATION FAILED</h4>
       <p id="errorMessage">Unable to generate the requested cohort.</p>
+      <div class="clarity-hint" style="color:#B91C1C;margin-bottom:0.75rem;">(We couldn't create the cohort. Try again or return to cohort setup.)</div>
       <div class="error-actions">
-        <button type="button" class="btn btn-primary" id="retryBtn" style="padding:0.5rem 1rem;font-size:12.5px;">
+        <button type="button" class="btn btn-primary" id="retryBtn" style="padding:0.5rem 1rem;font-size:12.5px;" title="Try the operation again">
           Retry synthesis &rarr;
         </button>
-        <a href="create.html" class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:12.5px;background:#fff;">
+        <a href="create.html" class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:12.5px;background:#fff;" title="Return to previous step">
           &larr; Back to cohort
         </a>
       </div>
@@ -562,26 +578,31 @@
         <span class="label">Source</span>
         <div class="meta-val mono" id="metaSource">4,826</div>
         <div class="meta-sub" id="metaSourceFile">nhanes_generative_train.csv</div>
+        <span class="clarity-hint">(Starting patient data size)</span>
       </div>
       <div class="meta-card">
         <span class="label">Variables</span>
         <div class="meta-val mono" id="metaVariables">9</div>
         <div class="meta-sub">Clinical features</div>
+        <span class="clarity-hint">(Patient features modeled)</span>
       </div>
       <div class="meta-card">
         <span class="label">Model</span>
-        <div class="meta-val mono" id="metaModel" style="font-size:15px;">Hurdle Conditional Copula</div>
-        <div class="meta-sub">Zero-Inflated Pain + Class-Conditional Copula</div>
+        <div class="meta-val mono" id="metaModel" style="font-size:15px;">GaussianCopulaFinal</div>
+        <div class="meta-sub">Learns relationships between features</div>
+        <span class="clarity-hint">(Model: <strong style="color:var(--ink);">GaussianCopulaFinal</strong> &mdash; Learns the joint structure of 9 clinical features)</span>
       </div>
       <div class="meta-card">
         <span class="label">Target</span>
         <div class="meta-val mono" id="metaTarget">10,000</div>
         <div class="meta-sub">Requested size</div>
+        <span class="clarity-hint">(Number of patients to generate)</span>
       </div>
       <div class="meta-card">
         <span class="label">Generated</span>
         <div class="meta-val mono accent" id="metaGenerated">&mdash;</div>
         <div class="meta-sub" id="metaStatus">Processing...</div>
+        <span class="clarity-hint">(Synthetic patients created)</span>
       </div>
     </div>
 
@@ -593,8 +614,9 @@
           <p style="font-size:13px;color:var(--text-faint);margin-top:0.25rem;">
             The population has been synthesized from the statistical structure of your source dataset.
           </p>
+          <span class="clarity-hint">(Shows how closely targets were met)</span>
         </div>
-        <div class="mono" style="font-size:11.5px;color:var(--violet);font-weight:600;" id="cohortIdBadge">
+        <div class="mono" style="font-size:11.5px;color:var(--violet);font-weight:600;" id="cohortIdBadge" title="Unique synthetic cohort identifier">
           SYN-COHORT
         </div>
       </div>
@@ -603,32 +625,36 @@
         <div class="dist-item">
           <span class="label">Age 60+</span>
           <div class="val mono" id="metricAge">--</div>
+          <span class="clarity-hint">(Achieved older-patient share)</span>
         </div>
         <div class="dist-item">
           <span class="label">Diabetes</span>
           <div class="val mono" id="metricDiabetes">--</div>
+          <span class="clarity-hint">(Achieved diabetic-patient share)</span>
         </div>
         <div class="dist-item">
           <span class="label">Low Activity</span>
           <div class="val mono" id="metricActivity">--</div>
+          <span class="clarity-hint">(Achieved less active share)</span>
         </div>
         <div class="dist-item">
           <span class="label">Mean Systolic BP</span>
           <div class="val mono" id="metricBP">--</div>
+          <span class="clarity-hint">(Average top blood pressure)</span>
         </div>
       </div>
     </div>
 
     <!-- Bottom Actions -->
     <div class="action-bar">
-      <a href="create.html" class="btn btn-ghost">
+      <a href="create.html" class="btn btn-ghost" title="Return to previous step">
         &larr; Back to cohort configuration
       </a>
       <div style="display:flex;gap:0.8rem;align-items:center;">
-        <button type="button" class="btn btn-ghost disabled" id="downloadCsvBtn" style="background:#fff;border-color:var(--hairline);font-weight:600;">
+        <button type="button" class="btn btn-ghost disabled" id="downloadCsvBtn" style="background:#fff;border-color:var(--hairline);font-weight:600;" title="Save synthetic patient data">
           Download cohort CSV &darr;
         </button>
-        <button type="button" class="btn btn-primary disabled" id="viewValidationBtn">
+        <button type="button" class="btn btn-primary disabled" id="viewValidationBtn" title="Check synthetic data quality">
           View validation &rarr;
         </button>
       </div>

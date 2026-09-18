@@ -394,8 +394,8 @@ def run_full_validation(params):
     quality_status = "High Statistical Fidelity" if avg_ks < 0.12 else "Moderate Statistical Fidelity"
 
     is_gc_final = "SYN-GC" in cohort_id or "copula_final" in syn_path.lower() or "gaussian" in syn_path.lower()
-    model_name = "Gaussian Copula Final (SH-405)" if is_gc_final else ("Hurdle Conditional Copula" if "SYN-HC" in cohort_id else "Gaussian Copula")
-    provenance = "GaussianCopulaFinal trained on 4,826 NHANES clinical records (SH405_GAUSSIAN_COPULA_FINAL_REVIEW_PACKAGE)" if is_gc_final else "Trained on 4,826 NHANES clinical records"
+    model_name = "GaussianCopulaFinal"
+    provenance = "GaussianCopulaFinal trained on 4,826 NHANES clinical records (SH405_GAUSSIAN_COPULA_FINAL_REVIEW_PACKAGE)"
 
     report = {
         "success": True,

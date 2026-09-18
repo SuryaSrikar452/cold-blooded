@@ -245,6 +245,11 @@
     pointer-events:none;
     z-index:1;
   }
+  /* Contextual Clarity Hints */
+  .clarity-hint{display:block;font-size:11px;font-weight:400;color:var(--text-faint);line-height:1.4;margin-top:2px;letter-spacing:normal;text-transform:none;}
+  .clarity-hint-dark{display:block;font-size:11px;font-weight:400;color:rgba(245,243,238,0.55);line-height:1.4;margin-top:2px;letter-spacing:normal;text-transform:none;}
+  .clarity-inline{font-size:11px;font-weight:400;color:var(--text-faint);margin-left:4px;letter-spacing:normal;text-transform:none;}
+  .clarity-inline-dark{font-size:11px;font-weight:400;color:rgba(245,243,238,0.55);margin-left:4px;letter-spacing:normal;text-transform:none;}
   canvas#bgField{
     position:absolute;
     inset:0;
@@ -770,19 +775,19 @@
     <div class="nav-left">
       <a href="index.html" class="logo">SYNTHIA</a>
       <div class="workflow-stepper">
-        <a href="index.html" class="step-item"><span class="step-badge">01</span> INDEX</a>
+        <a href="index.html" class="step-item" title="Platform overview &amp; methodology"><span class="step-badge">01</span> INDEX</a>
         <span class="step-track"></span>
-        <span class="step-item active"><span class="step-badge">02</span> SETUP</span>
+        <span class="step-item active" title="Upload data &amp; configure target cohort"><span class="step-badge">02</span> SETUP</span>
         <span class="step-track"></span>
-        <a href="generate.html" class="step-item"><span class="step-badge">03</span> GENERATE</a>
+        <a href="generate.html" class="step-item" title="Create new synthetic patients"><span class="step-badge">03</span> GENERATE</a>
         <span class="step-track"></span>
-        <a href="validation.html" class="step-item"><span class="step-badge">04</span> VALIDATE</a>
+        <a href="validation.html" class="step-item" title="Check synthetic data quality"><span class="step-badge">04</span> VALIDATE</a>
         <span class="step-track"></span>
-        <a href="privacy.html" class="step-item"><span class="step-badge">05</span> PRIVACY</a>
+        <a href="privacy.html" class="step-item" title="Test real vs synthetic distinguishability"><span class="step-badge">05</span> PRIVACY</a>
         <span class="step-track"></span>
-        <a href="patient.html" class="step-item"><span class="step-badge">06</span> PATIENTS</a>
+        <a href="patient.html" class="step-item" title="Inspect individual patient profiles"><span class="step-badge">06</span> PATIENTS</a>
         <span class="step-track"></span>
-        <a href="stress-test.html" class="step-item"><span class="step-badge">07</span> STRESS TEST</a>
+        <a href="stress-test.html" class="step-item" title="Test challenging clinical cases"><span class="step-badge">07</span> STRESS TEST</a>
       </div>
       <div class="mobile-stepper-compact">
         <span>STEP 02 / 07</span>
@@ -790,7 +795,7 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
-      <a href="generate.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);">
+      <a href="generate.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);" title="Move to synthetic generation">
         <span>Generation</span>
         <span style="font-size:13px;line-height:1;">&rarr;</span>
       </a>
@@ -810,6 +815,7 @@
       <div class="section-tag"><span class="dot"></span><span class="label" style="color:var(--soft-violet);">STAGE 01 &middot; DATASET &amp; COHORT SETUP</span></div>
       <h1>Start with your <span class="accent">data.</span></h1>
       <p class="intro-sub">Upload a small healthcare dataset, inspect its 30-day longitudinal structure, then configure your target population.</p>
+      <span class="clarity-hint-dark" style="margin-top:0.5rem;">(Add your source data and set target patient proportions)</span>
     </div>
   </div>
 </section>
@@ -836,12 +842,14 @@
         </svg>
       </div>
       <div class="upload-title">Drop your CSV here</div>
-      <div class="upload-sub">or <button type="button" class="browse-btn" id="browseBtn">browse files</button> from your system</div>
+      <div class="clarity-hint" style="margin-bottom:0.4rem;">(Add your healthcare data file)</div>
+      <div class="upload-sub">or <button type="button" class="browse-btn" id="browseBtn" title="Select a CSV file from your system">browse files</button> from your system</div>
       <div class="upload-meta mono">SUPPORTED FORMAT: .CSV &nbsp;&middot;&nbsp; RECOMMENDED SAMPLE: 100&ndash;5,000 ROWS</div>
       
       <div class="sample-load-hint">
         <span>Testing?</span>
-        <button type="button" class="sample-pill" id="loadSampleBtn">Load clinical_sample.csv (512 records)</button>
+        <button type="button" class="sample-pill" id="loadSampleBtn" title="Try with 512 pre-cleaned patient records">Load clinical_sample.csv (512 records)</button>
+        <span class="clarity-hint" style="margin-top:0.25rem;">(Try with 512 pre-cleaned patient records)</span>
       </div>
     </div>
 
@@ -851,8 +859,9 @@
         <div class="status-received mono">
           <span class="pulse-dot"></span>
           DATASET RECEIVED
+          <span class="clarity-inline" style="font-weight:400;color:var(--text-faint);">(Source data loaded successfully)</span>
         </div>
-        <button type="button" class="btn-replace" id="replaceFileBtn">Replace file</button>
+        <button type="button" class="btn-replace" id="replaceFileBtn" title="Upload a different dataset">Replace file</button>
       </div>
 
       <div class="file-details">
@@ -864,19 +873,19 @@
             <span><strong id="statObs">6,144</strong> OBSERVATIONS</span>
           </div>
         </div>
-        <div class="mono" style="font-size:12px;color:var(--violet);background:var(--lavender);border:1px solid var(--hairline-soft);padding:4px 9px;border-radius:3px;font-weight:600;">
+        <div class="mono" style="font-size:12px;color:var(--violet);background:var(--lavender);border:1px solid var(--hairline-soft);padding:4px 9px;border-radius:3px;font-weight:600;" title="Columns and data types are valid">
           FORMAT VERIFIED &check;
         </div>
       </div>
 
-      <div class="label" style="margin-top:1.5rem;font-size:11px;color:var(--text-faint);">DETECTED ATTRIBUTES &amp; STATISTICAL TYPES</div>
+      <div class="label" style="margin-top:1.5rem;font-size:11px;color:var(--text-faint);">DETECTED ATTRIBUTES &amp; STATISTICAL TYPES <span class="clarity-inline" style="text-transform:none;letter-spacing:normal;">(Columns found in your data)</span></div>
       <div class="schema-table" id="schemaGrid">
-        <div class="schema-col-item"><span class="col-var">AGE</span><span class="col-type mono">INTEGER</span></div>
-        <div class="schema-col-item"><span class="col-var">BLOOD PRESSURE</span><span class="col-type mono">CONTINUOUS</span></div>
-        <div class="schema-col-item"><span class="col-var">ACTIVITY</span><span class="col-type mono">CONTINUOUS</span></div>
-        <div class="schema-col-item"><span class="col-var">PAIN SCORE</span><span class="col-type mono">INTEGER</span></div>
-        <div class="schema-col-item"><span class="col-var">MEDICATION ADHERENCE</span><span class="col-type mono">PERCENTAGE</span></div>
-        <div class="schema-col-item"><span class="col-var">DIABETES</span><span class="col-type mono">BOOLEAN</span></div>
+        <div class="schema-col-item"><span class="col-var">AGE</span><span class="col-type mono">INTEGER</span><span class="clarity-hint">(Patient age)</span></div>
+        <div class="schema-col-item"><span class="col-var">BLOOD PRESSURE</span><span class="col-type mono">CONTINUOUS</span><span class="clarity-hint">(Top and bottom blood pressure)</span></div>
+        <div class="schema-col-item"><span class="col-var">ACTIVITY</span><span class="col-type mono">CONTINUOUS</span><span class="clarity-hint">(Physical activity count)</span></div>
+        <div class="schema-col-item"><span class="col-var">PAIN SCORE</span><span class="col-type mono">INTEGER</span><span class="clarity-hint">(Reported pain 0&ndash;10)</span></div>
+        <div class="schema-col-item"><span class="col-var">MEDICATION ADHERENCE</span><span class="col-type mono">PERCENTAGE</span><span class="clarity-hint">(Treatment adherence level)</span></div>
+        <div class="schema-col-item"><span class="col-var">DIABETES</span><span class="col-type mono">BOOLEAN</span><span class="clarity-hint">(Diabetes diagnosis status)</span></div>
       </div>
     </div>
 
@@ -885,9 +894,10 @@
       <div class="timeline-story-head">
         <h2>Every patient has <span class="accent">a story over time.</span></h2>
         <p>Human health isn't a single snapshot. Synthia inspects individual synthetic patient records across a 30-day treatment window — blood pressure, reported pain, and activity respond and stay chronologically coherent with each other over time.</p>
+        <span class="clarity-hint" style="font-size:12px;margin-top:0.4rem;">(Simulated changes across a 30-day treatment window)</span>
       </div>
       <div class="timeline-panel" id="timelinePanel">
-        <div class="timeline-scrubber" id="timelineScrubber"></div>
+        <div class="timeline-scrubber" id="timelineScrubber" title="Drag scrubber to inspect daily values"></div>
         <div class="timeline-scrub-badge" id="timelineScrubBadge">
           <span id="scrubDayText">DAY 14</span> &middot; <span class="badge-metric" id="scrubMetricsText">BP 124/82 &bull; PAIN 2.8 &bull; ACT 6,400 &bull; ADH 99%</span>
         </div>
@@ -904,7 +914,7 @@
           <span>DAY 30</span>
         </div>
         <div class="timeline-row" id="rowBP">
-          <div class="t-label">Blood pressure</div>
+          <div class="t-label">Blood pressure <span class="clarity-hint" style="font-size:10px;">(Daily blood pressure)</span></div>
           <div class="t-svg-wrap">
             <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
               <path class="t-path" id="p1" d="M 0,18 C 140,18 240,13 360,13 C 480,13 560,19 680,18 C 780,17 880,14 1000,12" />
@@ -912,7 +922,7 @@
           </div>
         </div>
         <div class="timeline-row" id="rowPain">
-          <div class="t-label">Reported pain</div>
+          <div class="t-label">Reported pain <span class="clarity-hint" style="font-size:10px;">(Daily pain rating)</span></div>
           <div class="t-svg-wrap">
             <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
               <path class="t-path" id="p2" d="M 0,11 C 140,13 260,18 400,23 C 520,27 640,26 760,22 C 860,19 930,20 1000,20" />
@@ -920,7 +930,7 @@
           </div>
         </div>
         <div class="timeline-row" id="rowAct">
-          <div class="t-label">Activity level</div>
+          <div class="t-label">Activity level <span class="clarity-hint" style="font-size:10px;">(Daily activity level)</span></div>
           <div class="t-svg-wrap">
             <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
               <path class="t-path" id="p3" d="M 0,28 C 160,24 300,20 450,17 C 600,14 740,12 880,11 C 940,10 980,9 1000,9" />
@@ -928,7 +938,7 @@
           </div>
         </div>
         <div class="timeline-row" id="rowAdh">
-          <div class="t-label">Medication adherence</div>
+          <div class="t-label">Medication adherence <span class="clarity-hint" style="font-size:10px;">(Daily adherence level)</span></div>
           <div class="t-svg-wrap">
             <svg viewBox="0 0 1000 36" preserveAspectRatio="none">
               <path class="t-path" id="p4" d="M 0,16 C 180,16 340,16 500,16 C 680,16 840,16 1000,16" />
@@ -962,28 +972,29 @@
           </svg>
           SYNTHIA ASSIST &middot; NATURAL LANGUAGE COHORT
         </div>
-        <span class="mono" style="font-size:11px;color:var(--text-faint);">EXPERIMENTAL LLM INTERFACE</span>
+        <span class="mono" style="font-size:11px;color:var(--text-faint);">USES GEMINI &middot; TURNS WORDS INTO SETTINGS</span>
       </div>
+      <div class="clarity-hint" style="margin-bottom:0.75rem;font-size:12px;">(Describe the patients you want to generate in plain words)</div>
 
       <div class="assist-prompt-row">
         <textarea id="promptInput" class="prompt-input" rows="2" placeholder="Describe the population you want (e.g. &ldquo;I want 10,000 patients, with more patients over 60 and around 30% diabetic.&rdquo;)"></textarea>
-        <button type="button" class="btn btn-primary btn-interpret" id="interpretBtn">
+        <button type="button" class="btn btn-primary btn-interpret" id="interpretBtn" title="Turns your words into cohort settings">
           Interpret with Synthia &rarr;
         </button>
       </div>
 
       <div class="quick-chips">
         <span>Try prompt:</span>
-        <button type="button" class="chip-btn" data-text="I want 10,000 patients, with 45% over age 60 and around 30% diabetic.">&ldquo;10k patients, 45% over 60, 30% diabetes&rdquo;</button>
-        <button type="button" class="chip-btn" data-text="Generate 20,000 patients with 55% elderly and high activity.">&ldquo;20k patients, 55% elderly, high activity&rdquo;</button>
-        <button type="button" class="chip-btn" data-text="I need 8,000 patients with 40% diabetes and moderate activity.">&ldquo;8k patients, 40% diabetes, moderate activity&rdquo;</button>
+        <button type="button" class="chip-btn" data-text="I want 10,000 patients, with 45% over age 60 and around 30% diabetic." title="Older diabetic patient cohort">&ldquo;10k patients, 45% over 60, 30% diabetes&rdquo;</button>
+        <button type="button" class="chip-btn" data-text="Generate 20,000 patients with 55% elderly and high activity." title="Active elderly patient cohort">&ldquo;20k patients, 55% elderly, high activity&rdquo;</button>
+        <button type="button" class="chip-btn" data-text="I need 8,000 patients with 40% diabetes and moderate activity." title="Standard clinical trial cohort">&ldquo;8k patients, 40% diabetes, moderate activity&rdquo;</button>
       </div>
 
       <!-- Synthia Understood Preview Box -->
       <div class="interpreted-box" id="interpretedBox">
         <div class="interp-header">
           <div class="mono" style="font-size:11.5px;font-weight:600;color:var(--violet);letter-spacing:0.06em;">
-            SYNTHIA UNDERSTOOD
+            SYNTHIA UNDERSTOOD <span class="clarity-inline" style="font-size:11px;font-weight:400;color:var(--text-faint);">(Turns your request into settings)</span>
           </div>
           <span class="mono" id="interpStatusBadge" style="font-size:11px;color:var(--text-faint);transition:color 160ms;">INTENT PARSED &check;</span>
         </div>
@@ -991,19 +1002,24 @@
           <div class="interp-item">
             <div class="label">TARGET COHORT</div>
             <div class="interp-val mono" id="interpSize">10,000</div>
+            <span class="clarity-hint">(Number of patients)</span>
           </div>
           <div class="interp-item">
             <div class="label">AGE 60+</div>
             <div class="interp-val mono" id="interpAge">45%</div>
+            <span class="clarity-hint">(Older-patient share)</span>
           </div>
           <div class="interp-item">
             <div class="label">DIABETES</div>
             <div class="interp-val mono" id="interpDiabetes">30%</div>
+            <span class="clarity-hint">(Diabetic share)</span>
           </div>
           <div class="interp-item">
             <div class="label">LOW ACTIVITY</div>
             <div class="interp-val mono" id="interpActivity">35%</div>
+            <span class="clarity-hint">(Less active share)</span>
           </div>
+        </div>
         <!-- Structured Filter Tags -->
         <div id="interpTags" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.85rem;"></div>
 
@@ -1011,10 +1027,10 @@
         <div id="feasibilityBox" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;border-radius:3px;font-size:12.5px;line-height:1.5;"></div>
 
         <div class="interp-actions">
-          <button type="button" class="btn btn-primary" id="applyInterpBtn" style="padding:0.5rem 1.1rem;font-size:12.5px;">
+          <button type="button" class="btn btn-primary" id="applyInterpBtn" style="padding:0.5rem 1.1rem;font-size:12.5px;" title="Sets manual sliders to these values">
             Apply to cohort &rarr;
           </button>
-          <span style="font-size:12.5px;color:var(--text-faint);">Applies directly to manual sliders and live simulation.</span>
+          <span style="font-size:12.5px;color:var(--text-faint);">Applies directly to manual sliders and live simulation. (Sets your target cohort)</span>
         </div>
       </div>
     </div>
@@ -1023,23 +1039,26 @@
     <div class="cohort-grid reveal">
       <div class="control-panel">
         <div class="control-head">
-          <span class="label">Target parameters</span>
+          <div>
+            <span class="label">Target parameters</span>
+            <span class="clarity-hint">(Adjust cohort characteristics)</span>
+          </div>
           <span class="mono" style="font-size:12px;color:var(--text-faint);">auto-applied</span>
         </div>
         <div class="control-row">
-          <div class="ctrl-top"><span>Target cohort size</span><span class="val mono" id="valSize">10,000</span></div>
+          <div class="ctrl-top"><span>Target cohort size <span class="clarity-hint">(Number of patients to generate)</span></span><span class="val mono" id="valSize">10,000</span></div>
           <input type="range" min="1000" max="20000" step="500" value="10000" id="sliderSize" />
         </div>
         <div class="control-row">
-          <div class="ctrl-top"><span>Age 60+</span><span class="val mono" id="valAge">40%</span></div>
+          <div class="ctrl-top"><span>Age 60+ <span class="clarity-hint">(Set the older-patient proportion)</span></span><span class="val mono" id="valAge">40%</span></div>
           <input type="range" min="0" max="100" value="40" id="sliderAge" />
         </div>
         <div class="control-row">
-          <div class="ctrl-top"><span>Type 2 diabetes</span><span class="val mono" id="valDiabetes">30%</span></div>
+          <div class="ctrl-top"><span>Type 2 diabetes <span class="clarity-hint">(Set the diabetic-patient proportion)</span></span><span class="val mono" id="valDiabetes">30%</span></div>
           <input type="range" min="0" max="100" value="30" id="sliderDiabetes" />
         </div>
         <div class="control-row">
-          <div class="ctrl-top"><span>Low activity baseline</span><span class="val mono" id="valActivity">35%</span></div>
+          <div class="ctrl-top"><span>Low activity baseline <span class="clarity-hint">(Set the low-activity proportion)</span></span><span class="val mono" id="valActivity">35%</span></div>
           <input type="range" min="0" max="100" value="35" id="sliderActivity" />
         </div>
       </div>
@@ -1047,7 +1066,10 @@
       <!-- Maintained Black Element: Cluster Viz Panel -->
       <div class="viz-panel">
         <div class="control-head" style="border-bottom-color:rgba(245,243,238,0.14);">
-          <span class="label" style="color:rgba(245,243,238,0.5);">Generated cluster preview</span>
+          <div>
+            <span class="label" style="color:rgba(245,243,238,0.5);">Generated cluster preview</span>
+            <span class="clarity-hint-dark">(Real-time view of requested population)</span>
+          </div>
           <span class="mono" id="cohortCount">10,000</span>
         </div>
         <div class="cluster-canvas"><canvas id="cohortCanvas"></canvas></div>
@@ -1057,17 +1079,19 @@
     <!-- Maintained Black Element: Primary Action Dock -->
     <div class="generate-dock reveal" id="generateDock">
       <div class="generate-info">
-        <div class="section-tag"><span class="dot"></span><span class="label" style="color:var(--soft-violet);">PIPELINE STAGE 03</span></div>
+        <div class="section-tag"><span class="dot"></span><span class="label" style="color:var(--soft-violet);">PIPELINE STAGE 03 &middot; GENERATION</span></div>
         <h2>Cohort ready.</h2>
         <p class="generate-sub">Your source data and population parameters are calibrated for statistical projection.</p>
+        <span class="clarity-hint-dark">(Calibrated and ready to synthesize patients via <strong style="color:rgba(245,243,238,0.85);">GaussianCopulaFinal</strong> &mdash; Creates synthetic patients from learned patterns)</span>
         <div class="gate-notice mono" id="gateNotice">
           &bull; Upload a source CSV above to unlock the generation pipeline.
         </div>
       </div>
       <div>
-        <button type="button" class="btn btn-primary btn-generate-main disabled" id="generateBtn" disabled>
+        <button type="button" class="btn btn-primary btn-generate-main disabled" id="generateBtn" disabled title="Create patients matching your targets">
           Generate cohort &rarr;
         </button>
+        <span class="clarity-hint-dark" style="text-align:center;margin-top:5px;">(<strong style="color:rgba(245,243,238,0.85);">GaussianCopulaFinal</strong> &mdash; Generates patients matching your cohort settings)</span>
       </div>
     </div>
 
@@ -1079,6 +1103,7 @@
   <div class="gen-modal">
     <div class="section-tag"><span class="dot"></span><span class="label" style="color:var(--soft-violet);">GENERATION PIPELINE</span></div>
     <h3>Synthesizing population...</h3>
+    <div class="clarity-hint-dark" style="margin-bottom:0.75rem;">(Generation: <strong style="color:rgba(245,243,238,0.85);">GaussianCopulaFinal</strong> &mdash; Creates new synthetic patient records from learned joint patterns)</div>
     <p id="modalDesc">Synthia is projecting 10,000 mathematically representative synthetic patient records based on your uploaded sample.</p>
     <div class="pipeline-bar-track">
       <div class="pipeline-bar-fill" id="modalBar"></div>

@@ -345,6 +345,9 @@
       padding: 1.5rem 0; font-size: 12px; color: var(--text-faint);
       margin-top: auto;
     }
+    /* Contextual Clarity Hints */
+    .clarity-hint{display:block;font-size:11px;font-weight:400;color:var(--text-faint);line-height:1.4;margin-top:3px;letter-spacing:normal;text-transform:none;}
+    .clarity-hint-violet{display:block;font-size:11px;font-weight:400;color:rgba(108,77,255,0.65);line-height:1.4;margin-top:2px;letter-spacing:normal;text-transform:none;}
   </style>
 </head>
 <body>
@@ -394,6 +397,9 @@
     <p class="subtitle">
       Can a trained machine learning adversary distinguish training participants from held-out individuals using only the synthetic dataset as the attack surface?
     </p>
+    <p style="font-size:12.5px;color:var(--text-faint);margin-top:0.6rem;max-width:680px;line-height:1.5;">
+      <strong style="color:var(--ink);">What this page does:</strong> We simulate a real privacy attacker trying to identify which real people the synthetic data was based on. If they can't — the data is safe to share.
+    </p>
 
     <div class="header-actions-row">
       <div class="cohort-badge-row">
@@ -401,9 +407,12 @@
         <span class="mono" style="font-size:12px;color:var(--text-faint);" id="corpusInfo">Attack Surface: 4,826 Training Members vs 1,207 Real Holdout Non-Members</span>
       </div>
       <div>
-        <button type="button" class="btn btn-attack" id="runAttackBtn">
-          Run live security attack &rarr;
-        </button>
+        <div>
+          <button type="button" class="btn btn-attack" id="runAttackBtn">
+            Run live security attack &rarr;
+          </button>
+          <span class="clarity-hint" style="margin-top:5px;">Trains a machine learning attacker (does not generate synthetic data) to test whether records can be distinguished. <strong style="color:var(--ink);">Logistic Regression</strong> (Tests whether records can be distinguished) with <strong style="color:var(--ink);">Attack features: 1-NN + 5-NN distances</strong> (Measure similarity to nearby records).</span>
+        </div>
       </div>
     </div>
   </div>
@@ -418,26 +427,31 @@
         <span class="label">Attacker ROC-AUC</span>
         <div class="val mono" id="statAuc">0.4669</div>
         <div class="sub" id="statAucSub">Near random discrimination</div>
+        <span class="clarity-hint"><strong style="color:var(--ink);">ROC-AUC</strong> (Shows how well the attack separates groups &mdash; 0.50 = random guess; lower or ~0.50 is safer).</span>
       </div>
       <div class="stat-card">
         <span class="label">Attacker Model</span>
         <div class="val mono" style="font-size:18px;" id="statAttacker">Logistic Reg.</div>
         <div class="sub">1-NN, 5-NN distance features</div>
+        <span class="clarity-hint">Algorithm simulating the privacy attacker (does not generate synthetic data): <strong style="color:var(--ink);">Logistic Regression</strong> (Tests whether records can be distinguished). <strong style="color:var(--ink);">Attack features: 1-NN + 5-NN distances</strong> (Measure similarity to nearby records).</span>
       </div>
       <div class="stat-card">
         <span class="label">Attack Accuracy</span>
         <div class="val mono" id="statAccuracy">50.1%</div>
         <div class="sub">Balanced test partition</div>
+        <span class="clarity-hint">~50% = pure chance. The attacker is essentially guessing.</span>
       </div>
       <div class="stat-card">
         <span class="label">Exact Duplicates</span>
         <div class="val mono" id="statDuplicates">0</div>
         <div class="sub">Zero training matches</div>
+        <span class="clarity-hint">No synthetic record is an exact copy of any real patient record.</span>
       </div>
       <div class="stat-card">
         <span class="label">Verdict</span>
         <div class="val mono" style="font-size:14px;color:var(--teal);" id="statVerdict">Low Risk</div>
         <div class="sub">Low membership leakage</div>
+        <span class="clarity-hint">Overall privacy risk assessment based on all attack metrics.</span>
       </div>
     </div>
 
@@ -447,6 +461,7 @@
         <div>
           <h3>Black-Box Shadow Attacker Execution</h3>
           <span style="font-size:12.5px;color:var(--text-faint);">Extracts nearest-neighbor distance features against synthetic cohort to train discriminator.</span>
+          <span class="clarity-hint" style="margin-top:4px;">A shadow attacker is a simulated adversary that uses the synthetic data to try to infer who the real training patients were. If it fails, the data is safe.</span>
         </div>
         <span class="badge-pill mono" id="attackStepBadge">IDLE</span>
       </div>
@@ -463,6 +478,7 @@
       <div class="panel-card">
         <div class="panel-title">Attacker ROC Curve</div>
         <div class="panel-sub">False Positive Rate vs True Positive Rate. Ideal privacy aligns with random diagonal (AUC = 0.50).</div>
+        <span class="clarity-hint" style="margin-bottom:0.75rem;">If the purple curve hugs the dashed diagonal line, the attacker is no better than random guessing &mdash; that's ideal privacy. <strong style="color:var(--ink);">ROC-AUC</strong> (Shows how well the attack separates groups).</span>
         <div class="roc-canvas-wrap">
           <canvas id="rocCanvas"></canvas>
         </div>
@@ -475,6 +491,7 @@
       <div class="panel-card">
         <div class="panel-title">Attacker Confusion Matrix</div>
         <div class="panel-sub">Classification performance at standard decision threshold (p &ge; 0.50).</div>
+        <span class="clarity-hint" style="margin-bottom:0.75rem;">Shows how many times the attacker correctly or incorrectly identified real vs synthetic patients. Balanced errors (similar TN and TP) indicate near-random performance.</span>
         <div class="cm-grid">
           <div class="cm-cell">
             <div class="cm-title">TRUE NON-MEMBERS (TN)</div>
@@ -503,6 +520,7 @@
             <span class="mono" style="color:var(--text-faint);">RECALL AT TOP 50:</span>
             <strong class="mono" id="statRec50">0.0166</strong>
           </div>
+          <span class="clarity-hint" style="margin-top:6px;">Precision &amp; recall near 0.50 and 0.02 respectively indicate the attacker cannot reliably identify real people from the top predictions.</span>
         </div>
       </div>
     </div>
@@ -524,17 +542,21 @@
           <p style="font-size:13px;color:var(--text-faint);margin-top:2px;">
             Inspect how closely an individual synthetic patient resembles the nearest actual training participant.
           </p>
+          <span class="clarity-hint" style="margin-top:4px;">Think of this as checking: &ldquo;Does this fake patient look too similar to a real person?&rdquo; A large distance means the synthetic patient is safely different from any real individual.</span>
         </div>
 
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <label for="patientSelect" class="mono" style="font-size:11.5px;color:var(--text-faint);">SELECT PATIENT:</label>
-          <select id="patientSelect" class="patient-select">
-            <option value="SYN-000001">SYN-000001</option>
-            <option value="SYN-000002">SYN-000002</option>
-            <option value="SYN-000003">SYN-000003</option>
-            <option value="SYN-000004">SYN-000004</option>
-            <option value="SYN-000005">SYN-000005</option>
-          </select>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <label for="patientSelect" class="mono" style="font-size:11.5px;color:var(--text-faint);">SELECT PATIENT:</label>
+            <select id="patientSelect" class="patient-select">
+              <option value="SYN-000001">SYN-000001</option>
+              <option value="SYN-000002">SYN-000002</option>
+              <option value="SYN-000003">SYN-000003</option>
+              <option value="SYN-000004">SYN-000004</option>
+              <option value="SYN-000005">SYN-000005</option>
+            </select>
+          </div>
+          <span class="clarity-hint">Choose a synthetic patient to see their closest match in the real training dataset.</span>
         </div>
       </div>
 
@@ -543,14 +565,17 @@
         <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
           <div class="mono" style="font-size:10.5px;color:var(--text-faint);">STANDARDIZED EUCLIDEAN DISTANCE</div>
           <div class="mono" style="font-size:20px;font-weight:600;margin-top:2px;" id="nnDistance">1.3842</div>
+          <span class="clarity-hint">Combined numerical distance across all clinical features. <strong style="color:var(--ink);">Standardized Euclidean distance</strong> (Measures similarity after scaling variables).</span>
         </div>
         <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
           <div class="mono" style="font-size:10.5px;color:var(--text-faint);">POPULATION DISTANCE PERCENTILE</div>
           <div class="mono" style="font-size:20px;font-weight:600;margin-top:2px;" id="nnPercentile">46.2th %ile</div>
+          <span class="clarity-hint">46th percentile = this synthetic patient is near the middle of the distance distribution — not unusually close to any real person.</span>
         </div>
         <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
           <div class="mono" style="font-size:10.5px;color:var(--text-faint);">NEAREST SEED ID</div>
           <div class="mono" style="font-size:20px;font-weight:600;margin-top:2px;" id="nnSeedId">NHANES-002194</div>
+          <span class="clarity-hint">The closest real NHANES survey participant to this synthetic patient (by feature distance).</span>
         </div>
       </div>
 
