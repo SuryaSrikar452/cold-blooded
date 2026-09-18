@@ -66,15 +66,30 @@
   .nav-inner{max-width:1180px;margin:0 auto;padding:0 3rem;height:64px;display:flex;align-items:center;justify-content:space-between;}
   @media(max-width:900px){.nav-inner{padding:0 1.25rem;}}
   .logo{font-family:'Newsreader',serif;font-weight:600;font-size:19px;letter-spacing:-0.01em;color:var(--ivory);}
-  .nav-links{display:flex;gap:2.25rem;}
-  .nav-links a{font-size:13px;color:rgba(245,243,238,0.65);transition:color 160ms var(--ease-out);}
-  .nav-links a:hover{color:var(--ivory);}
+  .nav-links{
+    display:flex;align-items:center;gap:0.25rem;
+    background:rgba(255,255,255,0.025);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:999px;
+    padding:3px 5px;
+    backdrop-filter:blur(8px);
+  }
+  .nav-links a{
+    font-size:12.5px;font-weight:450;letter-spacing:0.02em;
+    color:rgba(245,243,238,0.65);
+    padding:4px 14px;border-radius:999px;
+    transition:all 180ms cubic-bezier(0.16,1,0.3,1);
+  }
+  .nav-links a:hover{
+    color:#FFFFFF;
+    background:rgba(255,255,255,0.06);
+  }
   @media(max-width:900px){.nav-links{display:none;}}
   .btn{
     display:inline-flex;align-items:center;gap:0.5rem;
     font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13.5px;
     padding:0.7rem 1.25rem;border-radius:4px;border:none;cursor:pointer;
-    transition:background 160ms var(--ease-out), transform 220ms var(--ease-spring), border-color 160ms var(--ease-out);
+    transition:background 160ms var(--ease-out), transform 220ms var(--ease-spring), border-color 160ms var(--ease-out), box-shadow 180ms ease;
   }
   .btn-primary{
     background:var(--violet-grad);
@@ -83,7 +98,8 @@
   }
   .btn-primary:hover{
     background:var(--violet-grad-hover);
-    transform:scale(1.02);
+    box-shadow:0 4px 18px rgba(108,77,255,0.45);
+    transform:translateY(-1px);
   }
   .btn-primary:active{transform:scale(0.98);}
   .btn-ghost{background:transparent;color:var(--ivory);border:1px solid rgba(255,255,255,0.22);}
@@ -333,7 +349,10 @@
       <a href="#timeline">Timeline</a>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
-      <a href="create.html" class="btn btn-ghost">Create a cohort →</a>
+      <a href="create.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);">
+        <span>Create a cohort</span>
+        <span style="font-size:13px;line-height:1;">&rarr;</span>
+      </a>
     </div>
   </div>
 </nav>

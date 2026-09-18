@@ -292,18 +292,22 @@
 
     if (session && session.user) {
       const email = session.user.email || 'Workspace User';
-      const name = (session.user.user_metadata && session.user.user_metadata.full_name) || email.split('@')[0];
+      const rawName = (session.user.user_metadata && session.user.user_metadata.full_name) || email.split('@')[0];
+      const initial = (rawName || 'U').charAt(0).toUpperCase();
+      const displayName = rawName.length > 14 ? rawName.slice(0, 12) + '…' : rawName;
 
       authNavEl.innerHTML = `
-        <div class="nav-user-chip" style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:999px;padding:3px 8px 3px 10px;gap:8px;backdrop-filter:blur(10px);box-shadow:0 2px 8px rgba(0,0,0,0.25);flex-shrink:0;">
-          <div style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#F5F3EE;" title="${email}">
-            <span style="width:7px;height:7px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981;display:inline-block;flex-shrink:0;"></span>
-            <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;letter-spacing:0.02em;">${name}</span>
+        <div class="synthia-user-pill" style="display:inline-flex;align-items:center;height:34px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:999px;padding:0 5px 0 6px;gap:8px;backdrop-filter:blur(12px);box-shadow:0 2px 8px rgba(0,0,0,0.25);flex-shrink:0;transition:all 200ms ease;">
+          <div style="display:inline-flex;align-items:center;gap:7px;" title="${email}">
+            <div style="position:relative;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,rgba(108,77,255,0.4),rgba(139,92,246,0.18));border:1px solid rgba(167,139,250,0.35);display:flex;align-items:center;justify-content:center;color:#EDECE6;font-family:'Newsreader',serif;font-size:11px;font-weight:600;flex-shrink:0;line-height:1;">
+              ${initial}
+              <span style="position:absolute;bottom:-1px;right:-1px;width:6px;height:6px;border-radius:50%;background:#10B981;border:1.5px solid #0B0B0D;box-shadow:0 0 6px #10B981;"></span>
+            </div>
+            <span style="font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;color:rgba(245,243,238,0.85);letter-spacing:0.01em;white-space:nowrap;">${displayName}</span>
           </div>
-          <span style="width:1px;height:14px;background:rgba(255,255,255,0.2);display:inline-block;flex-shrink:0;"></span>
-          <button id="synthiaSignOutBtn" type="button" title="Log out from SYNTHIA" style="background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.35);color:#FCA5A5;font-size:10.5px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:0.04em;padding:2px 8px;cursor:pointer;border-radius:999px;display:inline-flex;align-items:center;gap:4px;transition:all 150ms ease;flex-shrink:0;">
-            <span>LOGOUT</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span style="width:1px;height:12px;background:rgba(255,255,255,0.12);display:inline-block;flex-shrink:0;"></span>
+          <button id="synthiaSignOutBtn" type="button" title="Log out from SYNTHIA" style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(245,243,238,0.5);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all 180ms ease;flex-shrink:0;padding:0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
           </button>
         </div>
       `;
@@ -311,27 +315,29 @@
       const signOutBtn = authNavEl.querySelector('#synthiaSignOutBtn');
       if (signOutBtn) {
         signOutBtn.addEventListener('mouseenter', () => {
-          signOutBtn.style.color = '#FFFFFF';
-          signOutBtn.style.background = '#EF4444';
-          signOutBtn.style.borderColor = '#EF4444';
-          signOutBtn.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
+          signOutBtn.style.color = '#F87171';
+          signOutBtn.style.background = 'rgba(239, 68, 68, 0.16)';
+          signOutBtn.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          signOutBtn.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.3)';
+          signOutBtn.style.transform = 'scale(1.08)';
         });
         signOutBtn.addEventListener('mouseleave', () => {
-          signOutBtn.style.color = '#FCA5A5';
-          signOutBtn.style.background = 'rgba(239, 68, 68, 0.14)';
-          signOutBtn.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          signOutBtn.style.color = 'rgba(245,243,238,0.5)';
+          signOutBtn.style.background = 'rgba(255,255,255,0.04)';
+          signOutBtn.style.borderColor = 'rgba(255,255,255,0.08)';
           signOutBtn.style.boxShadow = 'none';
+          signOutBtn.style.transform = 'scale(1)';
         });
         signOutBtn.addEventListener('click', async (e) => {
           e.preventDefault();
-          signOutBtn.innerHTML = `<span>Logging out&hellip;</span>`;
+          signOutBtn.innerHTML = `<span style="font-size:9px;color:#FCA5A5;">…</span>`;
           signOutBtn.disabled = true;
           await signOut('http://localhost:5000/login.html');
         });
       }
     } else {
       authNavEl.innerHTML = `
-        <a href="http://localhost:5000/login.html" class="btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:rgba(245,243,238,0.9);font-size:11.5px;padding:0.35rem 0.75rem;border-radius:999px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms var(--ease-out, ease);">
+        <a href="http://localhost:5000/login.html" class="btn" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:rgba(245,243,238,0.85);font-size:12px;padding:0.3rem 0.8rem;border-radius:999px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms ease;">
           Sign In &rarr;
         </a>
       `;
