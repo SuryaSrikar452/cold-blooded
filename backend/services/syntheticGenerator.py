@@ -138,9 +138,19 @@ def synthesize_cohort(params):
 
     cohort_id = f"SYN-GC-{uuid.uuid4().hex[:8].upper()}"
 
+    # Automatically save full generated cohort CSV to disk
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cohorts_dir = os.path.join(base_dir, 'generated_cohorts')
+    os.makedirs(cohorts_dir, exist_ok=True)
+    csv_filename = f"{cohort_id}.csv"
+    csv_path = os.path.join(cohorts_dir, csv_filename)
+    df.to_csv(csv_path, index=False)
+
     result = {
         "success": True,
         "cohort_id": cohort_id,
+        "csv_filename": csv_filename,
+        "csv_path": csv_path,
         "model": "Gaussian Copula",
         "model_type": "GaussianCopulaSynthesizer",
         "sdv_version": "1.38.3",

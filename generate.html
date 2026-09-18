@@ -524,9 +524,14 @@
       <a href="create.html" class="btn btn-ghost">
         &larr; Back to cohort configuration
       </a>
-      <button type="button" class="btn btn-primary disabled" id="viewValidationBtn">
-        View validation &rarr;
-      </button>
+      <div style="display:flex;gap:0.8rem;align-items:center;">
+        <button type="button" class="btn btn-ghost disabled" id="downloadCsvBtn" style="background:#fff;border-color:var(--hairline);font-weight:600;">
+          Download cohort CSV &darr;
+        </button>
+        <button type="button" class="btn btn-primary disabled" id="viewValidationBtn">
+          View validation &rarr;
+        </button>
+      </div>
     </div>
 
   </div>
@@ -1021,6 +1026,16 @@
 
       resultsPanel.style.display = 'block';
       viewValidationBtn.classList.remove('disabled');
+
+      const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+      if (downloadCsvBtn) {
+        downloadCsvBtn.classList.remove('disabled');
+        downloadCsvBtn.onclick = () => {
+          const cohortId = result.cohort_id || 'SYN-GC-BDF99F07';
+          const backendUrl = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
+          window.open(`${backendUrl}/api/generate/download/${cohortId}`, '_blank');
+        };
+      }
 
       // Populate right-side particle cluster to capacity
       for (let k = synthParticles.length; k < maxSynthDisplay; k++) {

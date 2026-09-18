@@ -65,7 +65,34 @@ async function getCohortById(req, res, next) {
   }
 }
 
+/**
+ * GET /api/generate/download/:id
+ */
+async function downloadCohortCsv(req, res, next) {
+  try {
+    const { id } = req.params;
+    const path = require('path');
+    const fs = require('fs');
+
+    const csvPath = path.join(__dirname, '../generated_cohorts', `${id}.csv`);
+    if (!fs.existsSync(csvPath)) {
+      return res.status(404).json({
+        success: false,
+        error: `Cohort CSV file for ${id} not found.`
+      });
+    }
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${id}.csv"`);
+    fs.createReadStream(csvPath).pipe(res);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   generateConditionalCohort,
-  getCohortById
+  getCohortById,
+  downloadCohortCsv
 };
+

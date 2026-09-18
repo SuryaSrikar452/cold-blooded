@@ -10,6 +10,9 @@ const generateController = require('../controllers/generateController');
 // POST /api/generate/conditional
 router.post('/conditional', generateController.generateConditionalCohort);
 
+// GET /api/generate/download/:id
+router.get('/download/:id', generateController.downloadCohortCsv);
+
 // GET /api/generate/:id
 router.get('/:id', generateController.getCohortById);
 
