@@ -138,6 +138,19 @@ def test_bias_representativeness_audit():
     assert "subgroup_audits" in data
     assert any("Age Band" in s["subgroup"] for s in data["subgroup_audits"])
 
+def test_statistical_validation_endpoint():
+    # First generate a small cohort to validate
+    gen_res = client.post("/generate", json={"n": 100, "targets": {"diabetes": 1}})
+    assert gen_res.status_code == 200
+    cid = gen_res.json()["cohort_id"]
+    
+    val_res = client.post("/api/validate", json={"cohortId": cid})
+    assert val_res.status_code == 200
+    val_data = val_res.json()
+    assert val_data["success"] is True
+    assert "continuous_features" in val_data
+    assert "correlation_preservation" in val_data
+
 def test_frozen_synthetic_sample_artifacts():
     assert os.path.exists("artifacts/final_synthetic_sample.csv")
     assert os.path.exists("artifacts/final_synthetic_sample.parquet")

@@ -24,6 +24,7 @@ from backend.services.bias_audit import run_representativeness_audit
 from backend.services.api_key_service import generate_raw_api_key, hash_api_key
 from backend.services.nearest_neighbor import find_nearest_real_neighbor
 from backend.services.nl_cohort_parser import parse_natural_language_cohort_query
+from backend.services.validationEngine import run_full_validation
 
 # Absolute Path Resolution via pathlib
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -453,6 +454,42 @@ def run_mia_endpoint(payload: Optional[MIARequest] = None, db: Session = Depends
         "all_models": mia_results,
         "disclaimer": "Attack performance near random discrimination indicates low empirical membership distinguishability under this specific attack configuration. No formal differential privacy guarantee claimed."
     }
+
+# ------------------------------------------------------------------
+# STATISTICAL & EMPIRICAL PRIVACY VALIDATION
+# ------------------------------------------------------------------
+class ValidationEndpointRequest(BaseModel):
+    cohortId: Optional[str] = None
+    cohort_id: Optional[str] = None
+    sourceDataset: Optional[str] = "source_benchmark_1000.csv"
+    targetConditions: Optional[Dict[str, Any]] = None
+    conditions: Optional[Dict[str, Any]] = None
+
+@app.post("/api/validate")
+@app.post("/validate")
+def validate_cohort_endpoint(payload: Optional[ValidationEndpointRequest] = None):
+    p_dict = payload.model_dump() if payload else {}
+    cohort_id = p_dict.get("cohortId") or p_dict.get("cohort_id")
+    if not cohort_id:
+        raise HTTPException(status_code=400, detail="cohortId is required for validation.")
+    try:
+        report = run_full_validation(p_dict)
+        return report
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Validation computation failed: {str(e)}")
+
+@app.get("/api/validate/{cohort_id}")
+@app.get("/validate/{cohort_id}")
+def get_validation_cohort_endpoint(cohort_id: str):
+    try:
+        report = run_full_validation({"cohortId": cohort_id})
+        return report
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Validation computation failed: {str(e)}")
 
 # ------------------------------------------------------------------
 # REPRESENTATIVENESS / BIAS AUDIT

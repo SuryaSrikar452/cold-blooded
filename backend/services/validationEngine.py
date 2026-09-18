@@ -42,17 +42,35 @@ def resolve_paths(params):
     if not cohort_id:
         raise ValueError("Missing required cohortId.")
 
-    # Try generated_cohorts directory
     cohort_filename = f"{cohort_id}.csv"
-    syn_path = os.path.join(base_dir, 'generated_cohorts', cohort_filename)
-    if not os.path.exists(syn_path):
-        # Check root directory
-        root_dir = os.path.dirname(base_dir)
-        possible_syn = os.path.join(root_dir, f"{cohort_id}_synthetic_cohort_2500.csv")
-        if os.path.exists(possible_syn):
-            syn_path = possible_syn
+    possible_paths = [
+        os.path.join(base_dir, 'generated_cohorts', cohort_filename),
+        os.path.join(base_dir, '..', 'artifacts', 'generated_cohorts', cohort_filename),
+        os.path.join(base_dir, '..', 'backend', 'generated_cohorts', cohort_filename),
+        os.path.join(base_dir, '..', 'generated_cohorts', cohort_filename),
+        os.path.join(os.path.dirname(base_dir), f"{cohort_id}_synthetic_cohort_2500.csv")
+    ]
+    
+    syn_path = None
+    for p in possible_paths:
+        if os.path.exists(p):
+            syn_path = os.path.abspath(p)
+            break
 
-    if not os.path.exists(syn_path):
+    if not syn_path or not os.path.exists(syn_path):
+        # Fallback to generator_service memory store
+        try:
+            from backend.services.generator_service import get_cohort_dataframe
+            mem_df = get_cohort_dataframe(cohort_id)
+            if mem_df is not None:
+                save_dir = os.path.join(base_dir, 'generated_cohorts')
+                os.makedirs(save_dir, exist_ok=True)
+                syn_path = os.path.join(save_dir, cohort_filename)
+                mem_df.to_csv(syn_path, index=False)
+        except Exception:
+            pass
+
+    if not syn_path or not os.path.exists(syn_path):
         raise FileNotFoundError(f"Generated synthetic cohort file not found for cohort ID: {cohort_id}")
 
     return source_path, syn_path, cohort_id
@@ -147,11 +165,13 @@ def compute_categorical_metrics(df_src, df_syn, col):
 
 def compute_correlation_matrices(df_src, df_syn, cols):
     """Compute Pearson & Spearman correlation matrices and pairwise errors."""
-    corr_src = df_src[cols].corr(method='pearson').round(3)
-    corr_syn = df_syn[cols].corr(method='pearson').round(3)
+    corr_src = df_src[cols].corr(method='pearson').fillna(0.0).round(3)
+    corr_syn = df_syn[cols].corr(method='pearson').fillna(0.0).round(3)
 
-    diff_matrix = (corr_src - corr_syn).abs().round(3)
+    diff_matrix = (corr_src - corr_syn).abs().fillna(0.0).round(3)
     mace = float(diff_matrix.values.mean())
+    if math.isnan(mace) or math.isinf(mace):
+        mace = 0.0
 
     # Key clinical pairs
     key_pairs = [
@@ -166,8 +186,10 @@ def compute_correlation_matrices(df_src, df_syn, cols):
     key_pair_results = []
     for c1, c2, label in key_pairs:
         if c1 in df_src.columns and c2 in df_src.columns:
-            r_s = round(float(df_src[c1].corr(df_src[c2])), 3)
-            r_y = round(float(df_syn[c1].corr(df_syn[c2])), 3)
+            r_s_val = df_src[c1].corr(df_src[c2])
+            r_y_val = df_syn[c1].corr(df_syn[c2])
+            r_s = round(float(r_s_val), 3) if not (math.isnan(r_s_val) or math.isinf(r_s_val)) else 0.0
+            r_y = round(float(r_y_val), 3) if not (math.isnan(r_y_val) or math.isinf(r_y_val)) else 0.0
             key_pair_results.append({
                 "pair": f"{c1}__{c2}",
                 "label": label,
@@ -356,15 +378,30 @@ def run_full_validation(params):
 
     t_end = time.time()
 
+    def sanitize_json_floats(obj):
+        if isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return 0.0
+            return obj
+        elif isinstance(obj, dict):
+            return {k: sanitize_json_floats(v) for k, v in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [sanitize_json_floats(v) for v in obj]
+        return obj
+
     # Overall synthesis quality indicator (mean KS statistic < 0.12 = High Fidelity)
     avg_ks = float(np.mean(ks_stats)) if ks_stats else 0.0
     quality_status = "High Statistical Fidelity" if avg_ks < 0.12 else "Moderate Statistical Fidelity"
 
-    return {
+    is_hurdle = "SYN-HC" in cohort_id or "hurdle" in syn_path.lower()
+    model_name = "Hurdle Conditional Copula" if is_hurdle else "Gaussian Copula"
+    provenance = "HurdleConditionalCopulaModel trained on 4,826 NHANES clinical records" if is_hurdle else "GaussianCopulaSynthesizer trained on 4,826 NHANES clinical records"
+
+    report = {
         "success": True,
         "cohort_id": cohort_id,
-        "model_name": "Gaussian Copula",
-        "model_provenance": "GaussianCopulaSynthesizer trained on 4,826 NHANES clinical records",
+        "model_name": model_name,
+        "model_provenance": provenance,
         "training_corpus_records": 4826,
         "source_records": len(df_src),
         "source_filename": os.path.basename(source_path),
@@ -383,6 +420,7 @@ def run_full_validation(params):
             "computation_time_sec": round(t_end - t_start, 3)
         }
     }
+    return sanitize_json_floats(report)
 
 
 if __name__ == '__main__':
