@@ -1,0 +1,13 @@
+metric_name,metric_value
+nearest_neighbor_min_distance,0.1456
+nearest_neighbor_p1_distance,0.3459
+nearest_neighbor_p5_distance,0.4824
+nearest_neighbor_p25_distance,0.7303
+nearest_neighbor_median_distance,0.9996
+nearest_neighbor_mean_distance,1.0831
+nearest_neighbor_max_distance,4.3841
+pct_distance_lt_0_1,0.0
+pct_distance_lt_0_5,5.99
+pct_distance_lt_1_0,50.04
+exact_feature_matches_holdout,0.0
+exact_feature_matches_train,0.0

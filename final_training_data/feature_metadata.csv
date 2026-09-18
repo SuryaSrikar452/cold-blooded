@@ -1,0 +1,10 @@
+feature,source,provenance_type,original_column,transformation,dtype,allowed_for_training,notes
+age,DEMO_G.xpt,DIRECT_NHANES,RIDAGEYR,Retained as integer years; top-coded at 80 per NHANES standard,int64,True,Participant age at examination (8 to 80 years).
+sex,DEMO_G.xpt,DIRECT_NHANES,RIAGENDR,"Binary encoding: 1 = Male, 2 = Female",int64,True,Biological sex recorded at screening.
+diabetes,DIQ_G.xpt,DERIVED_FROM_NHANES,"DIQ010, DIQ050, DIQ070",Binary indicator: 1 if diagnosed diabetes or insulin or pills; 0 if no/borderline,int64,True,Doctor-diagnosed diabetes validated against insulin & oral diabetic agents.
+systolic_bp,BPX_G.xpt,DERIVED_FROM_NHANES,"BPXSY1, BPXSY2, BPXSY3, BPXSY4",AHA protocol: mean of readings 2 & 3; fallback to reading 1; rounded to integer,int64,True,Clinically measured representative systolic blood pressure in mmHg.
+diastolic_bp,BPX_G.xpt,DERIVED_FROM_NHANES,"BPXDI1, BPXDI2, BPXDI3, BPXDI4",AHA protocol: cleaned < 1e-5 zeros; mean of readings 2 & 3 (fallback to 1); integer,int64,True,Clinically measured representative diastolic blood pressure in mmHg. Strictly > 0 and < SBP.
+activity_mims,PAXDAY_G.xpt,DERIVED_FROM_NHANES,PAXMTSD,Mean daily Monitor-Independent Movement Summary (MIMS) across monitoring days,int64,True,Objective triaxial physical activity from ActiGraph GT3X+ monitor.
+n_medications,RXQ_RX_G.xpt,DERIVED_FROM_NHANES,"RXDUSE, RXDDRUG","Count of distinct reported prescription drugs (0 for non-users, 1-19 for users)",int64,True,Discrete count of prescription medications taken in the past 30 days.
+adherence_pct,nhanes_complete_seed.csv,BENCHMARK_AUGMENTED,adherence_pct,Audited benchmark variable (range: 5.0 to 95.0%),float64,True,BENCHMARK_AUGMENTED: NHANES lacks direct adherence questionnaire. Preserved for SH-405 hackathon fidelity.
+pain_score,nhanes_complete_seed.csv,BENCHMARK_AUGMENTED,pain_score,"Audited benchmark variable (range: 0.0 to 9.6, 69.4% zero-inflated)",float64,True,BENCHMARK_AUGMENTED: Numeric pain score (0-10 NRS). Preserved for SH-405 hackathon fidelity.

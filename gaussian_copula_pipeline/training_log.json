@@ -1,0 +1,69 @@
+{
+    "timestamp": "2026-09-18T13:53:38Z",
+    "training_file_path": "final_training_data/nhanes_generative_train.csv",
+    "training_file_hash": "690321d829d262dfa0d77a91d7d7159457dcc75541fc345f95098638c89a2866",
+    "holdout_file_path": "final_training_data/nhanes_real_holdout.csv",
+    "holdout_file_hash": "345a320bb2ab5b57093f54f1791736fadfa2c637646412308560f17015aadf71",
+    "training_rows": 4826,
+    "holdout_rows": 1207,
+    "synthetic_rows": 4826,
+    "feature_list": [
+        "age",
+        "sex",
+        "diabetes",
+        "systolic_bp",
+        "diastolic_bp",
+        "activity_mims",
+        "n_medications",
+        "adherence_pct",
+        "pain_score"
+    ],
+    "random_seed": 42,
+    "python_version": "3.13.7",
+    "sdv_version": "1.38.3",
+    "pandas_version": "2.3.3",
+    "numpy_version": "2.2.5",
+    "scipy_version": "1.17.0",
+    "scikit_learn_version": "1.8.0",
+    "pyarrow_version": "25.0.1",
+    "model_configuration": {
+        "model_type": "GaussianCopulaSynthesizer",
+        "sdv_version": "1.38.3",
+        "random_seed": 42,
+        "features": [
+            "age",
+            "sex",
+            "diabetes",
+            "systolic_bp",
+            "diastolic_bp",
+            "activity_mims",
+            "n_medications",
+            "adherence_pct",
+            "pain_score"
+        ],
+        "continuous_columns": [
+            "age",
+            "systolic_bp",
+            "diastolic_bp",
+            "activity_mims",
+            "n_medications",
+            "adherence_pct",
+            "pain_score"
+        ],
+        "categorical_columns": [
+            "sex",
+            "diabetes"
+        ],
+        "default_distribution": "gaussian"
+    },
+    "training_time_seconds": 1.832,
+    "generation_time_seconds": 0.1143,
+    "model_path": "gaussian_copula_pipeline/models/gaussian_copula\\model.pkl",
+    "synthetic_dataset_csv_path": "gaussian_copula_pipeline/synthetic/gaussian_copula_synthetic.csv",
+    "synthetic_dataset_parquet_path": "gaussian_copula_pipeline/synthetic/gaussian_copula_synthetic.parquet",
+    "synthetic_dataset_hash": "676957776a5539a26e7defd4fa04ec10a37c8936f8c4b04caac05a5eb7a9dc39",
+    "post_generation_valid_rows": 4825,
+    "post_generation_invalid_rows": 1,
+    "post_generation_validity_percentage": 99.98,
+    "holdout_hash_after_experiment": "345a320bb2ab5b57093f54f1791736fadfa2c637646412308560f17015aadf71"
+}

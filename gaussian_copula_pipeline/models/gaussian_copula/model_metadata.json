@@ -1,0 +1,23 @@
+{
+    "model_name": "GaussianCopulaSynthesizer",
+    "training_rows": 4826,
+    "num_features": 9,
+    "continuous_columns": [
+        "age",
+        "systolic_bp",
+        "diastolic_bp",
+        "activity_mims",
+        "n_medications",
+        "adherence_pct",
+        "pain_score"
+    ],
+    "categorical_columns": [
+        "sex",
+        "diabetes"
+    ],
+    "sdv_version": "1.38.3",
+    "random_seed": 42,
+    "training_duration_seconds": 1.832,
+    "training_start_timestamp": "2026-09-18T13:53:36Z",
+    "training_end_timestamp": "2026-09-18T13:53:37Z"
+}

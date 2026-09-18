@@ -682,19 +682,23 @@
     <div class="nav-left">
       <a href="index.html" class="logo">SYNTHIA</a>
       <div class="workflow-indicator">
-        <span class="wf-step active"><span class="wf-badge">01</span> DATASET</span>
+        <span class="wf-step active"><span class="wf-badge">01</span> SETUP</span>
         <span class="wf-sep">&rarr;</span>
-        <span class="wf-step active"><span class="wf-badge">02</span> POPULATION</span>
+        <a href="generate.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">03</span> GENERATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="validation.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">05</span> VALIDATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="privacy.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">06</span> PRIVACY</a>
         <span class="wf-sep">&middot;</span>
-        <span class="wf-step">03 GENERATE</span>
+        <a href="patient.html" class="wf-step" style="text-decoration:none;color:inherit;">07 PATIENTS</a>
         <span class="wf-sep">&middot;</span>
-        <span class="wf-step">04 VALIDATE</span>
+        <a href="stress-test.html" class="wf-step" style="text-decoration:none;color:inherit;">08 STRESS TEST</a>
         <span class="wf-sep">&middot;</span>
-        <span class="wf-step">05 EXPLORE</span>
+        <a href="api-hub.html" class="wf-step" style="text-decoration:none;color:inherit;">API HUB</a>
       </div>
     </div>
     <div>
-      <a href="index.html" class="btn btn-ghost-dark" style="padding:0.45rem 0.95rem;font-size:12.5px;">&larr; Exit to overview</a>
+      <a href="generate.html" class="btn btn-primary" style="padding:0.45rem 0.95rem;font-size:12.5px;">Generation &rarr;</a>
     </div>
   </div>
 </nav>
@@ -905,7 +909,12 @@
             <div class="label">LOW ACTIVITY</div>
             <div class="interp-val mono" id="interpActivity">35%</div>
           </div>
-        </div>
+        <!-- Structured Filter Tags -->
+        <div id="interpTags" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.85rem;"></div>
+
+        <!-- Empirical Feasibility Warning / Notice Banner -->
+        <div id="feasibilityBox" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;border-radius:3px;font-size:12.5px;line-height:1.5;"></div>
+
         <div class="interp-actions">
           <button type="button" class="btn btn-primary" id="applyInterpBtn" style="padding:0.5rem 1.1rem;font-size:12.5px;">
             Apply to cohort &rarr;
@@ -1846,6 +1855,45 @@ async function interpretPrompt(text) {
     interpAge.textContent = age + '%';
     interpDiabetes.textContent = diabetes + '%';
     interpActivity.textContent = activity + '%';
+
+    // Populate structured tags
+    const tagsContainer = document.getElementById('interpTags');
+    if (tagsContainer) {
+      tagsContainer.innerHTML = '';
+      const tagItems = [
+        `N = ${Number(size).toLocaleString('en-US')}`,
+        `AGE > 60 (${age}%)`,
+        `DIABETES = ${diabetes > 0 ? diabetes + '%' : 'NO'}`,
+        `LOW ACTIVITY (${activity}%)`
+      ];
+      tagItems.forEach(label => {
+        const tag = document.createElement('span');
+        tag.className = 'mono';
+        tag.style.cssText = 'padding:3px 8px;background:rgba(108,77,255,0.08);color:var(--violet);border:1px solid rgba(108,77,255,0.2);border-radius:2px;font-size:11px;font-weight:600;';
+        tag.textContent = label;
+        tagsContainer.appendChild(tag);
+      });
+    }
+
+    // Populate feasibility box
+    const feasBox = document.getElementById('feasibilityBox');
+    if (feasBox) {
+      if (result && result.feasibility_warning) {
+        feasBox.style.display = 'block';
+        feasBox.style.border = '1px solid #E05252';
+        feasBox.style.background = 'rgba(224, 82, 82, 0.08)';
+        feasBox.style.color = '#B32D2D';
+        feasBox.innerHTML = `<strong>⚠ EXTREME CONSTRAINT WARNING</strong><br><span style="font-size:12px;color:#7A1E1E;">${result.explanation || 'This combination is rare in the source population and may require conditional resampling.'}</span>`;
+      } else if (result && result.explanation) {
+        feasBox.style.display = 'block';
+        feasBox.style.border = '1px solid #00D4B2';
+        feasBox.style.background = 'rgba(0, 212, 178, 0.08)';
+        feasBox.style.color = '#007A65';
+        feasBox.innerHTML = `<strong>✓ FEASIBLE REFERENCE PROFILE</strong><br><span style="font-size:12px;color:#005A4A;">${result.explanation}</span>`;
+      } else {
+        feasBox.style.display = 'none';
+      }
+    }
 
     interpretedBox.style.display = 'block';
   } catch (err) {

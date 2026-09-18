@@ -1,0 +1,110 @@
+{
+  "dataset_name": "NHANES 2011-2012 Cleaned Cohort for SH-405 Generative Modeling",
+  "provenance_cycle": "NHANES 2011-2012 (Cycle G)",
+  "total_participants": 6033,
+  "train_participants": 4826,
+  "holdout_participants": 1207,
+  "stratification": "diabetes",
+  "random_seed": 42,
+  "features": {
+    "age": {
+      "source_file": "DEMO_G.xpt",
+      "provenance_type": "DIRECT_NHANES",
+      "original_column": "RIDAGEYR",
+      "dtype": "int64",
+      "allowed_for_training": true,
+      "min": 8.0,
+      "max": 80.0,
+      "unique_values": 73,
+      "notes": "Participant age at examination (8 to 80 years)."
+    },
+    "sex": {
+      "source_file": "DEMO_G.xpt",
+      "provenance_type": "DIRECT_NHANES",
+      "original_column": "RIAGENDR",
+      "dtype": "int64",
+      "allowed_for_training": true,
+      "min": 1.0,
+      "max": 2.0,
+      "unique_values": 2,
+      "notes": "Biological sex recorded at screening."
+    },
+    "diabetes": {
+      "source_file": "DIQ_G.xpt",
+      "provenance_type": "DERIVED_FROM_NHANES",
+      "original_column": "DIQ010, DIQ050, DIQ070",
+      "dtype": "int64",
+      "allowed_for_training": true,
+      "min": 0.0,
+      "max": 1.0,
+      "unique_values": 2,
+      "notes": "Doctor-diagnosed diabetes validated against insulin & oral diabetic agents."
+    },
+    "systolic_bp": {
+      "source_file": "BPX_G.xpt",
+      "provenance_type": "DERIVED_FROM_NHANES",
+      "original_column": "BPXSY1, BPXSY2, BPXSY3, BPXSY4",
+      "dtype": "int64",
+      "allowed_for_training": true,
+      "min": 74.0,
+      "max": 233.0,
+      "unique_values": 129,
+      "notes": "Clinically measured representative systolic blood pressure in mmHg."
+    },
+    "diastolic_bp": {
+      "source_file": "BPX_G.xpt",
+      "provenance_type": "DERIVED_FROM_NHANES",
+      "original_column": "BPXDI1, BPXDI2, BPXDI3, BPXDI4",
+      "dtype": "int64",
+      "allowed_for_training": true,
+      "min": 14.0,
+      "max": 116.0,
+      "unique_values": 93,
+      "notes": "Clinically measured representative diastolic blood pressure in mmHg. Strictly > 0 and < SBP."
+    },
+    "activity_mims": {
+      "source_file": "PAXDAY_G.xpt",
+      "provenance_type": "DERIVED_FROM_NHANES",
+      "original_column": "PAXMTSD",
+      "dtype": "int64",
+      "allowed_for_training": true,
+      "min": 0.0,
+      "max": 33379.0,
+      "unique_values": 4905,
+      "notes": "Objective triaxial physical activity from ActiGraph GT3X+ monitor."
+    },
+    "n_medications": {
+      "source_file": "RXQ_RX_G.xpt",
+      "provenance_type": "DERIVED_FROM_NHANES",
+      "original_column": "RXDUSE, RXDDRUG",
+      "dtype": "int64",
+      "allowed_for_training": true,
+      "min": 0.0,
+      "max": 19.0,
+      "unique_values": 20,
+      "notes": "Discrete count of prescription medications taken in the past 30 days."
+    },
+    "adherence_pct": {
+      "source_file": "nhanes_complete_seed.csv",
+      "provenance_type": "BENCHMARK_AUGMENTED",
+      "original_column": "adherence_pct",
+      "dtype": "float64",
+      "allowed_for_training": true,
+      "min": 5.0,
+      "max": 95.0,
+      "unique_values": 800,
+      "notes": "BENCHMARK_AUGMENTED: NHANES lacks direct adherence questionnaire. Preserved for SH-405 hackathon fidelity."
+    },
+    "pain_score": {
+      "source_file": "nhanes_complete_seed.csv",
+      "provenance_type": "BENCHMARK_AUGMENTED",
+      "original_column": "pain_score",
+      "dtype": "float64",
+      "allowed_for_training": true,
+      "min": 0.0,
+      "max": 9.6,
+      "unique_values": 80,
+      "notes": "BENCHMARK_AUGMENTED: Numeric pain score (0-10 NRS). Preserved for SH-405 hackathon fidelity."
+    }
+  }
+}

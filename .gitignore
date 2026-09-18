@@ -23,3 +23,8 @@ Thumbs.db
 *.zip
 *.tar.gz
 backend/models/
+__pycache__/
+*.pyc
+*.db
+backend/generated_cohorts/
+artifacts/generated_cohorts/

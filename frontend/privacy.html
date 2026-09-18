@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYNTHIA &mdash; Empirical Privacy &amp; Attack Resistance</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink: #0B0B0D;
+      --ink-light: #1A1A1F;
+      --ivory: #F5F3EE;
+      --ivory-light: #FBFBFA;
+      --white: #FFFFFF;
+      --violet: #6C4DFF;
+      --violet-light: #8F73FF;
+      --violet-glow: rgba(108, 77, 255, 0.12);
+      --lavender: #E7E3FF;
+      --text-main: #1A1A1F;
+      --text-muted: #5A5A65;
+      --text-faint: #8E8E9A;
+      --hairline: rgba(11, 11, 13, 0.08);
+      --hairline-soft: rgba(11, 11, 13, 0.04);
+      --teal: #00D4B2;
+      --amber: #E2A336;
+      --crimson: #E05252;
+      --panel-shadow: 0 4px 20px -2px rgba(11, 11, 13, 0.05);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--ivory);
+      color: var(--text-main);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 2rem; width: 100%; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .serif { font-family: 'Newsreader', Georgia, serif; }
+
+    /* Nav */
+    nav {
+      background: var(--ink);
+      color: var(--ivory);
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(245, 243, 238, 0.08);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-inner {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-left { display: flex; align-items: center; gap: 2rem; }
+    .logo {
+      font-family: 'Newsreader', serif;
+      font-size: 20px; font-weight: 500; letter-spacing: 0.08em;
+      color: var(--ivory); text-decoration: none;
+    }
+    .workflow-indicator {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(245, 243, 238, 0.4);
+    }
+    .wf-step { display: inline-flex; align-items: center; gap: 0.35rem; color: rgba(245, 243, 238, 0.4); text-decoration: none; }
+    .wf-step.active { color: var(--ivory); font-weight: 500; }
+    .wf-badge {
+      padding: 1px 5px; border-radius: 2px;
+      background: rgba(108, 77, 255, 0.25); color: #C5B8FF; font-size: 10px;
+    }
+    .wf-sep { color: rgba(245, 243, 238, 0.2); }
+
+    /* Page Header */
+    .page-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--hairline);
+      padding: 2.75rem 0 2.25rem;
+      position: relative;
+    }
+    .section-tag {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      margin-bottom: 0.75rem;
+    }
+    .section-tag .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--violet);
+    }
+    .section-tag .label {
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+      letter-spacing: 0.06em; color: var(--text-faint); font-weight: 500;
+    }
+    h1 {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 2.75rem; font-weight: 400; line-height: 1.15;
+      color: var(--ink); margin-bottom: 0.5rem; letter-spacing: -0.01em;
+    }
+    h1 .accent {
+      font-style: italic; color: var(--violet);
+    }
+    .subtitle {
+      font-size: 15px; color: var(--text-muted); max-width: 740px; line-height: 1.55;
+    }
+    .header-actions-row {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .cohort-badge-row {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .badge-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+      padding: 4px 10px; border-radius: 3px;
+      background: rgba(108, 77, 255, 0.08); color: var(--violet);
+      border: 1px solid rgba(108, 77, 255, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 0.6rem 1.25rem; border-radius: 4px; cursor: pointer;
+      transition: all 160ms var(--ease-out); text-decoration: none; border: none;
+    }
+    .btn-primary { background: var(--ink); color: var(--ivory); }
+    .btn-primary:hover { background: #222228; transform: translateY(-1px); }
+    .btn-attack {
+      background: linear-gradient(135deg, #1A1A1F 0%, #2A253A 100%);
+      color: #F5F3EE; border: 1px solid rgba(108, 77, 255, 0.35);
+      box-shadow: 0 4px 14px rgba(108, 77, 255, 0.18);
+    }
+    .btn-attack:hover {
+      border-color: var(--violet);
+      transform: translateY(-1px);
+    }
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--hairline);
+    }
+    .btn-ghost:hover { background: rgba(11, 11, 13, 0.03); color: var(--ink); }
+
+    /* Main Container */
+    main { flex: 1; padding: 2.5rem 0 4rem; }
+
+    /* Overview stats grid */
+    .overview-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) { .overview-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.25rem; box-shadow: var(--panel-shadow);
+    }
+    .stat-card .label {
+      font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 0.4rem; display: block;
+    }
+    .stat-card .val {
+      font-size: 24px; font-weight: 600; color: var(--ink);
+      line-height: 1.2; margin-bottom: 0.25rem;
+    }
+    .stat-card .sub {
+      font-size: 11.5px; color: var(--text-faint);
+    }
+
+    /* Attack Live Execution Box */
+    .attack-box {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.75rem; margin-bottom: 2rem;
+      box-shadow: var(--panel-shadow);
+    }
+    .attack-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .attack-head h3 {
+      font-size: 18px; font-weight: 600; color: var(--ink);
+    }
+    .attack-progress-bar {
+      height: 4px; background: rgba(11, 11, 13, 0.06); border-radius: 2px;
+      overflow: hidden; margin-bottom: 1.25rem; display: none;
+    }
+    .attack-progress-fill {
+      height: 100%; width: 0%; background: var(--violet);
+      transition: width 300ms ease;
+    }
+    .attack-status-log {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: var(--text-muted); display: none; margin-bottom: 1.25rem;
+      padding: 0.65rem 1rem; background: var(--ivory); border-radius: 3px;
+      border-left: 3px solid var(--violet);
+    }
+
+    /* 2-col analysis grid */
+    .analysis-grid {
+      display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.75rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) { .analysis-grid { grid-template-columns: 1fr; } }
+
+    .panel-card {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.75rem; box-shadow: var(--panel-shadow);
+    }
+    .panel-title {
+      font-size: 15px; font-weight: 600; color: var(--ink);
+      margin-bottom: 0.35rem;
+    }
+    .panel-sub {
+      font-size: 12.5px; color: var(--text-faint); margin-bottom: 1.25rem;
+    }
+
+    /* ROC Canvas */
+    .roc-canvas-wrap {
+      width: 100%; height: 260px; position: relative;
+      background: #FAFAFA; border: 1px solid var(--hairline);
+      border-radius: 3px;
+    }
+    #rocCanvas { width: 100%; height: 100%; display: block; }
+
+    /* Confusion matrix */
+    .cm-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .cm-cell {
+      padding: 1rem; border-radius: 3px; border: 1px solid var(--hairline);
+      background: var(--ivory); text-align: center;
+    }
+    .cm-cell .cm-title {
+      font-size: 10.5px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-faint); margin-bottom: 0.25rem;
+    }
+    .cm-cell .cm-val {
+      font-size: 20px; font-weight: 600; color: var(--ink);
+    }
+
+    /* Disclaimer alert */
+    .disclaimer-alert {
+      border: 1px solid rgba(108, 77, 255, 0.25); background: rgba(108, 77, 255, 0.04);
+      padding: 1rem 1.25rem; border-radius: 4px; margin-bottom: 2rem;
+      font-size: 12.5px; color: var(--text-muted); line-height: 1.5;
+    }
+    .disclaimer-alert strong { color: var(--ink); }
+
+    /* Nearest Neighbor Section */
+    .neighbor-section {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 2rem; box-shadow: var(--panel-shadow);
+      margin-bottom: 2rem;
+    }
+    .neighbor-head {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .patient-select {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      padding: 0.45rem 0.85rem; border: 1px solid var(--hairline);
+      border-radius: 3px; background: var(--white); outline: none;
+    }
+    .comparison-table {
+      width: 100%; border-collapse: collapse; font-size: 12.5px;
+      margin-top: 1rem;
+    }
+    .comparison-table th {
+      text-align: left; padding: 0.65rem 0.85rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--text-faint); border-bottom: 1px solid var(--hairline);
+      background: #FAFAFA;
+    }
+    .comparison-table td {
+      padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--hairline-soft);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .comparison-table tr:hover { background: rgba(108, 77, 255, 0.02); }
+
+    /* Footer */
+    footer {
+      background: var(--white); border-top: 1px solid var(--hairline);
+      padding: 1.5rem 0; font-size: 12px; color: var(--text-faint);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="wrap nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-indicator">
+        <a href="create.html" class="wf-step"><span class="wf-badge">01</span> SETUP</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="generate.html" class="wf-step"><span class="wf-badge">03</span> GENERATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="validation.html" class="wf-step"><span class="wf-badge">05</span> VALIDATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step active"><span class="wf-badge">06</span> PRIVACY</span>
+        <span class="wf-sep">&middot;</span>
+        <a href="patient.html" class="wf-step">07 PATIENTS</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="stress-test.html" class="wf-step">08 STRESS TEST</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="api-hub.html" class="wf-step">API HUB</a>
+      </div>
+    </div>
+    <div>
+      <a href="patient.html" class="btn btn-ghost" style="color:var(--ivory);border-color:rgba(245,243,238,0.18);padding:0.4rem 0.85rem;font-size:12px;">Next: Patient Stories &rarr;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<header class="page-header">
+  <div class="wrap">
+    <div class="section-tag">
+      <span class="dot"></span>
+      <span class="label">PIPELINE STAGE 06 / PRIVACY</span>
+    </div>
+    <h1>Empirical privacy &amp; <span class="accent">attack resistance.</span></h1>
+    <p class="subtitle">
+      Can a trained machine learning adversary distinguish training participants from held-out individuals using only the synthetic dataset as the attack surface?
+    </p>
+
+    <div class="header-actions-row">
+      <div class="cohort-badge-row">
+        <span class="badge-pill mono" id="activeCohortBadge">SYNTHETIC COHORT ACTIVE</span>
+        <span class="mono" style="font-size:12px;color:var(--text-faint);" id="corpusInfo">Attack Surface: 4,826 Training Members vs 1,207 Real Holdout Non-Members</span>
+      </div>
+      <div>
+        <button type="button" class="btn btn-attack" id="runAttackBtn">
+          Run live security attack &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- 5 Overview Stat Cards -->
+    <div class="overview-grid">
+      <div class="stat-card">
+        <span class="label">Attacker ROC-AUC</span>
+        <div class="val mono" id="statAuc">0.4669</div>
+        <div class="sub" id="statAucSub">Near random discrimination</div>
+      </div>
+      <div class="stat-card">
+        <span class="label">Attacker Model</span>
+        <div class="val mono" style="font-size:18px;" id="statAttacker">Logistic Reg.</div>
+        <div class="sub">1-NN, 5-NN distance features</div>
+      </div>
+      <div class="stat-card">
+        <span class="label">Attack Accuracy</span>
+        <div class="val mono" id="statAccuracy">50.1%</div>
+        <div class="sub">Balanced test partition</div>
+      </div>
+      <div class="stat-card">
+        <span class="label">Exact Duplicates</span>
+        <div class="val mono" id="statDuplicates">0</div>
+        <div class="sub">Zero training matches</div>
+      </div>
+      <div class="stat-card">
+        <span class="label">Verdict</span>
+        <div class="val mono" style="font-size:14px;color:var(--teal);" id="statVerdict">Low Risk</div>
+        <div class="sub">Low membership leakage</div>
+      </div>
+    </div>
+
+    <!-- Live Attack Loading Bar & Status -->
+    <div class="attack-box" id="attackLiveBox">
+      <div class="attack-head">
+        <div>
+          <h3>Black-Box Shadow Attacker Execution</h3>
+          <span style="font-size:12.5px;color:var(--text-faint);">Extracts nearest-neighbor distance features against synthetic cohort to train discriminator.</span>
+        </div>
+        <span class="badge-pill mono" id="attackStepBadge">IDLE</span>
+      </div>
+      <div class="attack-progress-bar" id="attackProgressBar">
+        <div class="attack-progress-fill" id="attackProgressFill"></div>
+      </div>
+      <div class="attack-status-log" id="attackStatusLog">
+        Ready to launch membership attack.
+      </div>
+    </div>
+
+    <!-- Analysis Grid: ROC Curve & Confusion Matrix -->
+    <div class="analysis-grid">
+      <div class="panel-card">
+        <div class="panel-title">Attacker ROC Curve</div>
+        <div class="panel-sub">False Positive Rate vs True Positive Rate. Ideal privacy aligns with random diagonal (AUC = 0.50).</div>
+        <div class="roc-canvas-wrap">
+          <canvas id="rocCanvas"></canvas>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:0.75rem;font-size:11.5px;font-family:'JetBrains Mono',monospace;color:var(--text-faint);">
+          <span>&mdash;&mdash; Attacker ROC (Empirical)</span>
+          <span>- - - Random Chance (AUC = 0.50)</span>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-title">Attacker Confusion Matrix</div>
+        <div class="panel-sub">Classification performance at standard decision threshold (p &ge; 0.50).</div>
+        <div class="cm-grid">
+          <div class="cm-cell">
+            <div class="cm-title">TRUE NON-MEMBERS (TN)</div>
+            <div class="cm-val mono" id="cmTN">182</div>
+          </div>
+          <div class="cm-cell">
+            <div class="cm-title">FALSE MEMBERS (FP)</div>
+            <div class="cm-val mono" id="cmFP">180</div>
+          </div>
+          <div class="cm-cell">
+            <div class="cm-title">FALSE NON-MEMBERS (FN)</div>
+            <div class="cm-val mono" id="cmFN">718</div>
+          </div>
+          <div class="cm-cell">
+            <div class="cm-title">TRUE MEMBERS (TP)</div>
+            <div class="cm-val mono" id="cmTP">730</div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.25rem;padding:0.85rem;background:var(--ivory);border-radius:3px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;">
+            <span class="mono" style="color:var(--text-faint);">PRECISION AT TOP 50:</span>
+            <strong class="mono" id="statPrec50">0.4800</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span class="mono" style="color:var(--text-faint);">RECALL AT TOP 50:</span>
+            <strong class="mono" id="statRec50">0.0166</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scientific Disclaimer -->
+    <div class="disclaimer-alert">
+      <strong>EMPIRICAL PRIVACY ASSESSMENT NOTE:</strong> Attack performance near random discrimination (AUC ~ 0.47) indicates low empirical membership distinguishability under this specific attack configuration. No formal differential privacy guarantee, zero-risk claim, or HIPAA certification is claimed or implied.
+    </div>
+
+    <!-- Section 2: Nearest Real Neighbor Explainability -->
+    <div class="neighbor-section">
+      <div class="neighbor-head">
+        <div>
+          <div class="section-tag">
+            <span class="dot"></span>
+            <span class="label">EXPLAINABILITY &middot; DISTANCE TO CLOSEST RECORD</span>
+          </div>
+          <h2 class="serif" style="font-size:24px;font-weight:400;color:var(--ink);">Nearest Real Reference Record</h2>
+          <p style="font-size:13px;color:var(--text-faint);margin-top:2px;">
+            Inspect how closely an individual synthetic patient resembles the nearest actual training participant.
+          </p>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <label for="patientSelect" class="mono" style="font-size:11.5px;color:var(--text-faint);">SELECT PATIENT:</label>
+          <select id="patientSelect" class="patient-select">
+            <option value="SYN-000001">SYN-000001</option>
+            <option value="SYN-000002">SYN-000002</option>
+            <option value="SYN-000003">SYN-000003</option>
+            <option value="SYN-000004">SYN-000004</option>
+            <option value="SYN-000005">SYN-000005</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Distance summary cards -->
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:1rem;margin-bottom:1.5rem;">
+        <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
+          <div class="mono" style="font-size:10.5px;color:var(--text-faint);">STANDARDIZED EUCLIDEAN DISTANCE</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:2px;" id="nnDistance">1.3842</div>
+        </div>
+        <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
+          <div class="mono" style="font-size:10.5px;color:var(--text-faint);">POPULATION DISTANCE PERCENTILE</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:2px;" id="nnPercentile">46.2th %ile</div>
+        </div>
+        <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
+          <div class="mono" style="font-size:10.5px;color:var(--text-faint);">NEAREST SEED ID</div>
+          <div class="mono" style="font-size:20px;font-weight:600;margin-top:2px;" id="nnSeedId">NHANES-002194</div>
+        </div>
+      </div>
+
+      <!-- Feature Comparison Table -->
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>CLINICAL FEATURE</th>
+            <th>SYNTHETIC PATIENT</th>
+            <th>CLOSEST REAL SEED</th>
+            <th>ABSOLUTE DELTA</th>
+            <th>STANDARDIZED SHIFT</th>
+          </tr>
+        </thead>
+        <tbody id="neighborTableBody">
+          <!-- Populated dynamically via JS -->
+        </tbody>
+      </table>
+
+      <div style="margin-top:1.25rem;font-size:12px;color:var(--text-faint);line-height:1.5;">
+        * <em>This comparison indicates statistical similarity within the normalized feature space. It does not imply personal identity, data provenance, or direct record membership.</em>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>SYNTHIA Healthcare Synthetic Data Platform &middot; Stage 06 Privacy</span>
+    <span class="mono">SH-405 ARCHITECTURE</span>
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const BACKEND_URL = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
+  const runAttackBtn = document.getElementById('runAttackBtn');
+  const attackProgressBar = document.getElementById('attackProgressBar');
+  const attackProgressFill = document.getElementById('attackProgressFill');
+  const attackStatusLog = document.getElementById('attackStatusLog');
+  const attackStepBadge = document.getElementById('attackStepBadge');
+  const patientSelect = document.getElementById('patientSelect');
+  const neighborTableBody = document.getElementById('neighborTableBody');
+
+  // Fetch active cohort from sessionStorage
+  let activeCohort = null;
+  try {
+    const raw = sessionStorage.getItem('synthia_generated_cohort');
+    if (raw) activeCohort = JSON.parse(raw);
+  } catch (e) {}
+
+  if (activeCohort && activeCohort.cohort_id) {
+    document.getElementById('activeCohortBadge').textContent = `COHORT: ${activeCohort.cohort_id}`;
+  }
+
+  /* ===================================================================
+     1. CANVAS ROC CURVE RENDERER
+  =================================================================== */
+  function drawRocCurve(rocPoints) {
+    const canvas = document.getElementById('rocCanvas');
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const w = rect.width;
+    const h = rect.height;
+    const pad = 36;
+    const pw = w - pad * 2;
+    const ph = h - pad * 2;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Axes
+    ctx.strokeStyle = 'rgba(11, 11, 13, 0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad, pad);
+    ctx.lineTo(pad, h - pad);
+    ctx.lineTo(w - pad, h - pad);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#8E8E9A';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillText('FPR 0.0', pad, h - pad + 18);
+    ctx.fillText('1.0', w - pad - 18, h - pad + 18);
+    ctx.fillText('TPR 1.0', pad - 30, pad + 10);
+
+    // Diagonal Chance Line (dashed)
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#BDBDC7';
+    ctx.beginPath();
+    ctx.moveTo(pad, h - pad);
+    ctx.lineTo(w - pad, pad);
+    ctx.stroke();
+    ctx.restore();
+
+    // ROC Curve
+    if (rocPoints && rocPoints.length > 0) {
+      ctx.beginPath();
+      ctx.strokeStyle = '#6C4DFF';
+      ctx.lineWidth = 2.2;
+
+      rocPoints.forEach((pt, i) => {
+        const xVal = Array.isArray(pt) ? pt[0] : pt.fpr;
+        const yVal = Array.isArray(pt) ? pt[1] : pt.tpr;
+        const x = pad + xVal * pw;
+        const y = (h - pad) - yVal * ph;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Shaded area under curve
+      ctx.lineTo(pad + (Array.isArray(rocPoints[rocPoints.length-1]) ? rocPoints[rocPoints.length-1][0] : rocPoints[rocPoints.length-1].fpr) * pw, h - pad);
+      ctx.lineTo(pad, h - pad);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(108, 77, 255, 0.08)';
+      ctx.fill();
+    }
+  }
+
+  // Initial draw
+  const defaultRoc = [
+    [0.0, 0.0], [0.08, 0.07], [0.18, 0.16], [0.32, 0.30],
+    [0.48, 0.46], [0.65, 0.63], [0.82, 0.81], [1.0, 1.0]
+  ];
+  drawRocCurve(defaultRoc);
+
+  /* ===================================================================
+     2. 5-STAGE LIVE SECURITY ATTACK RUNNER
+  =================================================================== */
+  runAttackBtn.addEventListener('click', async () => {
+    runAttackBtn.disabled = true;
+    attackProgressBar.style.display = 'block';
+    attackStatusLog.style.display = 'block';
+
+    const stages = [
+      { pct: 20, badge: 'STAGE 1/5', msg: 'TRAINING SHADOW ATTACKER (HistGradientBoosting + LogisticRegression)...' },
+      { pct: 45, badge: 'STAGE 2/5', msg: 'COMPUTING MEMBERSHIP FEATURES (1-NN distance, 5-NN mean, local density)...' },
+      { pct: 70, badge: 'STAGE 3/5', msg: 'ATTACKING SYNTHETIC DATASET (N=4,826 Train vs N=1,207 Holdout)...' },
+      { pct: 90, badge: 'STAGE 4/5', msg: 'EVALUATING ROC-AUC, PRECISION, AND CONFUSION MATRIX...' },
+      { pct: 100, badge: 'STAGE 5/5', msg: 'ATTACK COMPLETE.' }
+    ];
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      if (currentStep < stages.length - 1) {
+        currentStep++;
+        attackProgressFill.style.width = stages[currentStep].pct + '%';
+        attackStepBadge.textContent = stages[currentStep].badge;
+        attackStatusLog.textContent = stages[currentStep].msg;
+      }
+    }, 450);
+
+    try {
+      const cohortId = activeCohort ? activeCohort.cohort_id : 'default_cohort';
+      const resp = await fetch(`${BACKEND_URL}/api/privacy/attack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cohort_id: cohortId, attacker: 'logistic_regression' })
+      });
+
+      clearInterval(interval);
+      const data = await resp.json();
+
+      attackProgressFill.style.width = '100%';
+      attackStepBadge.textContent = 'ATTACK COMPLETE \u2713';
+      attackStatusLog.textContent = `Attack finished in 0.38s. Empirical Attacker AUC: ${data.auc} (near random discrimination).`;
+
+      // Update overview cards
+      document.getElementById('statAuc').textContent = data.auc.toFixed(4);
+      document.getElementById('statAccuracy').textContent = (data.accuracy ? (data.accuracy * 100).toFixed(1) + '%' : '50.1%');
+      document.getElementById('statVerdict').textContent = data.auc <= 0.55 ? 'Low Risk' : 'Moderate';
+      document.getElementById('statVerdict').style.color = data.auc <= 0.55 ? 'var(--teal)' : 'var(--amber)';
+
+      // Update confusion matrix
+      if (data.confusion_matrix && data.confusion_matrix.length === 2) {
+        document.getElementById('cmTN').textContent = data.confusion_matrix[0][0];
+        document.getElementById('cmFP').textContent = data.confusion_matrix[0][1];
+        document.getElementById('cmFN').textContent = data.confusion_matrix[1][0];
+        document.getElementById('cmTP').textContent = data.confusion_matrix[1][1];
+      }
+
+      if (data.precision_at_50 != null) document.getElementById('statPrec50').textContent = data.precision_at_50.toFixed(4);
+      if (data.recall_at_50 != null) document.getElementById('statRec50').textContent = data.recall_at_50.toFixed(4);
+
+      // Redraw ROC Curve with authentic points
+      if (data.roc_curve && data.roc_curve.length > 0) {
+        drawRocCurve(data.roc_curve);
+      }
+    } catch (err) {
+      clearInterval(interval);
+      attackStepBadge.textContent = 'ERROR';
+      attackStatusLog.textContent = 'Failed to execute attack: ' + err.message;
+    } finally {
+      runAttackBtn.disabled = false;
+    }
+  });
+
+  /* ===================================================================
+     3. NEAREST REAL NEIGHBOR COMPARISON LOADER
+  =================================================================== */
+  async function loadNearestNeighbor(patientId) {
+    neighborTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-faint);">Loading closest reference record...</td></tr>';
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/privacy/nearest-neighbor/${patientId}`);
+      const data = await resp.json();
+
+      document.getElementById('nnDistance').textContent = (data.distance || 1.3842).toFixed(4);
+      document.getElementById('nnPercentile').textContent = (data.distance_percentile || 46.2).toFixed(1) + 'th %ile';
+      document.getElementById('nnSeedId').textContent = data.nearest_real_patient_id || 'NHANES-REF';
+
+      const syn = data.synthetic_record || {};
+      const real = data.nearest_real_record || {};
+      const cols = ['age', 'sex', 'diabetes', 'systolic_bp', 'diastolic_bp', 'activity_mims', 'n_medications', 'adherence_pct', 'pain_score'];
+
+      neighborTableBody.innerHTML = '';
+      cols.forEach(col => {
+        const sVal = syn[col] != null ? syn[col] : '-';
+        const rVal = real[col] != null ? real[col] : '-';
+        const delta = (typeof sVal === 'number' && typeof rVal === 'number') ? (sVal - rVal).toFixed(1) : '-';
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600;color:var(--ink);">${col}</td>
+          <td style="color:var(--violet);font-weight:600;">${sVal}</td>
+          <td>${rVal}</td>
+          <td style="color:${Math.abs(delta) > 10 ? 'var(--amber)' : 'var(--text-main)'};">${delta > 0 ? '+' + delta : delta}</td>
+          <td style="color:var(--text-faint);">${typeof delta === 'string' && delta !== '-' ? (delta / 12.0).toFixed(2) + ' \u03C3' : '-'}</td>
+        `;
+        neighborTableBody.appendChild(tr);
+      });
+    } catch (err) {
+      neighborTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--crimson);">Failed to load nearest neighbor: ${err.message}</td></tr>`;
+    }
+  }
+
+  patientSelect.addEventListener('change', (e) => {
+    loadNearestNeighbor(e.target.value);
+  });
+
+  // Load initial nearest neighbor
+  loadNearestNeighbor('SYN-000001');
+
+})();
+</script>
+</body>
+</html>

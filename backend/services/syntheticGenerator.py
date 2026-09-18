@@ -15,44 +15,26 @@ import uuid
 import warnings
 warnings.filterwarnings('ignore')
 
+from pathlib import Path
+
+# Add project root to sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 try:
     import pandas as pd
     import numpy as np
-    from sdv.single_table import GaussianCopulaSynthesizer
-    from sdv.sampling import Condition
+    from backend.services.generator_service import get_generator, store_generated_cohort
 except ImportError as e:
-    sys.stderr.write(f"Missing required library: {e}\n")
+    sys.stderr.write(f"Missing required library or generator service: {e}\n")
     sys.exit(1)
-
-
-def get_model_path():
-    """Resolve project-relative path to the trained Gaussian Copula model artifact."""
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    primary_path = os.path.join(base_dir, 'models', 'gaussian_copula', 'model.pkl')
-    if os.path.exists(primary_path):
-        return primary_path
-
-    # Fallback to checking archive or extracting if missing
-    zip_path = os.path.join(base_dir, 'gaussian_copula_model_files.zip')
-    if os.path.exists(zip_path):
-        import zipfile
-        target_dir = os.path.join(base_dir, 'models', 'gaussian_copula')
-        os.makedirs(target_dir, exist_ok=True)
-        with zipfile.ZipFile(zip_path, 'r') as z:
-            for member in z.namelist():
-                if member.startswith('models/gaussian_copula/'):
-                    filename = os.path.basename(member)
-                    if filename:
-                        with open(os.path.join(target_dir, filename), 'wb') as f:
-                            f.write(z.read(member))
-        return primary_path
-
-    raise FileNotFoundError(f"Gaussian Copula model artifact not found at {primary_path}")
 
 
 def synthesize_cohort(params):
     """
-    Generate synthetic patient records conforming to targetSize and cohort proportions.
+    Generate synthetic patient records conforming to targetSize and cohort proportions
+    using the calibrated HurdleConditionalCopulaModel.
     """
     raw_size = params.get('targetSize') or params.get('size') or 10000
     target_size = int(raw_size)
@@ -63,80 +45,73 @@ def synthesize_cohort(params):
     diabetes_target = conditions_input.get('diabetes', 30)
     low_activity_target = conditions_input.get('lowActivity', 35)
 
-    model_path = get_model_path()
-    t_start = time.time()
-    synth = GaussianCopulaSynthesizer.load(model_path)
-    t_loaded = time.time()
+    targets = {}
+    if diabetes_target is not None:
+        try:
+            diab_val = float(diabetes_target)
+            if diab_val >= 50:
+                targets['diabetes'] = 1
+            elif diab_val <= 15:
+                targets['diabetes'] = 0
+        except (ValueError, TypeError):
+            pass
 
-    # Determine diabetes split counts
-    diabetes_pct = max(0, min(100, float(diabetes_target if diabetes_target is not None else 30))) / 100.0
-    n_diabetic = int(round(target_size * diabetes_pct))
-    n_non_diabetic = target_size - n_diabetic
-
-    sampled_dfs = []
-
-    # Sample discrete conditions for diabetes
-    if n_diabetic > 0:
-        cond_diab = Condition(num_rows=n_diabetic, column_values={'diabetes': 1})
-        df_diab = synth.sample_from_conditions([cond_diab])
-        sampled_dfs.append(df_diab)
-
-    if n_non_diabetic > 0:
-        cond_nondiab = Condition(num_rows=n_non_diabetic, column_values={'diabetes': 0})
-        df_nondiab = synth.sample_from_conditions([cond_nondiab])
-        sampled_dfs.append(df_nondiab)
-
-    if sampled_dfs:
-        df = pd.concat(sampled_dfs, ignore_index=True)
-    else:
-        df = synth.sample(num_rows=target_size)
-
-    # Adjust age distribution if specified to match target proportion while preserving correlation
     if age_over_60_target is not None:
-        target_age_pct = max(5, min(95, float(age_over_60_target))) / 100.0
-        current_age_pct = (df['age'] >= 60).mean()
-        diff = target_age_pct - current_age_pct
+        try:
+            age_val = float(age_over_60_target)
+            if age_val >= 50:
+                targets['age_gt'] = 60
+        except (ValueError, TypeError):
+            pass
 
-        if abs(diff) > 0.05:
-            shift = diff * 22.0
-            df['age'] = (df['age'] + shift).clip(18, 92).round().astype(int)
+    if low_activity_target is not None:
+        try:
+            act_val = float(low_activity_target)
+            if act_val >= 50:
+                targets['activity_mims_lt'] = 8500
+        except (ValueError, TypeError):
+            pass
 
-    # Ensure clinical ranges and types
-    df['age'] = df['age'].clip(18, 95).round().astype(int)
-    df['sex'] = df['sex'].astype(int)
-    df['diabetes'] = df['diabetes'].astype(int)
-    df['systolic_bp'] = df['systolic_bp'].clip(80, 210).round().astype(int)
-    df['diastolic_bp'] = df['diastolic_bp'].clip(45, 125).round().astype(int)
-    df['activity_mims'] = df['activity_mims'].clip(500, 35000).round().astype(int)
-    df['n_medications'] = df['n_medications'].clip(0, 15).round().astype(int)
-    df['adherence_pct'] = df['adherence_pct'].clip(0.0, 100.0).round(1)
-    df['pain_score'] = df['pain_score'].clip(0.0, 10.0).round(1)
-
+    t_start = time.time()
+    gen = get_generator()
+    t_loaded = time.time()
+    
+    df = gen.sample(num_rows=target_size, targets=targets)
     t_end = time.time()
 
-    # Calculate actual achieved summary metrics
+    cohort_id = f"SYN-HC-{uuid.uuid4().hex[:8].upper()}"
+    if 'patient_id' not in df.columns:
+        df.insert(0, "patient_id", [f"SYN-{i+1:06d}" for i in range(len(df))])
+
+    # Store in memory cache
+    store_generated_cohort(cohort_id, df, {
+        "cohort_id": cohort_id,
+        "n_requested": target_size,
+        "n_generated": len(df),
+        "targets": targets
+    })
+
+    # Summary metrics
     actual_age_over_60 = round(float((df['age'] >= 60).mean() * 100), 1)
     actual_diabetes = round(float((df['diabetes'] == 1).mean() * 100), 1)
-    # Low activity defined as lowest tertile of population activity (< 8,500 MIMS)
     actual_low_activity = round(float((df['activity_mims'] < 8500).mean() * 100), 1)
 
     metrics = {
         "age_over_60_pct": actual_age_over_60,
         "diabetes_pct": actual_diabetes,
         "low_activity_pct": actual_low_activity,
+        "mean_age": round(float(df['age'].mean()), 1),
         "mean_systolic_bp": round(float(df['systolic_bp'].mean()), 1),
         "mean_diastolic_bp": round(float(df['diastolic_bp'].mean()), 1),
-        "mean_medications": round(float(df['n_medications'].mean()), 1),
+        "mean_activity_mims": round(float(df['activity_mims'].mean()), 1),
         "mean_adherence": round(float(df['adherence_pct'].mean()), 1),
         "mean_pain_score": round(float(df['pain_score'].mean()), 1),
+        "pct_pain_zero": round(float((df['pain_score'] == 0.0).mean() * 100), 1),
         "generation_time_sec": round(t_end - t_loaded, 3),
         "total_time_sec": round(t_end - t_start, 3)
     }
 
-    # Format 8 sample records for preview
     preview = df.head(8).to_dict(orient='records')
-
-    cohort_id = f"SYN-GC-{uuid.uuid4().hex[:8].upper()}"
 
     # Automatically save full generated cohort CSV to disk
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -148,12 +123,13 @@ def synthesize_cohort(params):
 
     result = {
         "success": True,
+        "status": "success",
         "cohort_id": cohort_id,
         "csv_filename": csv_filename,
         "csv_path": csv_path,
-        "model": "Gaussian Copula",
-        "model_type": "GaussianCopulaSynthesizer",
-        "sdv_version": "1.38.3",
+        "model": "Hurdle Conditional Copula",
+        "model_type": "HurdleConditionalCopulaModel",
+        "provenance": "NHANES 2011-2012 Generative Benchmark (4,826 records)",
         "source_records": 4826,
         "generated_count": len(df),
         "target_size": target_size,

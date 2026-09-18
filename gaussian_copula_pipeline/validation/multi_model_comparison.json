@@ -1,0 +1,92 @@
+{
+    "pain_zero_pct": {
+        "real": "69.18%",
+        "m1_baseline": 35.64,
+        "m2_truncated": 35.64,
+        "m3_fixed": 72.25
+    },
+    "pain_jsd": {
+        "real": "0.000000",
+        "m1_baseline": 0.011889,
+        "m2_truncated": 0.011889,
+        "m3_fixed": 0.042467
+    },
+    "pain_full_ks": {
+        "real": "0.0000",
+        "m1_baseline": 0.3354,
+        "m2_truncated": 0.3354,
+        "m3_fixed": 0.1698
+    },
+    "pain_positive_ks": {
+        "real": "0.0000",
+        "m1_baseline": 0.6027,
+        "m2_truncated": 0.6027,
+        "m3_fixed": 0.5011
+    },
+    "diabetes_prevalence_pct": {
+        "real": "9.94%",
+        "m1_baseline": 9.95,
+        "m2_truncated": 9.95,
+        "m3_fixed": 9.95
+    },
+    "diabetes_jsd": {
+        "real": "0.000000",
+        "m1_baseline": 0.0,
+        "m2_truncated": 0.0,
+        "m3_fixed": 0.0
+    },
+    "pearson_macd": {
+        "real": "0.0000",
+        "m1_baseline": 0.0841,
+        "m2_truncated": 0.0841,
+        "m3_fixed": 0.0596
+    },
+    "spearman_macd": {
+        "real": "0.0000",
+        "m1_baseline": 0.0855,
+        "m2_truncated": 0.0855,
+        "m3_fixed": 0.057
+    },
+    "downstream_auc": {
+        "real": "0.9278",
+        "m1_baseline": 0.8584,
+        "m2_truncated": 0.8584,
+        "m3_fixed": 0.6338
+    },
+    "downstream_f1": {
+        "real": "0.5596",
+        "m1_baseline": 0.0,
+        "m2_truncated": 0.0,
+        "m3_fixed": 0.2063
+    },
+    "downstream_acc": {
+        "real": "0.9296",
+        "m1_baseline": 0.8998,
+        "m2_truncated": 0.8998,
+        "m3_fixed": 0.6239
+    },
+    "real_vs_syn_auc": {
+        "real": "0.5000",
+        "m1_baseline": 0.8477,
+        "m2_truncated": 0.8477,
+        "m3_fixed": 0.9093
+    },
+    "mia_auc": {
+        "real": "0.5000",
+        "m1_baseline": 0.4895,
+        "m2_truncated": 0.4895,
+        "m3_fixed": 0.4669
+    },
+    "exact_duplicates": {
+        "real": "0",
+        "m1_baseline": 0,
+        "m2_truncated": 0,
+        "m3_fixed": 0
+    },
+    "clinical_validity_pct": {
+        "real": "100.00%",
+        "m1_baseline": 99.98,
+        "m2_truncated": 99.98,
+        "m3_fixed": 100.0
+    }
+}

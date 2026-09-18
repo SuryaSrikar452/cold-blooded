@@ -365,20 +365,28 @@
     <div class="nav-left">
       <a href="index.html" class="logo">SYNTHIA</a>
       <div class="workflow-indicator">
-        <span class="wf-step">01 Dataset</span>
+        <a href="create.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">01</span> SETUP</a>
         <span class="wf-sep">&rarr;</span>
-        <span class="wf-step">02 Cohort</span>
+        <span class="wf-step active"><span class="wf-badge">03</span> GENERATE</span>
         <span class="wf-sep">&rarr;</span>
-        <span class="wf-step active"><span class="wf-badge">03 Generate</span></span>
+        <a href="validation.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">05</span> VALIDATE</a>
         <span class="wf-sep">&rarr;</span>
-        <span class="wf-step">04 Validate</span>
+        <a href="privacy.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">06</span> PRIVACY</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="patient.html" class="wf-step" style="text-decoration:none;color:inherit;">07 PATIENTS</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="stress-test.html" class="wf-step" style="text-decoration:none;color:inherit;">08 STRESS TEST</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="api-hub.html" class="wf-step" style="text-decoration:none;color:inherit;">API HUB</a>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:1rem;">
       <a href="create.html" class="btn btn-ghost-dark" style="font-size:12px;padding:0.45rem 0.9rem;">
-        &larr; Back to cohort
+        &larr; Cohort Setup
       </a>
-      <span class="mono" style="font-size:11px;color:rgba(245,243,238,0.45);">STAGE 04 / 07</span>
+      <a href="validation.html" class="btn btn-primary" style="font-size:12px;padding:0.45rem 0.9rem;">
+        Stage 05: Validation &rarr;
+      </a>
     </div>
   </div>
 </nav>
@@ -414,7 +422,7 @@
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
-          <span>SYNTHIA CORE</span>
+          <span>SYNTHIA CORE &middot; HURDLE CONDITIONAL COPULA ENGINE</span>
         </div>
 
         <div class="stage-col-label col-synth">
@@ -470,8 +478,8 @@
       </div>
       <div class="meta-card">
         <span class="label">Model</span>
-        <div class="meta-val mono" id="metaModel" style="font-size:16px;">Gaussian Copula</div>
-        <div class="meta-sub">SDV Synthesizer v1.38.3</div>
+        <div class="meta-val mono" id="metaModel" style="font-size:15px;">Hurdle Conditional Copula</div>
+        <div class="meta-sub">Zero-Inflated Pain + Class-Conditional Copula</div>
       </div>
       <div class="meta-card">
         <span class="label">Target</span>

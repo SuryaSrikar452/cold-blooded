@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYNTHIA &mdash; Synthetic Longitudinal Trajectories &amp; What-If Explorer</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink: #0B0B0D;
+      --ink-light: #1A1A1F;
+      --ivory: #F5F3EE;
+      --ivory-light: #FBFBFA;
+      --white: #FFFFFF;
+      --violet: #6C4DFF;
+      --violet-light: #8F73FF;
+      --violet-glow: rgba(108, 77, 255, 0.12);
+      --lavender: #E7E3FF;
+      --text-main: #1A1A1F;
+      --text-muted: #5A5A65;
+      --text-faint: #8E8E9A;
+      --hairline: rgba(11, 11, 13, 0.08);
+      --hairline-soft: rgba(11, 11, 13, 0.04);
+      --teal: #00D4B2;
+      --amber: #E2A336;
+      --crimson: #E05252;
+      --panel-shadow: 0 4px 20px -2px rgba(11, 11, 13, 0.05);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--ivory);
+      color: var(--text-main);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 2rem; width: 100%; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .serif { font-family: 'Newsreader', Georgia, serif; }
+
+    /* Nav */
+    nav {
+      background: var(--ink);
+      color: var(--ivory);
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(245, 243, 238, 0.08);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-inner {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-left { display: flex; align-items: center; gap: 2rem; }
+    .logo {
+      font-family: 'Newsreader', serif;
+      font-size: 20px; font-weight: 500; letter-spacing: 0.08em;
+      color: var(--ivory); text-decoration: none;
+    }
+    .workflow-indicator {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(245, 243, 238, 0.4);
+    }
+    .wf-step { display: inline-flex; align-items: center; gap: 0.35rem; color: rgba(245, 243, 238, 0.4); text-decoration: none; }
+    .wf-step.active { color: var(--ivory); font-weight: 500; }
+    .wf-badge {
+      padding: 1px 5px; border-radius: 2px;
+      background: rgba(108, 77, 255, 0.25); color: #C5B8FF; font-size: 10px;
+    }
+    .wf-sep { color: rgba(245, 243, 238, 0.2); }
+
+    /* Page Header */
+    .page-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--hairline);
+      padding: 2.75rem 0 2.25rem;
+      position: relative;
+    }
+    .section-tag {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      margin-bottom: 0.75rem;
+    }
+    .section-tag .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--violet);
+    }
+    .section-tag .label {
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+      letter-spacing: 0.06em; color: var(--text-faint); font-weight: 500;
+    }
+    h1 {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 2.75rem; font-weight: 400; line-height: 1.15;
+      color: var(--ink); margin-bottom: 0.5rem; letter-spacing: -0.01em;
+    }
+    h1 .accent {
+      font-style: italic; color: var(--violet);
+    }
+    .subtitle {
+      font-size: 15px; color: var(--text-muted); max-width: 760px; line-height: 1.55;
+    }
+    .header-actions-row {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 0.6rem 1.25rem; border-radius: 4px; cursor: pointer;
+      transition: all 160ms var(--ease-out); text-decoration: none; border: none;
+    }
+    .btn-primary { background: var(--ink); color: var(--ivory); }
+    .btn-primary:hover { background: #222228; transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--hairline);
+    }
+    .btn-ghost:hover { background: rgba(11, 11, 13, 0.03); color: var(--ink); }
+
+    /* Main Container */
+    main { flex: 1; padding: 2.5rem 0 4rem; }
+
+    /* Patient Selector Row */
+    .patient-bar {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.25rem 1.75rem; box-shadow: var(--panel-shadow);
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .patient-select {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      padding: 0.5rem 0.85rem; border: 1px solid var(--hairline);
+      border-radius: 3px; background: var(--ivory-light); outline: none;
+    }
+
+    /* Baseline Metric Cards */
+    .baseline-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) { .baseline-grid { grid-template-columns: repeat(3, 1fr); } }
+    .b-card {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1rem 1.2rem; box-shadow: var(--panel-shadow);
+    }
+    .b-card .lbl {
+      font-size: 11px; font-family: 'JetBrains Mono', monospace;
+      color: var(--text-faint); text-transform: uppercase; margin-bottom: 0.25rem;
+    }
+    .b-card .val {
+      font-size: 20px; font-weight: 600; color: var(--ink);
+    }
+
+    /* Trajectory Canvas Panel */
+    .viz-card {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.75rem; box-shadow: var(--panel-shadow);
+      margin-bottom: 2rem;
+    }
+    .viz-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .canvas-wrap {
+      width: 100%; height: 320px; position: relative;
+      background: #FAFAFA; border: 1px solid var(--hairline);
+      border-radius: 3px;
+    }
+    #trajectoryCanvas { width: 100%; height: 100%; display: block; }
+
+    /* Legend */
+    .traj-legend {
+      display: flex; gap: 1.5rem; margin-top: 1rem; font-size: 12px;
+      font-family: 'JetBrains Mono', monospace; color: var(--text-muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-box { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* Counterfactual Section */
+    .cf-section {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 2rem; box-shadow: var(--panel-shadow);
+      margin-bottom: 2rem;
+    }
+    .cf-slider-row {
+      margin: 1.5rem 0 2rem; padding: 1.5rem; background: var(--ivory);
+      border-radius: 4px; border: 1px solid var(--hairline);
+    }
+    .cf-results-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 800px) { .cf-results-grid { grid-template-columns: repeat(2, 1fr); } }
+    .cf-card {
+      padding: 1rem; background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 3px; text-align: center;
+    }
+    .cf-card .cf-var { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-faint); margin-bottom: 0.35rem; }
+    .cf-card .cf-orig { font-size: 13px; color: var(--text-muted); text-decoration: line-through; }
+    .cf-card .cf-new { font-size: 22px; font-weight: 600; color: var(--violet); margin-top: 2px; }
+    .cf-card .cf-delta { font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-top: 0.25rem; }
+
+    /* Disclaimer */
+    .disclaimer-alert {
+      border: 1px solid rgba(108, 77, 255, 0.25); background: rgba(108, 77, 255, 0.04);
+      padding: 1rem 1.25rem; border-radius: 4px; margin-bottom: 2rem;
+      font-size: 12.5px; color: var(--text-muted); line-height: 1.5;
+    }
+    .disclaimer-alert strong { color: var(--ink); }
+
+    /* Table */
+    .traj-table {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 1.5rem;
+    }
+    .traj-table th {
+      text-align: left; padding: 0.65rem 0.75rem; background: #FAFAFA;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--text-faint); border-bottom: 1px solid var(--hairline);
+    }
+    .traj-table td {
+      padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--hairline-soft);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    footer {
+      background: var(--white); border-top: 1px solid var(--hairline);
+      padding: 1.5rem 0; font-size: 12px; color: var(--text-faint);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="wrap nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-indicator">
+        <a href="create.html" class="wf-step"><span class="wf-badge">01</span> SETUP</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="generate.html" class="wf-step"><span class="wf-badge">03</span> GENERATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="validation.html" class="wf-step"><span class="wf-badge">05</span> VALIDATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="privacy.html" class="wf-step"><span class="wf-badge">06</span> PRIVACY</a>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step active"><span class="wf-badge">07</span> PATIENTS</span>
+        <span class="wf-sep">&middot;</span>
+        <a href="stress-test.html" class="wf-step">08 STRESS TEST</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="api-hub.html" class="wf-step">API HUB</a>
+      </div>
+    </div>
+    <div>
+      <a href="stress-test.html" class="btn btn-ghost" style="color:var(--ivory);border-color:rgba(245,243,238,0.18);padding:0.4rem 0.85rem;font-size:12px;">Next: Stress Test Lab &rarr;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<header class="page-header">
+  <div class="wrap">
+    <div class="section-tag">
+      <span class="dot"></span>
+      <span class="label">PIPELINE STAGE 07 / PATIENT STORIES</span>
+    </div>
+    <h1>Synthetic longitudinal <span class="accent">trajectories.</span></h1>
+    <p class="subtitle">
+      Modelled 12-month individual clinical trajectories using an AR(1) Ornstein-Uhlenbeck mean-reverting process with physiological boundaries and conditional covariance.
+    </p>
+
+    <div class="header-actions-row">
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="mono" style="font-size:12px;padding:3px 8px;border-radius:2px;background:rgba(108,77,255,0.08);color:var(--violet);border:1px solid rgba(108,77,255,0.2);">
+          AR(1) STOCHASTIC SIMULATION
+        </span>
+        <span class="mono" style="font-size:12px;color:var(--text-faint);">Cadence: Monthly (12 Steps) &middot; Clinical Logic: DBP &lt; SBP - 10</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- Patient Selection Bar -->
+    <div class="patient-bar">
+      <div>
+        <label for="patientPicker" class="mono" style="font-size:12px;color:var(--text-faint);margin-right:0.6rem;">INSPECT PATIENT:</label>
+        <select id="patientPicker" class="patient-select">
+          <option value="SYN-000001">SYN-000001 (Baseline Patient)</option>
+          <option value="SYN-000002">SYN-000002</option>
+          <option value="SYN-000003">SYN-000003</option>
+          <option value="SYN-000004">SYN-000004</option>
+          <option value="SYN-000005">SYN-000005</option>
+          <option value="SYN-000006">SYN-000006</option>
+          <option value="SYN-000007">SYN-000007</option>
+          <option value="SYN-000008">SYN-000008</option>
+        </select>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <span class="mono" style="font-size:12px;color:var(--text-faint);">CADENCE:</span>
+        <button type="button" class="btn btn-ghost" id="cadenceMonthlyBtn" style="padding:0.35rem 0.75rem;font-size:12px;background:var(--ink);color:var(--ivory);">Monthly (12)</button>
+        <button type="button" class="btn btn-ghost" id="cadenceWeeklyBtn" style="padding:0.35rem 0.75rem;font-size:12px;">Weekly (48)</button>
+      </div>
+    </div>
+
+    <!-- Baseline Metrics -->
+    <div class="baseline-grid">
+      <div class="b-card">
+        <div class="lbl">AGE / SEX</div>
+        <div class="val mono" id="bAgeSex">58 / M</div>
+      </div>
+      <div class="b-card">
+        <div class="lbl">DIABETES</div>
+        <div class="val mono" id="bDiab">Yes (1)</div>
+      </div>
+      <div class="b-card">
+        <div class="lbl">BASELINE BP</div>
+        <div class="val mono" id="bBP">138 / 84</div>
+      </div>
+      <div class="b-card">
+        <div class="lbl">ACTIVITY</div>
+        <div class="val mono" id="bAct">7,420</div>
+      </div>
+      <div class="b-card">
+        <div class="lbl">MEDICATIONS</div>
+        <div class="val mono" id="bMeds">3 Rx</div>
+      </div>
+      <div class="b-card">
+        <div class="lbl">PAIN SCORE</div>
+        <div class="val mono" id="bPain">0.0 NRS</div>
+      </div>
+    </div>
+
+    <!-- Trajectory Canvas Chart -->
+    <div class="viz-card">
+      <div class="viz-head">
+        <div>
+          <h3 style="font-size:18px;font-weight:600;color:var(--ink);">12-Month Multi-Parametric Trajectory</h3>
+          <span style="font-size:12.5px;color:var(--text-faint);">Mean-reverting stochastic trajectory with patient baseline setpoint parameters.</span>
+        </div>
+        <span class="mono" style="font-size:12px;color:var(--violet);" id="trajectoryStatus">Simulated Trajectory Active &check;</span>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="trajectoryCanvas"></canvas>
+      </div>
+
+      <div class="traj-legend">
+        <div class="legend-item">
+          <div class="legend-box" style="background:#6C4DFF;"></div>
+          <span>Systolic BP (mmHg)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box" style="background:#00D4B2;"></div>
+          <span>Diastolic BP (mmHg)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box" style="background:#E2A336;"></div>
+          <span>Adherence (%)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box" style="background:#E05252;"></div>
+          <span>Pain Score (0&ndash;10)</span>
+        </div>
+      </div>
+
+      <!-- Month by month table preview -->
+      <table class="traj-table">
+        <thead>
+          <tr>
+            <th>MONTH</th>
+            <th>DAY OFFSET</th>
+            <th>SYSTOLIC BP</th>
+            <th>DIASTOLIC BP</th>
+            <th>HEART RATE</th>
+            <th>PHYSICAL ACTIVITY</th>
+            <th>ADHERENCE</th>
+            <th>PAIN SCORE</th>
+          </tr>
+        </thead>
+        <tbody id="trajectoryTableBody">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Scientific Disclaimer -->
+    <div class="disclaimer-alert">
+      <strong>CROSS-SECTIONAL BASELINE DISCLAIMER:</strong> NHANES Cycle G is an observational cross-sectional health survey. This 12-month trajectory is a mathematical simulation generated via an AR(1) Ornstein-Uhlenbeck process with literature-derived clinical drift parameters. It does NOT represent longitudinal real-world patient tracking data.
+    </div>
+
+    <!-- Section 2: Counterfactual What-If Lab -->
+    <div class="cf-section">
+      <div class="section-tag">
+        <span class="dot"></span>
+        <span class="label">INTERVENTIONAL SIMULATION &middot; COPULA CONDITIONAL EXPLORER</span>
+      </div>
+      <h2 class="serif" style="font-size:24px;font-weight:400;color:var(--ink);">Statistical "What-If" Explorer</h2>
+      <p style="font-size:13.5px;color:var(--text-muted);margin-top:2px;">
+        Explore conditional shifts across correlated clinical variables when a primary driver is altered in Gaussian Copula latent space.
+      </p>
+
+      <div class="cf-slider-row">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+          <span style="font-weight:600;font-size:14px;color:var(--ink);">DRIVER INTERVENTION: PHYSICAL ACTIVITY (MIMS)</span>
+          <span class="mono" style="font-size:16px;font-weight:600;color:var(--violet);" id="cfDriverVal">12,000 MIMS</span>
+        </div>
+        <input type="range" id="cfDriverSlider" min="1000" max="25000" step="500" value="12000" style="width:100%;height:3px;" />
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-faint);margin-top:0.4rem;">
+          <span>1,000 MIMS (Sedentary)</span>
+          <span>10,000 (Average)</span>
+          <span>25,000 MIMS (Vigorous)</span>
+        </div>
+      </div>
+
+      <div class="cf-results-grid">
+        <div class="cf-card">
+          <div class="cf-var">SYSTOLIC BLOOD PRESSURE</div>
+          <div class="cf-orig mono" id="cfOrigSBP">138 mmHg</div>
+          <div class="cf-new mono" id="cfNewSBP">134 mmHg</div>
+          <div class="cf-delta mono" id="cfDeltaSBP" style="color:var(--teal);">-4 mmHg</div>
+        </div>
+        <div class="cf-card">
+          <div class="cf-var">DIASTOLIC BLOOD PRESSURE</div>
+          <div class="cf-orig mono" id="cfOrigDBP">84 mmHg</div>
+          <div class="cf-new mono" id="cfNewDBP">82 mmHg</div>
+          <div class="cf-delta mono" id="cfDeltaDBP" style="color:var(--teal);">-2 mmHg</div>
+        </div>
+        <div class="cf-card">
+          <div class="cf-var">REPORTED PAIN SCORE</div>
+          <div class="cf-orig mono" id="cfOrigPain">1.2 NRS</div>
+          <div class="cf-new mono" id="cfNewPain">0.8 NRS</div>
+          <div class="cf-delta mono" id="cfDeltaPain" style="color:var(--teal);">-0.4 NRS</div>
+        </div>
+        <div class="cf-card">
+          <div class="cf-var">MEDICATION ADHERENCE</div>
+          <div class="cf-orig mono" id="cfOrigAdh">62.0%</div>
+          <div class="cf-new mono" id="cfNewAdh">64.5%</div>
+          <div class="cf-delta mono" id="cfDeltaAdh" style="color:var(--teal);">+2.5%</div>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;font-size:12px;color:var(--text-faint);">
+        * <em>STATISTICAL WHAT-IF: This demonstrates conditional dependency learned by the model copula covariance. It is NOT a clinical treatment prediction or medical causal prognosis.</em>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>SYNTHIA Healthcare Synthetic Data Platform &middot; Stage 07 Patient Stories</span>
+    <span class="mono">SH-405 ARCHITECTURE</span>
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const BACKEND_URL = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
+  const patientPicker = document.getElementById('patientPicker');
+  const cadenceMonthlyBtn = document.getElementById('cadenceMonthlyBtn');
+  const cadenceWeeklyBtn = document.getElementById('cadenceWeeklyBtn');
+  const trajectoryTableBody = document.getElementById('trajectoryTableBody');
+  const cfDriverSlider = document.getElementById('cfDriverSlider');
+  const cfDriverVal = document.getElementById('cfDriverVal');
+
+  let currentCadence = 'monthly';
+  let currentPatientId = 'SYN-000001';
+  let currentPatientProfile = null;
+
+  /* ===================================================================
+     1. TRAJECTORY CANVAS CHART
+  =================================================================== */
+  function drawTrajectory(trajectory) {
+    const canvas = document.getElementById('trajectoryCanvas');
+    if (!canvas || !trajectory || trajectory.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const w = rect.width;
+    const h = rect.height;
+    const pad = 40;
+    const pw = w - pad * 2;
+    const ph = h - pad * 2;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(11, 11, 13, 0.06)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad + (ph / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(pad, y);
+      ctx.lineTo(w - pad, y);
+      ctx.stroke();
+    }
+
+    const nSteps = trajectory.length;
+    function getX(idx) { return pad + (idx / (nSteps - 1)) * pw; }
+
+    // Plot series helper
+    function plotSeries(key, minVal, maxVal, color, lineWidth = 2) {
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      trajectory.forEach((pt, i) => {
+        const val = pt[key];
+        const norm = (val - minVal) / (maxVal - minVal);
+        const y = (h - pad) - norm * ph;
+        if (i === 0) ctx.moveTo(getX(i), y);
+        else ctx.lineTo(getX(i), y);
+      });
+      ctx.stroke();
+
+      // Nodes
+      ctx.fillStyle = color;
+      trajectory.forEach((pt, i) => {
+        const val = pt[key];
+        const norm = (val - minVal) / (maxVal - minVal);
+        const y = (h - pad) - norm * ph;
+        ctx.beginPath();
+        ctx.arc(getX(i), y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    // Series: SBP (70 to 200) -> Violet
+    plotSeries('systolic_bp', 70, 200, '#6C4DFF', 2.2);
+    // Series: DBP (40 to 120) -> Teal
+    plotSeries('diastolic_bp', 40, 120, '#00D4B2', 2);
+    // Series: Adherence (0 to 100) -> Amber
+    plotSeries('adherence_pct', 0, 100, '#E2A336', 1.8);
+    // Series: Pain (0 to 10) -> Crimson
+    plotSeries('pain_score', 0, 10, '#E05252', 1.8);
+
+    // Axis labels
+    ctx.fillStyle = '#8E8E9A';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillText('Month 0', pad, h - pad + 18);
+    ctx.fillText(`Month ${trajectory[trajectory.length - 1].month || 12}`, w - pad - 40, h - pad + 18);
+  }
+
+  /* ===================================================================
+     2. LOAD LONGITUDINAL TRAJECTORY
+  =================================================================== */
+  async function loadTrajectory(patientId, cadence) {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/patient/${patientId}/longitudinal?cadence=${cadence}&num_months=12`);
+      const data = await resp.json();
+      const traj = data.trajectory || [];
+
+      if (traj.length > 0) {
+        currentPatientProfile = traj[0];
+        // Update baseline cards
+        document.getElementById('bAgeSex').textContent = `${currentPatientProfile.age || 58} / ${currentPatientProfile.sex === 1 ? 'M' : 'F'}`;
+        document.getElementById('bDiab').textContent = currentPatientProfile.diabetes === 1 ? 'Yes (1)' : 'No (0)';
+        document.getElementById('bBP').textContent = `${Math.round(currentPatientProfile.systolic_bp || 130)} / ${Math.round(currentPatientProfile.diastolic_bp || 80)}`;
+        document.getElementById('bAct').textContent = Number(Math.round(currentPatientProfile.activity_mims || 8000)).toLocaleString('en-US');
+        document.getElementById('bMeds').textContent = `${currentPatientProfile.n_medications || 1} Rx`;
+        document.getElementById('bPain').textContent = `${(currentPatientProfile.pain_score || 0).toFixed(1)} NRS`;
+
+        // Update counterfactual baseline
+        document.getElementById('cfOrigSBP').textContent = `${Math.round(currentPatientProfile.systolic_bp || 130)} mmHg`;
+        document.getElementById('cfOrigDBP').textContent = `${Math.round(currentPatientProfile.diastolic_bp || 80)} mmHg`;
+        document.getElementById('cfOrigPain').textContent = `${(currentPatientProfile.pain_score || 0).toFixed(1)} NRS`;
+        document.getElementById('cfOrigAdh').textContent = `${(currentPatientProfile.adherence_pct || 50).toFixed(1)}%`;
+      }
+
+      drawTrajectory(traj);
+
+      // Render table
+      trajectoryTableBody.innerHTML = '';
+      traj.slice(0, 13).forEach(pt => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600;color:var(--ink);">Month ${pt.month}</td>
+          <td style="color:var(--text-faint);">+${pt.day_offset}d</td>
+          <td style="color:#6C4DFF;font-weight:600;">${pt.systolic_bp.toFixed(1)}</td>
+          <td style="color:#00D4B2;">${pt.diastolic_bp.toFixed(1)}</td>
+          <td>${pt.heart_rate ? pt.heart_rate.toFixed(0) : '72'} bpm</td>
+          <td>${Number(Math.round(pt.activity_mims)).toLocaleString('en-US')}</td>
+          <td style="color:#E2A336;">${pt.adherence_pct.toFixed(1)}%</td>
+          <td style="color:#E05252;">${pt.pain_score.toFixed(1)}</td>
+        `;
+        trajectoryTableBody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('Failed to load trajectory:', err);
+    }
+  }
+
+  patientPicker.addEventListener('change', (e) => {
+    currentPatientId = e.target.value;
+    loadTrajectory(currentPatientId, currentCadence);
+  });
+
+  cadenceMonthlyBtn.addEventListener('click', () => {
+    currentCadence = 'monthly';
+    cadenceMonthlyBtn.style.background = 'var(--ink)';
+    cadenceMonthlyBtn.style.color = 'var(--ivory)';
+    cadenceWeeklyBtn.style.background = 'transparent';
+    cadenceWeeklyBtn.style.color = 'var(--text-muted)';
+    loadTrajectory(currentPatientId, currentCadence);
+  });
+
+  cadenceWeeklyBtn.addEventListener('click', () => {
+    currentCadence = 'weekly';
+    cadenceWeeklyBtn.style.background = 'var(--ink)';
+    cadenceWeeklyBtn.style.color = 'var(--ivory)';
+    cadenceMonthlyBtn.style.background = 'transparent';
+    cadenceMonthlyBtn.style.color = 'var(--text-muted)';
+    loadTrajectory(currentPatientId, currentCadence);
+  });
+
+  /* ===================================================================
+     3. COUNTERFACTUAL WHAT-IF (DEBOUNCED)
+  =================================================================== */
+  let cfTimeout = null;
+  cfDriverSlider.addEventListener('input', (e) => {
+    const val = Number(e.target.value);
+    cfDriverVal.textContent = `${val.toLocaleString('en-US')} MIMS`;
+
+    clearTimeout(cfTimeout);
+    cfTimeout = setTimeout(async () => {
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/copula/counterfactual`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patient_ids: [currentPatientId],
+            variable: 'activity_mims',
+            new_value: val
+          })
+        });
+        const res = await resp.json();
+        const cf = res.counterfactual || {};
+        const orig = res.original || {};
+
+        const sbpDiff = (cf.systolic_bp - orig.systolic_bp);
+        const dbpDiff = (cf.diastolic_bp - orig.diastolic_bp);
+        const painDiff = (cf.pain_score - orig.pain_score);
+        const adhDiff = (cf.adherence_pct - orig.adherence_pct);
+
+        document.getElementById('cfNewSBP').textContent = `${Math.round(cf.systolic_bp)} mmHg`;
+        document.getElementById('cfDeltaSBP').textContent = `${sbpDiff > 0 ? '+' : ''}${sbpDiff.toFixed(1)} mmHg`;
+        document.getElementById('cfDeltaSBP').style.color = sbpDiff <= 0 ? 'var(--teal)' : 'var(--amber)';
+
+        document.getElementById('cfNewDBP').textContent = `${Math.round(cf.diastolic_bp)} mmHg`;
+        document.getElementById('cfDeltaDBP').textContent = `${dbpDiff > 0 ? '+' : ''}${dbpDiff.toFixed(1)} mmHg`;
+        document.getElementById('cfDeltaDBP').style.color = dbpDiff <= 0 ? 'var(--teal)' : 'var(--amber)';
+
+        document.getElementById('cfNewPain').textContent = `${cf.pain_score.toFixed(1)} NRS`;
+        document.getElementById('cfDeltaPain').textContent = `${painDiff > 0 ? '+' : ''}${painDiff.toFixed(1)} NRS`;
+        document.getElementById('cfDeltaPain').style.color = painDiff <= 0 ? 'var(--teal)' : 'var(--amber)';
+
+        document.getElementById('cfNewAdh').textContent = `${cf.adherence_pct.toFixed(1)}%`;
+        document.getElementById('cfDeltaAdh').textContent = `${adhDiff > 0 ? '+' : ''}${adhDiff.toFixed(1)}%`;
+        document.getElementById('cfDeltaAdh').style.color = adhDiff >= 0 ? 'var(--teal)' : 'var(--amber)';
+      } catch (err) {
+        console.error('Counterfactual calculation failed:', err);
+      }
+    }, 250);
+  });
+
+  // Initial load
+  loadTrajectory('SYN-000001', 'monthly');
+
+})();
+</script>
+</body>
+</html>

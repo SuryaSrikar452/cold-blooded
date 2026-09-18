@@ -1,0 +1,9 @@
+Python Version: 3.13.7
+OS: Windows 11 (AMD64)
+CPU: AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD
+SDV Version: 1.38.3
+pandas Version: 2.3.3
+numpy Version: 2.2.5
+scipy Version: 1.17.0
+scikit-learn Version: 1.8.0
+pyarrow Version: 25.0.1

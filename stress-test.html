@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYNTHIA &mdash; Stress-Test &amp; Edge-Case Laboratory</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink: #0B0B0D;
+      --ink-light: #1A1A1F;
+      --ivory: #F5F3EE;
+      --ivory-light: #FBFBFA;
+      --white: #FFFFFF;
+      --violet: #6C4DFF;
+      --violet-light: #8F73FF;
+      --violet-glow: rgba(108, 77, 255, 0.12);
+      --lavender: #E7E3FF;
+      --text-main: #1A1A1F;
+      --text-muted: #5A5A65;
+      --text-faint: #8E8E9A;
+      --hairline: rgba(11, 11, 13, 0.08);
+      --hairline-soft: rgba(11, 11, 13, 0.04);
+      --teal: #00D4B2;
+      --amber: #E2A336;
+      --crimson: #E05252;
+      --panel-shadow: 0 4px 20px -2px rgba(11, 11, 13, 0.05);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--ivory);
+      color: var(--text-main);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 2rem; width: 100%; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .serif { font-family: 'Newsreader', Georgia, serif; }
+
+    /* Nav */
+    nav {
+      background: var(--ink);
+      color: var(--ivory);
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(245, 243, 238, 0.08);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-inner {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-left { display: flex; align-items: center; gap: 2rem; }
+    .logo {
+      font-family: 'Newsreader', serif;
+      font-size: 20px; font-weight: 500; letter-spacing: 0.08em;
+      color: var(--ivory); text-decoration: none;
+    }
+    .workflow-indicator {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(245, 243, 238, 0.4);
+    }
+    .wf-step { display: inline-flex; align-items: center; gap: 0.35rem; color: rgba(245, 243, 238, 0.4); text-decoration: none; }
+    .wf-step.active { color: var(--ivory); font-weight: 500; }
+    .wf-badge {
+      padding: 1px 5px; border-radius: 2px;
+      background: rgba(108, 77, 255, 0.25); color: #C5B8FF; font-size: 10px;
+    }
+    .wf-sep { color: rgba(245, 243, 238, 0.2); }
+
+    /* Page Header */
+    .page-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--hairline);
+      padding: 2.75rem 0 2.25rem;
+      position: relative;
+    }
+    .section-tag {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      margin-bottom: 0.75rem;
+    }
+    .section-tag .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--crimson);
+    }
+    .section-tag .label {
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+      letter-spacing: 0.06em; color: var(--text-faint); font-weight: 500;
+    }
+    h1 {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 2.75rem; font-weight: 400; line-height: 1.15;
+      color: var(--ink); margin-bottom: 0.5rem; letter-spacing: -0.01em;
+    }
+    h1 .accent {
+      font-style: italic; color: var(--violet);
+    }
+    .subtitle {
+      font-size: 15px; color: var(--text-muted); max-width: 780px; line-height: 1.55;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 0.6rem 1.25rem; border-radius: 4px; cursor: pointer;
+      transition: all 160ms var(--ease-out); text-decoration: none; border: none;
+    }
+    .btn-primary { background: var(--ink); color: var(--ivory); }
+    .btn-primary:hover { background: #222228; transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--hairline);
+    }
+    .btn-ghost:hover { background: rgba(11, 11, 13, 0.03); color: var(--ink); }
+
+    /* Main Container */
+    main { flex: 1; padding: 2.5rem 0 4rem; }
+
+    /* Scenario Grid */
+    .scenarios-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    @media (max-width: 900px) { .scenarios-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .scenarios-grid { grid-template-columns: 1fr; } }
+
+    .scenario-card {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.25rem; box-shadow: var(--panel-shadow);
+      cursor: pointer; transition: all 180ms ease; position: relative;
+    }
+    .scenario-card:hover {
+      border-color: rgba(108, 77, 255, 0.4);
+      transform: translateY(-2px);
+    }
+    .scenario-card.active {
+      border-color: var(--violet);
+      box-shadow: 0 4px 16px rgba(108, 77, 255, 0.12);
+      background: #FAF9FF;
+    }
+    .scenario-badge {
+      font-size: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+      padding: 2px 6px; border-radius: 2px; display: inline-block; margin-bottom: 0.5rem;
+    }
+    .badge-tail { background: rgba(226, 163, 54, 0.12); color: #B37B1B; }
+    .badge-anomaly { background: rgba(224, 82, 82, 0.1); color: #C53030; }
+    .badge-complex { background: rgba(108, 77, 255, 0.1); color: var(--violet); }
+
+    .scenario-card h4 {
+      font-size: 14.5px; font-weight: 600; color: var(--ink); margin-bottom: 0.35rem;
+    }
+    .scenario-card p {
+      font-size: 12px; color: var(--text-faint); line-height: 1.45;
+    }
+
+    /* Action Control Bar */
+    .control-bar {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.5rem 1.75rem; box-shadow: var(--panel-shadow);
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .input-n {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      padding: 0.45rem 0.75rem; border: 1px solid var(--hairline);
+      border-radius: 3px; width: 90px;
+    }
+
+    /* Results Panel */
+    .results-panel {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 2rem; box-shadow: var(--panel-shadow);
+    }
+    .res-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .provenance-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 3px 8px; border-radius: 2px;
+      background: rgba(224, 82, 82, 0.08); color: var(--crimson);
+      border: 1px solid rgba(224, 82, 82, 0.25);
+    }
+
+    .edge-table {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 1rem;
+    }
+    .edge-table th {
+      text-align: left; padding: 0.65rem 0.75rem; background: #FAFAFA;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--text-faint); border-bottom: 1px solid var(--hairline);
+    }
+    .edge-table td {
+      padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--hairline-soft);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .edge-table tr:hover { background: rgba(108, 77, 255, 0.02); }
+    .anom-cell {
+      color: var(--crimson); font-weight: 600; background: rgba(224, 82, 82, 0.04);
+    }
+
+    footer {
+      background: var(--white); border-top: 1px solid var(--hairline);
+      padding: 1.5rem 0; font-size: 12px; color: var(--text-faint);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="wrap nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-indicator">
+        <a href="create.html" class="wf-step"><span class="wf-badge">01</span> SETUP</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="generate.html" class="wf-step"><span class="wf-badge">03</span> GENERATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="validation.html" class="wf-step"><span class="wf-badge">05</span> VALIDATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="privacy.html" class="wf-step"><span class="wf-badge">06</span> PRIVACY</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="patient.html" class="wf-step"><span class="wf-badge">07</span> PATIENTS</a>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step active"><span class="wf-badge">08</span> STRESS TEST</span>
+        <span class="wf-sep">&middot;</span>
+        <a href="api-hub.html" class="wf-step">API HUB</a>
+      </div>
+    </div>
+    <div>
+      <a href="api-hub.html" class="btn btn-ghost" style="color:var(--ivory);border-color:rgba(245,243,238,0.18);padding:0.4rem 0.85rem;font-size:12px;">Next: Developer API Hub &rarr;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<header class="page-header">
+  <div class="wrap">
+    <div class="section-tag">
+      <span class="dot"></span>
+      <span class="label">PIPELINE STAGE 08 / STRESS TEST</span>
+    </div>
+    <h1>Edge-case generation for <span class="accent">downstream systems.</span></h1>
+    <p class="subtitle">
+      Generate adversarial, extreme tail, and conflicting clinical profiles via Hurdle Copula conditional resampling to stress-test diagnostic pipelines and safety boundaries.
+    </p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- 8 Scenario Cards Grid -->
+    <div class="scenarios-grid" id="scenariosGrid">
+      <div class="scenario-card active" data-id="elderly_diabetic">
+        <span class="scenario-badge badge-tail">TAIL AGE + DIABETES</span>
+        <h4>Very Elderly + Diabetic</h4>
+        <p>Patients aged over 75 with confirmed diagnosis of diabetes mellitus.</p>
+      </div>
+
+      <div class="scenario-card" data-id="severe_hypertension">
+        <span class="scenario-badge badge-tail">CARDIOVASCULAR TAIL</span>
+        <h4>Severe Hypertension</h4>
+        <p>Crisis-level blood pressure spikes exceeding 165 mmHg systolic.</p>
+      </div>
+
+      <div class="scenario-card" data-id="severe_sedentary">
+        <span class="scenario-badge badge-tail">SEDENTARY EXTREME</span>
+        <h4>Severe Sedentary Profile</h4>
+        <p>Objective physical activity (MIMS) under 2,000 (lowest 1% of population).</p>
+      </div>
+
+      <div class="scenario-card" data-id="poor_adherence">
+        <span class="scenario-badge badge-anomaly">SAFETY ANOMALY</span>
+        <h4>Severe Non-Adherence</h4>
+        <p>Prescription adherence under 15% despite diagnosed clinical conditions.</p>
+      </div>
+
+      <div class="scenario-card" data-id="high_pain_nonadherent">
+        <span class="scenario-badge badge-anomaly">ADVERSARIAL COMBINATION</span>
+        <h4>High Pain + Non-Adherent</h4>
+        <p>High pain score (>7.0 NRS) combined with medication adherence under 30%.</p>
+      </div>
+
+      <div class="scenario-card" data-id="polypharmacy">
+        <span class="scenario-badge badge-complex">POLYPHARMACY COMPLEX</span>
+        <h4>Polypharmacy Cohort</h4>
+        <p>Patients concurrently taking 10 or more distinct prescription medications.</p>
+      </div>
+
+      <div class="scenario-card" data-id="conflicting_med_pattern">
+        <span class="scenario-badge badge-anomaly">CONFLICTING PATTERN</span>
+        <h4>Conflicting Med Pattern</h4>
+        <p>Zero reported medications but high adherence percentage (&gt;80%).</p>
+      </div>
+
+      <div class="scenario-card" data-id="multimorbid_risk">
+        <span class="scenario-badge badge-complex">MULTIMORBID RISK</span>
+        <h4>Multimorbid High Risk</h4>
+        <p>Concurrent: age &gt; 65, diabetes, SBP &gt; 140 mmHg, medications &ge; 5.</p>
+      </div>
+    </div>
+
+    <!-- Generation Control Bar -->
+    <div class="control-bar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <span style="font-weight:600;font-size:14px;color:var(--ink);">SELECTED SCENARIO:</span>
+        <span class="mono" style="font-size:13px;color:var(--violet);" id="selectedScenarioName">Very Elderly + Diabetic</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1.25rem;">
+        <label for="inputN" class="mono" style="font-size:12px;color:var(--text-faint);">SAMPLE SIZE (N):</label>
+        <input type="number" id="inputN" class="input-n" value="50" min="10" max="500" step="10" />
+        <button type="button" class="btn btn-primary" id="generateEdgeBtn">
+          Generate Edge Cases &rarr;
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="results-panel">
+      <div class="res-head">
+        <div>
+          <h3 style="font-size:18px;font-weight:600;color:var(--ink);" id="resTitle">Generated Edge Cases Preview</h3>
+          <span style="font-size:12px;color:var(--text-faint);" id="resSub">Showing records generated matching the selected scenario filters.</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span class="provenance-pill mono">data_provenance = "edge_case"</span>
+          <span class="mono" style="font-size:12px;color:var(--text-muted);" id="resCount">Count: 50 / 50</span>
+        </div>
+      </div>
+
+      <table class="edge-table">
+        <thead>
+          <tr>
+            <th>PATIENT ID</th>
+            <th>AGE</th>
+            <th>SEX</th>
+            <th>DIABETES</th>
+            <th>SYSTOLIC BP</th>
+            <th>DIASTOLIC BP</th>
+            <th>ACTIVITY (MIMS)</th>
+            <th>MEDICATIONS</th>
+            <th>ADHERENCE</th>
+            <th>PAIN SCORE</th>
+          </tr>
+        </thead>
+        <tbody id="edgeTableBody">
+          <!-- Populated dynamically via JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>SYNTHIA Healthcare Synthetic Data Platform &middot; Stage 08 Stress-Test</span>
+    <span class="mono">SH-405 ARCHITECTURE</span>
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const BACKEND_URL = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
+  const scenariosGrid = document.getElementById('scenariosGrid');
+  const selectedScenarioName = document.getElementById('selectedScenarioName');
+  const generateEdgeBtn = document.getElementById('generateEdgeBtn');
+  const inputN = document.getElementById('inputN');
+  const edgeTableBody = document.getElementById('edgeTableBody');
+
+  let activeScenarioId = 'elderly_diabetic';
+
+  scenariosGrid.addEventListener('click', (e) => {
+    const card = e.target.closest('.scenario-card');
+    if (!card) return;
+
+    document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+
+    activeScenarioId = card.dataset.id;
+    selectedScenarioName.textContent = card.querySelector('h4').textContent;
+  });
+
+  async function runEdgeCaseGeneration() {
+    const n = Math.min(500, Math.max(10, parseInt(inputN.value) || 50));
+    generateEdgeBtn.disabled = true;
+    generateEdgeBtn.textContent = 'Synthesizing edge cases...';
+
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/generate/edge-cases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario_id: activeScenarioId, n: n })
+      });
+
+      const data = await resp.json();
+      const patients = data.patients || [];
+
+      document.getElementById('resCount').textContent = `Generated: ${patients.length} / ${n}`;
+      edgeTableBody.innerHTML = '';
+
+      patients.slice(0, 50).forEach((pat, i) => {
+        const tr = document.createElement('tr');
+        
+        const isHighAge = pat.age > 75;
+        const isHighBP = pat.systolic_bp > 165;
+        const isLowAct = pat.activity_mims < 2000;
+        const isLowAdh = pat.adherence_pct < 15;
+        const isHighPain = pat.pain_score > 7.0;
+        const isHighMeds = pat.n_medications >= 10;
+        const isConflict = pat.n_medications === 0 && pat.adherence_pct > 80;
+
+        tr.innerHTML = `
+          <td style="font-weight:600;color:var(--ink);">${pat.patient_id || 'SYN-EDGE-' + (i+1)}</td>
+          <td class="${isHighAge ? 'anom-cell' : ''}">${pat.age}</td>
+          <td>${pat.sex === 1 ? 'M' : 'F'}</td>
+          <td class="${pat.diabetes === 1 ? 'anom-cell' : ''}">${pat.diabetes === 1 ? 'Yes' : 'No'}</td>
+          <td class="${isHighBP ? 'anom-cell' : ''}">${pat.systolic_bp}</td>
+          <td>${pat.diastolic_bp}</td>
+          <td class="${isLowAct ? 'anom-cell' : ''}">${Number(pat.activity_mims).toLocaleString('en-US')}</td>
+          <td class="${(isHighMeds || isConflict) ? 'anom-cell' : ''}">${pat.n_medications}</td>
+          <td class="${(isLowAdh || isConflict) ? 'anom-cell' : ''}">${pat.adherence_pct}%</td>
+          <td class="${isHighPain ? 'anom-cell' : ''}">${pat.pain_score}</td>
+        `;
+        edgeTableBody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('Edge case generation failed:', err);
+    } finally {
+      generateEdgeBtn.disabled = false;
+      generateEdgeBtn.textContent = 'Generate Edge Cases \u2192';
+    }
+  }
+
+  generateEdgeBtn.addEventListener('click', runEdgeCaseGeneration);
+
+  // Initial generation
+  runEdgeCaseGeneration();
+
+})();
+</script>
+</body>
+</html>

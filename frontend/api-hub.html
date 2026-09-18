@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYNTHIA — Developer API Gateway</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0B0B0D;
+      --ink-light: #1A1A1F;
+      --ivory: #F5F3EE;
+      --ivory-light: #FBFBFA;
+      --white: #FFFFFF;
+      --violet: #6C4DFF;
+      --violet-light: #8F73FF;
+      --violet-glow: rgba(108, 77, 255, 0.12);
+      --lavender: #E7E3FF;
+      --text-main: #1A1A1F;
+      --text-muted: #5A5A65;
+      --text-faint: #8E8E9A;
+      --hairline: rgba(11, 11, 13, 0.08);
+      --hairline-soft: rgba(11, 11, 13, 0.04);
+      --teal: #00D4B2;
+      --amber: #E2A336;
+      --crimson: #E05252;
+      --panel-shadow: 0 4px 20px -2px rgba(11, 11, 13, 0.05);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--ivory);
+      color: var(--text-main);
+      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 2rem; width: 100%; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .serif { font-family: 'Newsreader', Georgia, serif; }
+
+    /* Nav */
+    nav {
+      background: var(--ink);
+      color: var(--ivory);
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(245, 243, 238, 0.08);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+    .nav-left { display: flex; align-items: center; gap: 2rem; }
+    .logo {
+      font-family: 'Newsreader', serif;
+      font-size: 20px; font-weight: 500; letter-spacing: 0.08em;
+      color: var(--ivory); text-decoration: none;
+    }
+    .workflow-indicator {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(245, 243, 238, 0.4);
+    }
+    .wf-step { display: inline-flex; align-items: center; gap: 0.35rem; color: rgba(245, 243, 238, 0.4); text-decoration: none; }
+    .wf-step.active { color: var(--ivory); font-weight: 500; }
+    .wf-badge {
+      padding: 1px 5px; border-radius: 2px;
+      background: rgba(108, 77, 255, 0.25); color: #C5B8FF; font-size: 10px;
+    }
+    .wf-sep { color: rgba(245, 243, 238, 0.2); }
+
+    /* Page Header */
+    .page-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--hairline);
+      padding: 2.75rem 0 2.25rem;
+      position: relative;
+    }
+    .section-tag {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      letter-spacing: 0.08em; color: var(--violet); margin-bottom: 0.5rem;
+    }
+    .section-tag .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--violet);
+    }
+    h1 {
+      font-family: 'Newsreader', serif;
+      font-size: 40px; font-weight: 400; line-height: 1.15;
+      color: var(--ink); margin-bottom: 0.75rem;
+    }
+    .header-sub {
+      font-size: 14.5px; color: var(--text-muted); max-width: 780px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 0.6rem 1.1rem; border-radius: 4px; border: none; cursor: pointer;
+      text-decoration: none; transition: all 0.2s var(--ease-out);
+    }
+    .btn-primary { background: var(--violet); color: var(--white); }
+    .btn-primary:hover { background: var(--violet-light); }
+    .btn-ghost {
+      background: transparent; color: var(--text-main);
+      border: 1px solid var(--hairline);
+    }
+    .btn-ghost:hover { background: rgba(0,0,0,0.03); border-color: var(--text-muted); }
+
+    /* Main layout */
+    main { padding: 2.5rem 0; flex: 1; }
+    .api-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem;
+    }
+    @media (max-width: 900px) { .api-grid { grid-template-columns: 1fr; } }
+
+    /* Cards */
+    .card {
+      background: var(--white); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 1.75rem; box-shadow: var(--panel-shadow);
+    }
+    .card-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem; border-bottom: 1px solid var(--hairline-soft);
+      padding-bottom: 0.85rem;
+    }
+    .card-title {
+      font-family: 'Newsreader', serif; font-size: 18px; font-weight: 500;
+      color: var(--ink);
+    }
+
+    /* Key Box */
+    .key-box {
+      background: var(--ivory); border: 1px solid var(--hairline);
+      border-radius: 4px; padding: 0.85rem 1.1rem;
+      display: flex; justify-content: space-between; align-items: center;
+      margin: 1rem 0 1.5rem;
+    }
+    .key-val {
+      font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+      font-weight: 600; color: var(--ink); letter-spacing: 0.05em;
+    }
+
+    /* Code blocks */
+    .tab-bar {
+      display: flex; gap: 0.5rem; margin-bottom: 0.75rem;
+    }
+    .tab-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 0.35rem 0.75rem; border-radius: 3px; border: 1px solid var(--hairline);
+      background: var(--ivory); color: var(--text-muted); cursor: pointer;
+    }
+    .tab-btn.active {
+      background: var(--ink); color: var(--ivory); border-color: var(--ink);
+    }
+    .code-container {
+      background: var(--ink); border-radius: 4px; padding: 1.25rem;
+      position: relative; overflow-x: auto;
+    }
+    .code-container pre {
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+      color: #E2E8F0; line-height: 1.6;
+    }
+    .copy-btn {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      padding: 0.25rem 0.55rem; border-radius: 3px; cursor: pointer;
+    }
+    .copy-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+    /* Interactive Console */
+    .field-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
+    }
+    .field-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .field-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--text-muted);
+    }
+    .field-input, .field-select {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      padding: 0.5rem 0.75rem; border: 1px solid var(--hairline);
+      border-radius: 3px; background: #FAFAFA; outline: none;
+    }
+    .field-input:focus, .field-select:focus {
+      border-color: var(--violet); background: #fff;
+    }
+
+    .status-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin: 1rem 0 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    }
+    .status-pill {
+      padding: 2px 7px; border-radius: 3px; font-weight: 600;
+    }
+    .status-pill.success { background: rgba(0, 212, 178, 0.15); color: #008770; }
+    .status-pill.loading { background: rgba(108, 77, 255, 0.15); color: var(--violet); }
+
+    .json-out {
+      background: #141419; border-radius: 4px; padding: 1rem;
+      max-height: 280px; overflow-y: auto; color: #72F1B8;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      white-space: pre-wrap; word-break: break-all;
+    }
+
+    /* Specs table */
+    .specs-table {
+      width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 12.5px;
+    }
+    .specs-table th {
+      text-align: left; padding: 0.65rem 0.85rem;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--text-faint); border-bottom: 1px solid var(--hairline);
+      background: #FAFAFA;
+    }
+    .specs-table td {
+      padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--hairline-soft);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--white); border-top: 1px solid var(--hairline);
+      padding: 1.5rem 0; font-size: 12px; color: var(--text-faint);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="wrap nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-indicator">
+        <a href="create.html" class="wf-step"><span class="wf-badge">01</span> SETUP</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="generate.html" class="wf-step"><span class="wf-badge">03</span> GENERATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="validation.html" class="wf-step"><span class="wf-badge">05</span> VALIDATE</a>
+        <span class="wf-sep">&rarr;</span>
+        <a href="privacy.html" class="wf-step"><span class="wf-badge">06</span> PRIVACY</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="patient.html" class="wf-step">07 PATIENTS</a>
+        <span class="wf-sep">&middot;</span>
+        <a href="stress-test.html" class="wf-step">08 STRESS TEST</a>
+        <span class="wf-sep">&middot;</span>
+        <span class="wf-step active"><span class="wf-badge">09</span> API HUB</span>
+      </div>
+    </div>
+    <div>
+      <a href="index.html" class="btn btn-ghost" style="color:var(--ivory);border-color:rgba(245,243,238,0.18);padding:0.4rem 0.85rem;font-size:12px;">Platform Home &rarr;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Header -->
+<header class="page-header">
+  <div class="wrap">
+    <div class="section-tag">
+      <span class="dot"></span>
+      <span>DEVELOPER API GATEWAY · HURDLE COPULA SDK</span>
+    </div>
+    <h1>Programmatic Synthetic <span style="color:var(--violet);">Cohort Generation</span></h1>
+    <p class="header-sub">
+      Integrate dynamically sampled Hurdle Conditional Copula cohorts directly into ML training pipelines, clinical trial simulations, and external health-tech applications with complete sub-second latency.
+    </p>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+  <div class="wrap">
+
+    <!-- Grid -->
+    <div class="api-grid">
+      
+      <!-- Left Column: Key Management & Code Docs -->
+      <div>
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div class="card-head">
+            <span class="card-title">Authentication &amp; API Key</span>
+            <span class="mono" style="font-size:10px;background:rgba(0,212,178,0.1);color:#008770;padding:2px 6px;border-radius:2px;">ACTIVE KEY</span>
+          </div>
+          <p style="font-size:13px;color:var(--text-muted);line-height:1.5;">
+            Pass your production or test API key via the standard <code>X-API-Key</code> request header or Authorization Bearer header.
+          </p>
+
+          <div class="key-box">
+            <span class="key-val" id="apiKeyDisplay">syn_live_demo994a28f8</span>
+            <button type="button" class="btn btn-ghost" id="copyKeyBtn" style="padding:0.3rem 0.65rem;font-size:11px;">Copy Key</button>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="mono" style="font-size:11px;color:var(--text-faint);">Rate Limit: 1,000 req / min</span>
+            <button type="button" class="btn btn-primary" id="generateKeyBtn" style="padding:0.45rem 0.85rem;font-size:12px;">Rotate Key &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Integration Code Examples -->
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Integration Code Snippets</span>
+            <div class="tab-bar">
+              <button class="tab-btn active" onclick="switchTab('curl')">cURL</button>
+              <button class="tab-btn" onclick="switchTab('python')">Python</button>
+              <button class="tab-btn" onclick="switchTab('js')">JavaScript</button>
+            </div>
+          </div>
+
+          <div class="code-container">
+            <button class="copy-btn" id="copyCodeBtn">Copy</button>
+            <pre id="codeDisplay">curl -X POST "http://localhost:5000/api/v1/generate" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: syn_live_demo994a28f8" \
+  -d '{
+    "n": 100,
+    "targets": {
+      "diabetes": 1,
+      "age_gt": 60,
+      "activity_mims_lt": 8000
+    }
+  }'</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Test Runner -->
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Live API Request Console</span>
+            <span class="mono" style="font-size:11px;color:var(--violet);">POST /api/v1/generate</span>
+          </div>
+
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:1.25rem;">
+            Test the live Hurdle Copula generator against your active local backend server.
+          </p>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">SAMPLE SIZE (n)</label>
+              <input type="number" id="testN" class="field-input" value="50" min="5" max="1000">
+            </div>
+            <div class="field-group">
+              <label class="field-label">DIABETES CONDITION</label>
+              <select id="testDiabetes" class="field-select">
+                <option value="1" selected>Diabetic (1)</option>
+                <option value="0">Non-Diabetic (0)</option>
+                <option value="any">Any (Unconditioned)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">MINIMUM AGE (age_gt)</label>
+              <input type="number" id="testAgeGt" class="field-input" value="60" min="0" max="80">
+            </div>
+            <div class="field-group">
+              <label class="field-label">MAX ACTIVITY (activity_mims_lt)</label>
+              <input type="number" id="testActivityLt" class="field-input" value="8000" min="1000" max="25000">
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary" id="runApiBtn" style="width:100%;margin-top:0.5rem;padding:0.75rem;">
+            Execute Live Request &rarr;
+          </button>
+
+          <div class="status-bar">
+            <span>RESPONSE INSPECTOR</span>
+            <div style="display:flex;gap:0.75rem;align-items:center;">
+              <span id="testLatency" class="mono" style="color:var(--text-faint);">-- ms</span>
+              <span id="testStatus" class="status-pill success">READY</span>
+            </div>
+          </div>
+
+          <div class="json-out" id="jsonOutput">// Click "Execute Live Request" to trigger live Hurdle Copula sampling...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Parameter Specification Table -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Endpoint Parameter Specification</span>
+        <span class="mono" style="font-size:11px;color:var(--text-faint);">API V1 SPECIFICATION</span>
+      </div>
+
+      <table class="specs-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description &amp; Clinical Context</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>n</code></td>
+            <td>integer</td>
+            <td>1000</td>
+            <td>Number of synthetic records to generate (1 to 5,000)</td>
+          </tr>
+          <tr>
+            <td><code>targets.diabetes</code></td>
+            <td>integer (0 or 1)</td>
+            <td>null</td>
+            <td>Routes through class-conditional Hurdle copula matrices</td>
+          </tr>
+          <tr>
+            <td><code>targets.age_gt</code></td>
+            <td>number</td>
+            <td>null</td>
+            <td>Restricts age distribution above threshold (years)</td>
+          </tr>
+          <tr>
+            <td><code>targets.activity_mims_lt</code></td>
+            <td>number</td>
+            <td>null</td>
+            <td>Triaxial accelerometer MIMS physical activity ceiling</td>
+          </tr>
+          <tr>
+            <td><code>random_seed</code></td>
+            <td>integer</td>
+            <td>42</td>
+            <td>Ensures exact deterministic reproducibility when specified</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <span>SYNTHIA &copy; 2026 &mdash; Healthcare Synthetic Data Hackathon (SH-405)</span>
+    <span class="mono">FASTAPI BACKEND &middot; REST V1</span>
+  </div>
+</footer>
+
+<script>
+  let currentKey = "syn_live_demo994a28f8";
+  let currentLang = "curl";
+
+  const codeTemplates = {
+    curl: () => `curl -X POST "http://localhost:5000/api/v1/generate" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: ${currentKey}" \\
+  -d '{
+    "n": 100,
+    "targets": {
+      "diabetes": 1,
+      "age_gt": 60,
+      "activity_mims_lt": 8000
+    }
+  }'`,
+    python: () => `import requests
+
+url = "http://localhost:5000/api/v1/generate"
+headers = {
+    "X-API-Key": "${currentKey}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "n": 100,
+    "targets": {
+        "diabetes": 1,
+        "age_gt": 60,
+        "activity_mims_lt": 8000
+    }
+}
+
+response = requests.post(url, json=payload, headers=headers)
+data = response.json()
+print(f"Generated {data['n_generated']} patients with ID: {data['cohort_id']}")`,
+    js: () => `const res = await fetch("http://localhost:5000/api/v1/generate", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "${currentKey}"
+  },
+  body: JSON.stringify({
+    n: 100,
+    targets: {
+      diabetes: 1,
+      age_gt: 60,
+      activity_mims_lt: 8000
+    }
+  })
+});
+const data = await res.json();
+console.log(data.cohort_id, data.patients);`
+  };
+
+  function updateCodeBlock() {
+    const codeDisplay = document.getElementById("codeDisplay");
+    if (codeDisplay && codeTemplates[currentLang]) {
+      codeDisplay.textContent = codeTemplates[currentLang]();
+    }
+  }
+
+  function switchTab(lang) {
+    currentLang = lang;
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.textContent.toLowerCase() === lang);
+    });
+    updateCodeBlock();
+  }
+
+  // Copy API key
+  document.getElementById("copyKeyBtn").onclick = () => {
+    navigator.clipboard.writeText(currentKey).then(() => {
+      const btn = document.getElementById("copyKeyBtn");
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = "Copy Key", 1500);
+    });
+  };
+
+  // Copy code snippet
+  document.getElementById("copyCodeBtn").onclick = () => {
+    const code = document.getElementById("codeDisplay").textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById("copyCodeBtn");
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = "Copy", 1500);
+    });
+  };
+
+  // Generate new API key
+  document.getElementById("generateKeyBtn").onclick = async () => {
+    const btn = document.getElementById("generateKeyBtn");
+    btn.textContent = "Generating...";
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Interactive Console Key" })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        currentKey = data.key;
+        document.getElementById("apiKeyDisplay").textContent = currentKey;
+        updateCodeBlock();
+      }
+    } catch (e) {
+      console.warn("Key generation fallback to client uuid");
+      currentKey = "syn_live_" + Math.random().toString(36).substring(2, 12);
+      document.getElementById("apiKeyDisplay").textContent = currentKey;
+      updateCodeBlock();
+    } finally {
+      btn.textContent = "Rotate Key \u2192";
+    }
+  };
+
+  // Run live API test
+  document.getElementById("runApiBtn").onclick = async () => {
+    const runBtn = document.getElementById("runApiBtn");
+    const statusPill = document.getElementById("testStatus");
+    const latencyEl = document.getElementById("testLatency");
+    const jsonOutput = document.getElementById("jsonOutput");
+
+    runBtn.disabled = true;
+    runBtn.textContent = "Sampling Copula Matrix...";
+    statusPill.className = "status-pill loading";
+    statusPill.textContent = "SAMPLING";
+    latencyEl.textContent = "...";
+    jsonOutput.textContent = "// Sending request to http://localhost:5000/api/v1/generate...";
+
+    const n = parseInt(document.getElementById("testN").value) || 50;
+    const targets = {};
+    const diabVal = document.getElementById("testDiabetes").value;
+    if (diabVal !== "any") targets.diabetes = parseInt(diabVal);
+
+    const ageGt = parseInt(document.getElementById("testAgeGt").value);
+    if (!isNaN(ageGt)) targets.age_gt = ageGt;
+
+    const actLt = parseInt(document.getElementById("testActivityLt").value);
+    if (!isNaN(actLt)) targets.activity_mims_lt = actLt;
+
+    const t0 = performance.now();
+
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": currentKey
+        },
+        body: JSON.stringify({ n, targets })
+      });
+
+      const t1 = performance.now();
+      const elapsed = Math.round(t1 - t0);
+      latencyEl.textContent = `${elapsed} ms`;
+
+      if (!res.ok) {
+        throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      statusPill.className = "status-pill success";
+      statusPill.textContent = "200 OK";
+
+      // Cache cohort for platform continuity if generated
+      if (data.cohort_id) {
+        sessionStorage.setItem("synthia_active_cohort_id", data.cohort_id);
+      }
+
+      // Render pretty summary
+      const preview = {
+        success: data.success,
+        cohort_id: data.cohort_id,
+        n_generated: data.n_generated,
+        generation_time_sec: data.generation_time_sec,
+        metrics: data.metrics,
+        patients_sample: (data.patients || []).slice(0, 3)
+      };
+
+      jsonOutput.textContent = JSON.stringify(preview, null, 2) + "\n\n// ... Total patients returned: " + (data.patients || []).length;
+
+    } catch (err) {
+      statusPill.className = "status-pill";
+      statusPill.style.background = "rgba(224, 82, 82, 0.15)";
+      statusPill.style.color = "var(--crimson)";
+      statusPill.textContent = "ERROR";
+      jsonOutput.textContent = `// Error: ${err.message}\n// Check if backend is active on http://localhost:5000`;
+    } finally {
+      runBtn.disabled = false;
+      runBtn.textContent = "Execute Live Request \u2192";
+    }
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+metric_type,feature,metric_name,metric_value,additional_info
+continuous_distribution,age,KS_statistic,0.0375,pvalue=0.127781
+continuous_distribution,age,Wasserstein_distance,1.4445,"real_mean=40.0663, syn_mean=39.3568"
+continuous_distribution,systolic_bp,KS_statistic,0.0185,pvalue=0.886694
+continuous_distribution,systolic_bp,Wasserstein_distance,0.6065,"real_mean=118.7349, syn_mean=118.5215"
+continuous_distribution,diastolic_bp,KS_statistic,0.0561,pvalue=0.004399
+continuous_distribution,diastolic_bp,Wasserstein_distance,1.2324,"real_mean=67.3927, syn_mean=66.8492"
+continuous_distribution,activity_mims,KS_statistic,0.1062,pvalue=0.0
+continuous_distribution,activity_mims,Wasserstein_distance,742.5821,"real_mean=11049.2668, syn_mean=10901.143"
+continuous_distribution,n_medications,KS_statistic,0.152,pvalue=0.0
+continuous_distribution,n_medications,Wasserstein_distance,0.7878,"real_mean=1.6495, syn_mean=0.8618"
+continuous_distribution,adherence_pct,KS_statistic,0.0376,pvalue=0.127518
+continuous_distribution,adherence_pct,Wasserstein_distance,1.3453,"real_mean=44.3207, syn_mean=43.2526"
+continuous_distribution,pain_score,KS_statistic,0.3354,pvalue=0.0
+continuous_distribution,pain_score,Wasserstein_distance,0.3621,"real_mean=0.9863, syn_mean=0.8249"
+categorical_distribution,sex,JSD,1.1e-05,"chi2_stat=0.4383, chi2_pval=0.507967"
+categorical_distribution,diabetes,JSD,0.0,"chi2_stat=0.0001, chi2_pval=0.992368"
+correlation,all,Pearson_MACD,0.0841,max_diff=0.4185
+correlation,all,Spearman_MACD,0.0855,max_diff=0.3245
+clinical_constraint,all,all_constraints_validity_pct,99.98,100% logic constraints satisfied
+discriminative_classifier,all,ROC_AUC,0.8492,5-fold CV RF
+discriminative_classifier,all,Accuracy,0.7664,5-fold CV RF
+discriminative_classifier,all,F1_Score,0.7484,5-fold CV RF

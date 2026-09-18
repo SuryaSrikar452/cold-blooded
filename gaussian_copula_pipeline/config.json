@@ -1,0 +1,30 @@
+{
+    "model_type": "GaussianCopulaSynthesizer",
+    "sdv_version": "1.38.3",
+    "random_seed": 42,
+    "features": [
+        "age",
+        "sex",
+        "diabetes",
+        "systolic_bp",
+        "diastolic_bp",
+        "activity_mims",
+        "n_medications",
+        "adherence_pct",
+        "pain_score"
+    ],
+    "continuous_columns": [
+        "age",
+        "systolic_bp",
+        "diastolic_bp",
+        "activity_mims",
+        "n_medications",
+        "adherence_pct",
+        "pain_score"
+    ],
+    "categorical_columns": [
+        "sex",
+        "diabetes"
+    ],
+    "default_distribution": "gaussian"
+}

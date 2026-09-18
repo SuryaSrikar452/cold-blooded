@@ -1,0 +1,377 @@
+{
+    "continuous": [
+        {
+            "feature": "age",
+            "real_mean": 40.0663,
+            "syn_mean": 39.3568,
+            "real_std": 22.2262,
+            "syn_std": 21.4231,
+            "real_min": 8.0,
+            "syn_min": 9.0,
+            "real_max": 80.0,
+            "syn_max": 80.0,
+            "real_p1": 8.0,
+            "syn_p1": 9.0,
+            "real_p5": 9.0,
+            "syn_p5": 10.0,
+            "real_p25": 19.0,
+            "syn_p25": 20.0,
+            "real_p50": 39.0,
+            "syn_p50": 37.0,
+            "real_p75": 60.0,
+            "syn_p75": 58.0,
+            "real_p95": 78.0,
+            "syn_p95": 76.0,
+            "real_p99": 80.0,
+            "syn_p99": 79.0,
+            "ks_statistic": 0.0375,
+            "ks_pvalue": 0.127781,
+            "wasserstein_distance": 1.4445
+        },
+        {
+            "feature": "systolic_bp",
+            "real_mean": 118.7349,
+            "syn_mean": 118.5215,
+            "real_std": 18.0822,
+            "syn_std": 17.6165,
+            "real_min": 81.0,
+            "syn_min": 77.0,
+            "real_max": 221.0,
+            "syn_max": 208.0,
+            "real_p1": 86.0,
+            "syn_p1": 87.25,
+            "real_p5": 95.0,
+            "syn_p5": 94.0,
+            "real_p25": 106.0,
+            "syn_p25": 106.0,
+            "real_p50": 116.0,
+            "syn_p50": 116.0,
+            "real_p75": 128.0,
+            "syn_p75": 129.0,
+            "real_p95": 151.7,
+            "syn_p95": 151.0,
+            "real_p99": 172.0,
+            "syn_p99": 169.0,
+            "ks_statistic": 0.0185,
+            "ks_pvalue": 0.886694,
+            "wasserstein_distance": 0.6065
+        },
+        {
+            "feature": "diastolic_bp",
+            "real_mean": 67.3927,
+            "syn_mean": 66.8492,
+            "real_std": 13.2996,
+            "syn_std": 13.4132,
+            "real_min": 22.0,
+            "syn_min": 20.0,
+            "real_max": 111.0,
+            "syn_max": 114.0,
+            "real_p1": 34.0,
+            "syn_p1": 36.0,
+            "real_p5": 42.3,
+            "syn_p5": 45.0,
+            "real_p25": 59.0,
+            "syn_p25": 58.0,
+            "real_p50": 68.0,
+            "syn_p50": 67.0,
+            "real_p75": 76.0,
+            "syn_p75": 76.0,
+            "real_p95": 88.0,
+            "syn_p95": 89.0,
+            "real_p99": 99.0,
+            "syn_p99": 98.75,
+            "ks_statistic": 0.0561,
+            "ks_pvalue": 0.004399,
+            "wasserstein_distance": 1.2324
+        },
+        {
+            "feature": "activity_mims",
+            "real_mean": 11049.2668,
+            "syn_mean": 10901.143,
+            "real_std": 3865.7584,
+            "syn_std": 4453.8994,
+            "real_min": 31.0,
+            "syn_min": 927.0,
+            "real_max": 23513.0,
+            "syn_max": 28331.0,
+            "real_p1": 977.1,
+            "syn_p1": 2594.75,
+            "real_p5": 4313.4,
+            "syn_p5": 4293.0,
+            "real_p25": 8777.5,
+            "syn_p25": 7542.5,
+            "real_p50": 11057.0,
+            "syn_p50": 10579.0,
+            "real_p75": 13553.0,
+            "syn_p75": 13824.25,
+            "real_p95": 17421.7,
+            "syn_p95": 18817.0,
+            "real_p99": 20196.26,
+            "syn_p99": 22123.75,
+            "ks_statistic": 0.1062,
+            "ks_pvalue": 0.0,
+            "wasserstein_distance": 742.5821
+        },
+        {
+            "feature": "n_medications",
+            "real_mean": 1.6495,
+            "syn_mean": 0.8618,
+            "real_std": 2.6051,
+            "syn_std": 1.6947,
+            "real_min": 0.0,
+            "syn_min": 0.0,
+            "real_max": 19.0,
+            "syn_max": 13.0,
+            "real_p1": 0.0,
+            "syn_p1": 0.0,
+            "real_p5": 0.0,
+            "syn_p5": 0.0,
+            "real_p25": 0.0,
+            "syn_p25": 0.0,
+            "real_p50": 0.0,
+            "syn_p50": 0.0,
+            "real_p75": 2.0,
+            "syn_p75": 1.0,
+            "real_p95": 7.0,
+            "syn_p95": 4.75,
+            "real_p99": 11.94,
+            "syn_p99": 8.0,
+            "ks_statistic": 0.152,
+            "ks_pvalue": 0.0,
+            "wasserstein_distance": 0.7878
+        },
+        {
+            "feature": "adherence_pct",
+            "real_mean": 44.3207,
+            "syn_mean": 43.2526,
+            "real_std": 17.3428,
+            "syn_std": 17.2435,
+            "real_min": 5.0,
+            "syn_min": 5.0,
+            "real_max": 95.0,
+            "syn_max": 95.0,
+            "real_p1": 5.0,
+            "syn_p1": 5.0,
+            "real_p5": 13.7,
+            "syn_p5": 13.8,
+            "real_p25": 32.75,
+            "syn_p25": 31.6,
+            "real_p50": 44.5,
+            "syn_p50": 43.0,
+            "real_p75": 56.35,
+            "syn_p75": 54.7,
+            "real_p95": 72.8,
+            "syn_p95": 72.4,
+            "real_p99": 81.876,
+            "syn_p99": 85.25,
+            "ks_statistic": 0.0376,
+            "ks_pvalue": 0.127518,
+            "wasserstein_distance": 1.3453
+        },
+        {
+            "feature": "pain_score",
+            "real_mean": 0.9863,
+            "syn_mean": 0.8249,
+            "real_std": 1.7667,
+            "syn_std": 1.4484,
+            "real_min": 0.0,
+            "syn_min": 0.0,
+            "real_max": 8.2,
+            "syn_max": 9.6,
+            "real_p1": 0.0,
+            "syn_p1": 0.0,
+            "real_p5": 0.0,
+            "syn_p5": 0.0,
+            "real_p25": 0.0,
+            "syn_p25": 0.0,
+            "real_p50": 0.0,
+            "syn_p50": 0.2,
+            "real_p75": 1.0,
+            "syn_p75": 1.0,
+            "real_p95": 5.0,
+            "syn_p95": 3.9,
+            "real_p99": 6.594,
+            "syn_p99": 7.0,
+            "ks_statistic": 0.3354,
+            "ks_pvalue": 0.0,
+            "wasserstein_distance": 0.3621
+        }
+    ],
+    "categorical": [
+        {
+            "feature": "sex",
+            "categories": [
+                1,
+                2
+            ],
+            "real_counts": {
+                "1": 607,
+                "2": 600
+            },
+            "syn_counts": {
+                "1": 2404,
+                "2": 2422
+            },
+            "real_pcts": {
+                "1": 50.29,
+                "2": 49.71
+            },
+            "syn_pcts": {
+                "1": 49.81,
+                "2": 50.19
+            },
+            "abs_pct_diff": {
+                "1": 0.48,
+                "2": 0.48
+            },
+            "jsd": 1.1e-05,
+            "chi2_stat": 0.4383,
+            "chi2_pvalue": 0.507967
+        },
+        {
+            "feature": "diabetes",
+            "categories": [
+                0,
+                1
+            ],
+            "real_counts": {
+                "0": 1087,
+                "1": 120
+            },
+            "syn_counts": {
+                "0": 4346,
+                "1": 480
+            },
+            "real_pcts": {
+                "0": 90.06,
+                "1": 9.94
+            },
+            "syn_pcts": {
+                "0": 90.05,
+                "1": 9.95
+            },
+            "abs_pct_diff": {
+                "0": 0.0,
+                "1": 0.0
+            },
+            "jsd": 0.0,
+            "chi2_stat": 0.0001,
+            "chi2_pvalue": 0.992368
+        }
+    ],
+    "correlation": {
+        "macd_pearson": 0.0841,
+        "max_diff_pearson": 0.4185,
+        "macd_spearman": 0.0855,
+        "max_diff_spearman": 0.3245,
+        "key_pairs": [
+            {
+                "pair": "age <-> systolic_bp",
+                "real_pearson": 0.5874,
+                "syn_pearson": 0.5159,
+                "abs_diff_pearson": 0.0715,
+                "real_spearman": 0.6124,
+                "syn_spearman": 0.5153,
+                "abs_diff_spearman": 0.0971
+            },
+            {
+                "pair": "age <-> diastolic_bp",
+                "real_pearson": 0.3434,
+                "syn_pearson": 0.3243,
+                "abs_diff_pearson": 0.0191,
+                "real_spearman": 0.3705,
+                "syn_spearman": 0.3193,
+                "abs_diff_spearman": 0.0512
+            },
+            {
+                "pair": "age <-> activity_mims",
+                "real_pearson": -0.3078,
+                "syn_pearson": -0.3013,
+                "abs_diff_pearson": 0.0065,
+                "real_spearman": -0.3502,
+                "syn_spearman": -0.3036,
+                "abs_diff_spearman": 0.0466
+            },
+            {
+                "pair": "diabetes <-> systolic_bp",
+                "real_pearson": 0.2501,
+                "syn_pearson": 0.0687,
+                "abs_diff_pearson": 0.1814,
+                "real_spearman": 0.2503,
+                "syn_spearman": 0.066,
+                "abs_diff_spearman": 0.1843
+            },
+            {
+                "pair": "diabetes <-> diastolic_bp",
+                "real_pearson": 0.0445,
+                "syn_pearson": -0.0116,
+                "abs_diff_pearson": 0.0561,
+                "real_spearman": 0.0406,
+                "syn_spearman": -0.0119,
+                "abs_diff_spearman": 0.0526
+            },
+            {
+                "pair": "diabetes <-> n_medications",
+                "real_pearson": 0.5306,
+                "syn_pearson": 0.1121,
+                "abs_diff_pearson": 0.4185,
+                "real_spearman": 0.4333,
+                "syn_spearman": 0.1088,
+                "abs_diff_spearman": 0.3245
+            },
+            {
+                "pair": "pain_score <-> activity_mims",
+                "real_pearson": -0.0285,
+                "syn_pearson": -0.0337,
+                "abs_diff_pearson": 0.0052,
+                "real_spearman": -0.0374,
+                "syn_spearman": -0.0211,
+                "abs_diff_spearman": 0.0163
+            },
+            {
+                "pair": "adherence_pct <-> n_medications",
+                "real_pearson": -0.359,
+                "syn_pearson": -0.0886,
+                "abs_diff_pearson": 0.2704,
+                "real_spearman": -0.0904,
+                "syn_spearman": -0.0859,
+                "abs_diff_spearman": 0.0045
+            },
+            {
+                "pair": "adherence_pct <-> pain_score",
+                "real_pearson": -0.1092,
+                "syn_pearson": -0.038,
+                "abs_diff_pearson": 0.0712,
+                "real_spearman": -0.0673,
+                "syn_spearman": -0.0634,
+                "abs_diff_spearman": 0.0039
+            },
+            {
+                "pair": "systolic_bp <-> diastolic_bp",
+                "real_pearson": 0.4836,
+                "syn_pearson": 0.4907,
+                "abs_diff_pearson": 0.0071,
+                "real_spearman": 0.5153,
+                "syn_spearman": 0.4812,
+                "abs_diff_spearman": 0.034
+            }
+        ]
+    },
+    "clinical_constraints": {
+        "sbp_gt_0": 100.0,
+        "dbp_gt_0": 100.0,
+        "dbp_lt_sbp": 99.98,
+        "activity_ge_0": 100.0,
+        "n_medications_ge_0": 100.0,
+        "adherence_in_0_100": 100.0,
+        "pain_in_0_10": 100.0,
+        "overall_validity_pct": 99.98
+    },
+    "discriminator": {
+        "roc_auc": 0.8492,
+        "accuracy": 0.7664,
+        "precision": 0.8109,
+        "recall": 0.6951,
+        "f1_score": 0.7484
+    }
+}
