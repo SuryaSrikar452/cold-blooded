@@ -934,123 +934,350 @@
   });
 
   // =========================================================================
-  // INTERACTIVE PURPLE NEURAL BALLS CANVAS (Exact SYNTHIA create.html system)
+  // HERO PARTICLE FIELD MATHEMATICS (Exact SYNTHIA index.html System)
+  // - Phase A (0–900ms): Seed cluster at center, low opacity
+  // - Phase B (900ms+): Pop outward to Poisson/Gaussian clusters via easeOutBack
+  // - Settle: Low-frequency 2D Simplex noise flow field + differential orbital flow
+  // - Interaction: Direct repulsion, smooth deflection & neon white proximity glow
   // =========================================================================
   const canvas = document.getElementById('neuralField');
   const container = document.getElementById('leftPaneContainer');
 
   if (canvas && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const ctx = canvas.getContext('2d');
-    let W = 0, H = 0;
+    let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    let anchors = [];
     let particles = [];
-    const NUM_PARTICLES = 65;
+    let startTime = null, lastFrameTime = null, rafId = 0;
+    const mouse = { x: -9999, y: -9999, active: false, px: 0, py: 0 };
 
-    const VIOLET = [108, 77, 255];      // #6C4DFF
-    const SOFT_VIOLET = [168, 150, 255];// #A896FF
+    const VIOLET = [108, 77, 255];       // #6C4DFF
+    const SOFT_VIOLET = [168, 150, 255]; // #A896FF
+    const TOTAL_PARTICLES = 120;
 
-    const mouse = { x: -9999, y: -9999, active: false };
+    // 1. Box-Muller Gaussian distribution
+    function gaussianRandom(mean = 0, stdDev = 1) {
+      const u1 = Math.max(1e-6, Math.random());
+      const u2 = Math.random();
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      return mean + z * stdDev;
+    }
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    // 2. Non-symmetric, weighted Poisson/Gaussian anchor placement
+    function generateAnchors(count, width, height, minDist = 80) {
+      const res = [];
+      const topClusters = [
+        { x: width * 0.28 + rand(-20, 20), y: height * 0.20 + rand(-15, 15), weight: 1.5, stdDev: 42 },
+        { x: width * 0.65 + rand(-25, 25), y: height * 0.35 + rand(-15, 15), weight: 1.6, stdDev: 48 },
+        { x: width * 0.38 + rand(-20, 20), y: height * 0.72 + rand(-15, 15), weight: 1.4, stdDev: 45 },
+      ];
+      topClusters.forEach(tc => res.push(tc));
+
+      let attempts = 0;
+      while (res.length < count && attempts < 500) {
+        attempts++;
+        const candidate = {
+          x: width * 0.12 + Math.random() * (width * 0.76),
+          y: height * 0.10 + Math.random() * (height * 0.80),
+          weight: 0.6 + Math.random() * 1.2,
+          stdDev: 30 + Math.random() * 45,
+        };
+        const tooClose = res.some(a => Math.hypot(a.x - candidate.x, a.y - candidate.y) < minDist);
+        if (!tooClose) res.push(candidate);
+      }
+      return res;
+    }
+
+    function pickWeightedAnchor(anchorsList) {
+      const total = anchorsList.reduce((s, a) => s + a.weight, 0);
+      let r = Math.random() * total;
+      for (const a of anchorsList) {
+        if ((r -= a.weight) <= 0) return a;
+      }
+      return anchorsList[anchorsList.length - 1];
+    }
+
+    // 3. Minimal dependency-free 2D Simplex noise flow field
+    function makeNoise2D(seed = Math.random() * 1000) {
+      const p = new Uint8Array(512);
+      const perm = [...Array(256).keys()];
+      for (let i = 255; i > 0; i--) {
+        const j = Math.floor((Math.sin(seed + i) * 43758.5453) % 1 * (i + 1));
+        [perm[i], perm[Math.abs(j) % (i + 1)]] = [perm[Math.abs(j) % (i + 1)], perm[i]];
+      }
+      for (let i = 0; i < 512; i++) p[i] = perm[i & 255];
+
+      function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+      function lerp(a, b, t) { return a + t * (b - a); }
+      function grad(hash, x, y) {
+        const h = hash & 3;
+        const u = h < 2 ? x : y, v = h < 2 ? y : x;
+        return ((h & 1) ? -u : u) + ((h & 2) ? -2 * v : 2 * v);
+      }
+
+      return function noise2D(x, y) {
+        const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+        x -= Math.floor(x); y -= Math.floor(y);
+        const u = fade(x), v = fade(y);
+        const aa = p[X + p[Y]], ab = p[X + p[Y + 1]];
+        const ba = p[X + 1 + p[Y]], bb = p[X + 1 + p[Y + 1]];
+        return lerp(
+          lerp(grad(aa, x, y), grad(ba, x - 1, y), u),
+          lerp(grad(ab, x, y - 1), grad(bb, x - 1, y - 1), u),
+          v
+        );
+      };
+    }
+
+    const noise2D = makeNoise2D();
+    const freq = 0.0028;
+    const flowStrength = 22;
+
+    function getFlowOffset(x, y, t) {
+      const angle = noise2D(x * freq, y * freq + t * 0.00015) * Math.PI * 2;
+      return {
+        dx: Math.cos(angle) * flowStrength,
+        dy: Math.sin(angle) * flowStrength,
+      };
+    }
+
+    // Overshoot easing for the "pop and spread" outward transition
+    function easeOutBack(t) {
+      const c1 = 1.70158, c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+
+    // Frame-rate-independent lerp
+    function frameLerp(current, target, baseLerp, deltaMs) {
+      const factor = 1 - Math.pow(1 - baseLerp, deltaMs / 16.67);
+      return current + (target - current) * factor;
+    }
 
     function resize() {
       const rect = container.getBoundingClientRect();
-      W = canvas.width = rect.width;
-      H = canvas.height = rect.height;
+      W = rect.width; H = rect.height;
+      canvas.width = W * DPR; canvas.height = H * DPR;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      computeAnchors();
     }
-    window.addEventListener('resize', resize);
-    resize();
+
+    function computeAnchors() {
+      const anchorCount = Math.floor(rand(7, 10));
+      anchors = generateAnchors(anchorCount, W, H, Math.min(W, H) * 0.18);
+    }
+
+    function makeParticle() {
+      const anchor = pickWeightedAnchor(anchors);
+      const depth = Math.random();
+      const finalX = anchor.x + gaussianRandom(0, anchor.stdDev);
+      const finalY = anchor.y + gaussianRandom(0, anchor.stdDev);
+
+      const cx = W / 2;
+      const cy = H / 2;
+      const u = (finalX - cx) / Math.max(1, W * 0.5);
+      const v = (finalY - cy) / Math.max(1, H * 0.5);
+      const orbitRadius = Math.max(0.24, Math.min(0.96, Math.hypot(u, v)));
+      const orbitAngle = Math.atan2(v, u);
+      const orbitSpeed = 0.000075 + (1 - Math.min(1, orbitRadius)) * 0.000035 + Math.random() * 0.00002;
+
+      // Phase A: start tightly clustered around center
+      const centerX = cx + gaussianRandom(0, 22);
+      const centerY = cy + gaussianRandom(0, 22);
+      const popStart = 800 + Math.random() * 250;
+
+      return {
+        anchor,
+        finalX,
+        finalY,
+        centerX,
+        centerY,
+        orbitRadius,
+        orbitAngle,
+        orbitSpeed,
+        x: centerX,
+        y: centerY,
+        popFromX: centerX,
+        popFromY: centerY,
+        popStart,
+        popped: false,
+        depth,
+        baseRadius: rand(1.2, 2.0) + depth * 2.2,
+        opacity: 0,
+        targetOpacity: 0.38 + depth * 0.55,
+        color: Math.random() < 0.65 ? VIOLET : SOFT_VIOLET,
+        neighborIndices: []
+      };
+    }
+
+    function seed(count) {
+      particles = [];
+      for (let i = 0; i < count; i++) {
+        particles.push(makeParticle());
+      }
+      linkNeighbors();
+    }
+
+    function linkNeighbors() {
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        const dists = [];
+        for (let j = 0; j < particles.length; j++) {
+          if (i === j) continue;
+          const b = particles[j];
+          const d = Math.hypot(a.finalX - b.finalX, a.finalY - b.finalY);
+          if (d < 140) dists.push({ idx: j, d });
+        }
+        dists.sort((p, q) => p.d - q.d);
+        a.neighborIndices = dists.slice(0, 3).map(x => x.idx);
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      resize();
+      particles.forEach(p => {
+        const anchor = pickWeightedAnchor(anchors);
+        p.anchor = anchor;
+        p.finalX = anchor.x + gaussianRandom(0, anchor.stdDev);
+        p.finalY = anchor.y + gaussianRandom(0, anchor.stdDev);
+      });
+      linkNeighbors();
+    });
 
     container.addEventListener('pointermove', (e) => {
-      const rect = container.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
+      const r = container.getBoundingClientRect();
+      mouse.px = ((e.clientX - r.left) / W - 0.5) * 2;
+      mouse.py = ((e.clientY - r.top) / H - 0.5) * 2;
+      mouse.x = e.clientX - r.left;
+      mouse.y = e.clientY - r.top;
       mouse.active = true;
     });
+
     container.addEventListener('pointerleave', () => {
       mouse.active = false;
     });
 
-    for (let i = 0; i < NUM_PARTICLES; i++) {
-      const depth = Math.random();
-      particles.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
-        radius: 2.2 + depth * 3.2,
-        depth: depth,
-        opacity: 0.35 + depth * 0.55,
-        color: Math.random() < 0.65 ? VIOLET : SOFT_VIOLET,
-        pulseSpeed: 0.002 + Math.random() * 0.003,
-        pulseOffset: Math.random() * Math.PI * 2
-      });
-    }
+    resize();
+    seed(TOTAL_PARTICLES);
 
-    function render(now) {
+    function tick(now) {
+      if (startTime === null) startTime = now;
+      const deltaMs = lastFrameTime ? Math.min(now - lastFrameTime, 100) : 16.67;
+      lastFrameTime = now;
+      const elapsed = now - startTime;
+
       ctx.clearRect(0, 0, W, H);
 
-      // Links between purple balls
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.hypot(dx, dy);
+      const cx = W / 2;
+      const cy = H / 2;
 
-          if (dist < 135) {
-            const alpha = (1 - dist / 135) * 0.18 * Math.min(particles[i].opacity, particles[j].opacity);
-            ctx.strokeStyle = `rgba(168, 150, 255, ${alpha.toFixed(3)})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Render purple neural balls with physics & pulse
+      // 1. Update particle positions with mathematical phases
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        p.x += p.vx;
-        p.y += p.vy;
+        if (elapsed < p.popStart) {
+          p.x = p.centerX;
+          p.y = p.centerY;
+          p.popFromX = p.x;
+          p.popFromY = p.y;
+          p.opacity = p.targetOpacity * Math.min(1, elapsed / 600) * 0.65;
+        } else {
+          const popT = Math.min(1, (elapsed - p.popStart) / 850);
+          const eased = easeOutBack(popT);
+          const targetX = p.popFromX + (p.finalX - p.popFromX) * eased;
+          const targetY = p.popFromY + (p.finalY - p.popFromY) * eased;
 
-        if (p.x < 0) p.x = W;
-        if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H;
-        if (p.y > H) p.y = 0;
+          p.opacity = p.targetOpacity * Math.min(1, 0.65 + popT * 0.35);
 
-        let proximity = 0;
-        if (mouse.active) {
-          const mdx = p.x - mouse.x;
-          const mdy = p.y - mouse.y;
-          const mdist = Math.hypot(mdx, mdy);
-          if (mdist < 110) {
-            proximity = 1 - mdist / 110;
-            const force = proximity * 14 * p.depth;
-            p.x += (mdx / (mdist || 1)) * force;
-            p.y += (mdy / (mdist || 1)) * force;
+          if (popT >= 1) p.popped = true;
+
+          if (!p.popped) {
+            p.x = targetX;
+            p.y = targetY;
+          } else {
+            // Natural orbital baseline flow
+            const cycleElapsed = Math.max(0, elapsed - (p.popStart + 850));
+            const currentAngle = p.orbitAngle + (cycleElapsed * p.orbitSpeed);
+
+            const orbitX = cx + p.orbitRadius * (W * 0.5) * Math.cos(currentAngle);
+            const orbitY = cy + p.orbitRadius * (H * 0.5) * Math.sin(currentAngle);
+
+            const flow = getFlowOffset(orbitX, orbitY, elapsed);
+            let curTargetX = orbitX + flow.dx;
+            let curTargetY = orbitY + flow.dy;
+
+            // Interactive mouse dynamics
+            if (mouse.active) {
+              curTargetX += mouse.px * 22 * p.depth;
+              curTargetY += mouse.py * 16 * p.depth;
+              const dx = p.x - mouse.x, dy = p.y - mouse.y;
+              const dist = Math.hypot(dx, dy);
+              if (dist < 95) {
+                const force = (1 - dist / 95) * 18;
+                curTargetX += (dx / (dist || 1)) * force;
+                curTargetY += (dy / (dist || 1)) * force;
+              }
+            }
+
+            p.x = frameLerp(p.x, curTargetX, 0.05, deltaMs);
+            p.y = frameLerp(p.y, curTargetY, 0.05, deltaMs);
           }
         }
-
-        const pulse = Math.sin(now * p.pulseSpeed + p.pulseOffset) * 0.4;
-        const currentRadius = Math.max(1.5, p.radius + pulse + proximity * 1.5);
-
-        ctx.save();
-        const [r, g, b] = p.color;
-
-        ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${0.75 + proximity * 0.25})`;
-        ctx.shadowBlur = 8 + proximity * 10;
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(p.opacity + proximity * 0.3).toFixed(3)})`;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, currentRadius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
       }
 
-      requestAnimationFrame(render);
+      // 2. Connecting lines pass
+      ctx.lineWidth = 1;
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        if (!a || a.opacity < 0.02) continue;
+        a.neighborIndices.forEach(j => {
+          const b = particles[j];
+          if (!b || b.opacity < 0.02) return;
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 135) {
+            const alpha = (1 - d / 135) * 0.16 * Math.min(a.opacity, b.opacity);
+            if (alpha <= 0.002) return;
+            ctx.strokeStyle = `rgba(168,150,255,${alpha.toFixed(3)})`;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // 3. Draw particles pass with neon proximity glow
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        if (p.opacity > 0.01) {
+          const dist = mouse.active ? Math.hypot(p.x - mouse.x, p.y - mouse.y) : 9999;
+          const proximity = mouse.active ? Math.max(0, 1 - dist / 55) : 0;
+
+          ctx.save();
+          const [r, g, b] = p.color;
+          if (proximity > 0) {
+            ctx.shadowColor = "rgba(255,255,255,0.95)";
+            ctx.shadowBlur = 8 * proximity;
+            ctx.fillStyle = `rgba(255,255,255,${0.65 + 0.35 * proximity})`;
+          } else {
+            ctx.shadowColor = `rgba(${r},${g},${b},${0.75 + p.depth * 0.25})`;
+            ctx.shadowBlur = 6 + p.depth * 6;
+            ctx.fillStyle = `rgba(${r},${g},${b},${p.opacity.toFixed(3)})`;
+          }
+
+          ctx.beginPath();
+          const r_draw = Math.max(0.8, p.baseRadius * (1 + proximity * 0.6));
+          ctx.arc(p.x, p.y, r_draw, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      rafId = requestAnimationFrame(tick);
     }
 
-    requestAnimationFrame(render);
+    rafId = requestAnimationFrame(tick);
   }
 
 })();

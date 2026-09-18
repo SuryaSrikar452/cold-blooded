@@ -196,7 +196,7 @@
   /**
    * Sign out and redirect to /login while preserving cohort state.
    */
-  async function signOut(redirectPath = 'login.html') {
+  async function signOut(redirectPath = 'http://localhost:5000/login.html') {
     try {
       const client = getClient();
       if (client) {
@@ -237,7 +237,7 @@
       if (target) {
         try {
           target = decodeURIComponent(target);
-          if (target.startsWith('/') || target.endsWith('.html')) {
+          if (target.startsWith('/') || target.endsWith('.html') || target.startsWith('http')) {
             window.location.href = target;
             return;
           }
@@ -249,6 +249,7 @@
 
   /**
    * Renders minimal, design-system compliant account indicator and Sign Out CTA in navigation.
+   * Placed harmoniously BEFORE the primary CTA button to preserve editorial balance.
    */
   async function renderNavAuth() {
     const session = await getSession();
@@ -261,8 +262,7 @@
       authNavEl.id = 'synthiaNavAuth';
       authNavEl.style.display = 'inline-flex';
       authNavEl.style.alignItems = 'center';
-      authNavEl.style.gap = '0.75rem';
-      authNavEl.style.marginLeft = '1rem';
+      authNavEl.style.marginRight = '0.5rem';
     }
 
     if (session && session.user) {
@@ -270,25 +270,39 @@
       const name = (session.user.user_metadata && session.user.user_metadata.full_name) || email.split('@')[0];
 
       authNavEl.innerHTML = `
-        <div style="display:inline-flex;align-items:center;gap:0.45rem;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:rgba(245,243,238,0.85);" title="${email}">
-          <span style="width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 6px rgba(16,185,129,0.5);"></span>
-          <span style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+        <div class="nav-user-chip" style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);border-radius:999px;padding:3px 8px 3px 10px;gap:8px;backdrop-filter:blur(8px);">
+          <div style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:rgba(245,243,238,0.92);" title="${email}">
+            <span style="width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 6px #10B981;display:inline-block;"></span>
+            <span style="max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;">${name}</span>
+          </div>
+          <span style="width:1px;height:12px;background:rgba(255,255,255,0.16);display:inline-block;"></span>
+          <button id="synthiaSignOutBtn" type="button" title="Log out from SYNTHIA" style="background:transparent;border:none;color:rgba(245,243,238,0.65);font-size:11px;font-family:'IBM Plex Sans',sans-serif;font-weight:500;padding:2px 5px;cursor:pointer;border-radius:3px;display:inline-flex;align-items:center;gap:3px;transition:all 140ms ease;">
+            <span>Logout</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.75;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
         </div>
-        <button id="synthiaSignOutBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.18);color:rgba(245,243,238,0.85);font-size:11px;padding:0.35rem 0.65rem;cursor:pointer;border-radius:3px;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms var(--ease-out, ease);">
-          Sign out
-        </button>
       `;
 
       const signOutBtn = authNavEl.querySelector('#synthiaSignOutBtn');
       if (signOutBtn) {
-        signOutBtn.addEventListener('click', (e) => {
+        signOutBtn.addEventListener('mouseenter', () => {
+          signOutBtn.style.color = '#F87171';
+          signOutBtn.style.background = 'rgba(239, 68, 68, 0.12)';
+        });
+        signOutBtn.addEventListener('mouseleave', () => {
+          signOutBtn.style.color = 'rgba(245,243,238,0.65)';
+          signOutBtn.style.background = 'transparent';
+        });
+        signOutBtn.addEventListener('click', async (e) => {
           e.preventDefault();
-          signOut('login.html');
+          signOutBtn.innerHTML = `<span>Logging out&hellip;</span>`;
+          signOutBtn.disabled = true;
+          await signOut('http://localhost:5000/login.html');
         });
       }
     } else {
       authNavEl.innerHTML = `
-        <a href="login.html" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.22);color:rgba(245,243,238,0.9);font-size:12px;padding:0.4rem 0.85rem;border-radius:3px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms var(--ease-out, ease);">
+        <a href="http://localhost:5000/login.html" class="btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:rgba(245,243,238,0.9);font-size:11.5px;padding:0.35rem 0.75rem;border-radius:999px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms var(--ease-out, ease);">
           Sign in &rarr;
         </a>
       `;
@@ -302,7 +316,8 @@
         if (!rightContainer.contains(authNavEl)) {
           rightContainer.style.display = 'flex';
           rightContainer.style.alignItems = 'center';
-          rightContainer.appendChild(authNavEl);
+          // Insert BEFORE the CTA button so Generation -> remains on the far right
+          rightContainer.insertBefore(authNavEl, rightContainer.firstChild);
         }
       } else {
         navInner.appendChild(authNavEl);
