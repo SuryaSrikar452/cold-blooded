@@ -1320,5 +1320,13 @@ function drawTimeline(){
 
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/config.js"></script>
+<script src="src/services/authService.js"></script>
+<script>
+  if (window.synthiaAuth) {
+    window.synthiaAuth.renderNavAuth();
+  }
+</script>
 </body>
 </html>

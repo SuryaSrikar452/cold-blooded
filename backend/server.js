@@ -83,6 +83,12 @@ app.get('/generate', (req, res) => {
 app.get('/validation', (req, res) => {
   res.sendFile(path.join(frontendDir, 'validation.html'));
 });
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'login.html'));
+});
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'register.html'));
+});
 
 // Error handling middleware
 app.use(errorHandler);

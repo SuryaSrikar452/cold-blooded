@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SYNTHIA — Access Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B0B0D;
+    --ink-black: #111111;
+    --ivory: #F5F3EE;
+    --ivory-alt: #EFEBE2;
+    --ivory-bright: #FBF9F4;
+    --white: #FFFFFF;
+    --violet: #6C4DFF;
+    --violet-hover: #583BD6;
+    --violet-grad: linear-gradient(90deg, #6C4DFF 0%, #8F73FF 100%);
+    --violet-grad-hover: linear-gradient(90deg, #583BD6 0%, #7B5CFF 100%);
+    --soft-violet: #A896FF;
+    --lavender: #E7E3FF;
+    --hairline: #DBD8CD;
+    --hairline-soft: #E2DFD5;
+    --text-muted: #3A3847;
+    --text-faint: #787588;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--ink);
+    color: var(--ivory);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Full Screen 50/50 Split Container */
+  .auth-split-wrapper {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 960px) {
+    .auth-split-wrapper {
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+  }
+
+  /* =========================================================
+     LEFT PANE: Deep Ink Black + Interactive Purple Neural Balls
+     ========================================================= */
+  .left-pane {
+    position: relative;
+    background: var(--ink);
+    color: var(--ivory);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3.5rem 4rem;
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  @media (max-width: 960px) {
+    .left-pane {
+      padding: 3rem 2rem;
+      min-height: 380px;
+      border-right: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  /* Purple Neural Balls Canvas */
+  canvas#neuralField {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: all;
+  }
+
+  .left-content {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .left-top {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: auto;
+  }
+  .brand-logo {
+    font-family: 'Newsreader', serif;
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    color: var(--ivory);
+    text-decoration: none;
+    pointer-events: all;
+  }
+  .brand-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--soft-violet);
+    background: rgba(108, 77, 255, 0.18);
+    border: 1px solid rgba(168, 150, 255, 0.32);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .left-body {
+    margin: 4.5rem 0;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: var(--soft-violet);
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .eyebrow .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--violet);
+    box-shadow: 0 0 10px rgba(108, 77, 255, 0.85);
+  }
+
+  h1.headline {
+    font-family: 'Newsreader', serif;
+    font-size: clamp(38px, 4.2vw, 56px);
+    font-weight: 600;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    color: var(--ivory);
+    margin-bottom: 1.25rem;
+    max-width: 14ch;
+  }
+
+  .subline {
+    font-size: 16px;
+    color: rgba(245, 243, 238, 0.68);
+    line-height: 1.6;
+    max-width: 36ch;
+  }
+
+  .left-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: rgba(245, 243, 238, 0.5);
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .left-footer svg {
+    width: 14px;
+    height: 14px;
+    color: var(--soft-violet);
+  }
+
+  /* =========================================================
+     RIGHT PANE: Warm Ivory Creamish Surface
+     ========================================================= */
+  .right-pane {
+    background: var(--ivory);
+    color: var(--ink-black);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 4.5rem;
+    position: relative;
+  }
+
+  @media (max-width: 960px) {
+    .right-pane {
+      padding: 3rem 1.5rem;
+    }
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 440px;
+    background: var(--ivory-bright);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 2.75rem 2.5rem;
+    box-shadow: 0 4px 20px rgba(17, 17, 17, 0.04), 0 1px 2px rgba(17, 17, 17, 0.02);
+  }
+
+  @media (max-width: 480px) {
+    .form-container {
+      padding: 2rem 1.25rem;
+    }
+  }
+
+  .form-header {
+    margin-bottom: 2rem;
+  }
+  .form-title {
+    font-family: 'Newsreader', serif;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--ink-black);
+    margin-bottom: 0.4rem;
+  }
+  .form-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .field-group {
+    margin-bottom: 1.5rem;
+  }
+  label {
+    display: block;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="email"] {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14.5px;
+    color: var(--ink-black);
+    background: var(--white);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 160ms var(--ease-out), box-shadow 160ms ease;
+  }
+  input[type="email"]:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(108, 77, 255, 0.12);
+  }
+
+  /* 8-Digit Segmented OTP Grid (Supports 6 to 8 Digits) */
+  .otp-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+  .otp-cell {
+    width: 100%;
+    height: 48px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink-black);
+    background: var(--white);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 160ms var(--ease-out), transform 140ms ease, box-shadow 160ms ease;
+  }
+  .otp-cell:focus {
+    border-color: var(--violet);
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 3px rgba(108, 77, 255, 0.15);
+  }
+
+  /* Primary Button */
+  .btn-submit {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 0.85rem 1.25rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    background: var(--violet-grad);
+    color: #fff;
+    transition: background 160ms var(--ease-out), transform 220ms var(--ease-spring), opacity 160ms ease;
+  }
+  .btn-submit:hover:not(:disabled) {
+    background: var(--violet-grad-hover);
+    transform: scale(1.01);
+  }
+  .btn-submit:active:not(:disabled) {
+    transform: scale(0.99);
+  }
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Secondary Actions */
+  .auth-switch {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--hairline-soft);
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .auth-switch a {
+    color: var(--violet);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+  .auth-switch a:hover {
+    color: var(--violet-hover);
+    text-decoration: underline;
+  }
+
+  .otp-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.25rem;
+    font-size: 12px;
+  }
+  .text-action {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 140ms ease;
+  }
+  .text-action:hover:not(:disabled) {
+    color: var(--ink-black);
+  }
+  .text-action.accent {
+    color: var(--violet);
+  }
+  .text-action.accent:hover:not(:disabled) {
+    color: var(--violet-hover);
+  }
+
+  /* Alerts */
+  .alert-banner {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 0.95rem;
+    border-radius: 4px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    display: none;
+  }
+  .alert-banner.error {
+    display: block;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+  }
+  .alert-banner.error strong {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+  .alert-banner.success {
+    display: block;
+    background: #ECFDF5;
+    border: 1px solid #A7F3D0;
+    color: #065F46;
+  }
+  .alert-banner.success strong {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+
+  .view-pane { display: none; }
+  .view-pane.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="auth-split-wrapper">
+
+  <!-- ==========================================
+       LEFT HALF: DEEP BLACK + PURPLE NEURAL BALLS
+       ========================================== -->
+  <section class="left-pane" id="leftPaneContainer">
+    <canvas id="neuralField"></canvas>
+
+    <div class="left-content left-top">
+      <a href="index.html" class="brand-logo">SYNTHIA</a>
+      <span class="brand-tag">ACCESS GATE</span>
+    </div>
+
+    <div class="left-content left-body">
+      <div class="eyebrow">
+        <span class="dot"></span>
+        <span>SYNTHIA / ACCESS</span>
+      </div>
+      <h1 class="headline">WELCOME BACK.</h1>
+      <p class="subline">Access your synthetic patient population workspace and cohort generation pipelines.</p>
+    </div>
+
+    <div class="left-content left-footer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span>Zero Passwords &bull; Verified via Supabase Email OTP</span>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       RIGHT HALF: WARM IVORY CREAMISH INTERACTION
+       ========================================== -->
+  <section class="right-pane">
+    <div class="form-container">
+
+      <!-- STAGE 1: Email Form -->
+      <div id="emailView" class="view-pane active">
+        <div class="form-header">
+          <h2 class="form-title">Workspace Login</h2>
+          <p class="form-desc">Enter your email to receive an instant verification code.</p>
+        </div>
+
+        <div id="emailBanner" class="alert-banner"></div>
+
+        <form id="emailForm" autocomplete="on">
+          <div class="field-group">
+            <label for="userEmail">Email Address</label>
+            <input type="email" id="userEmail" placeholder="your@email.com" required autocomplete="email" autofocus />
+          </div>
+
+          <button type="submit" id="sendBtn" class="btn-submit">
+            <span>SEND CODE</span>
+            <span>&rarr;</span>
+          </button>
+        </form>
+
+        <div class="auth-switch">
+          Don't have an account? <a href="register.html">CREATE ACCOUNT &rarr;</a>
+        </div>
+      </div>
+
+      <!-- STAGE 2: 8-Digit Segmented OTP Form -->
+      <div id="otpView" class="view-pane">
+        <div class="form-header">
+          <h2 class="form-title">CHECK YOUR EMAIL.</h2>
+          <p class="form-desc">We sent a verification code to <strong id="targetEmailText" style="color: var(--ink-black);">your@email.com</strong></p>
+        </div>
+
+        <div id="otpBanner" class="alert-banner"></div>
+
+        <form id="otpForm" autocomplete="off">
+          <div class="field-group">
+            <label>Verification Code (6 or 8 digits)</label>
+            <!-- 8 Segmented Cells accommodating both 6-digit and 8-digit codes -->
+            <div class="otp-grid" id="otpGrid">
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="0" />
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="1" />
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="2" />
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="3" />
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="4" />
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="5" />
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="6" />
+              <input type="text" class="otp-cell" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-idx="7" />
+            </div>
+          </div>
+
+          <button type="submit" id="verifyBtn" class="btn-submit">
+            <span>VERIFY CODE</span>
+            <span>&rarr;</span>
+          </button>
+        </form>
+
+        <div class="otp-actions">
+          <button type="button" class="text-action" id="backToEmailBtn">&larr; USE A DIFFERENT EMAIL</button>
+          <button type="button" class="text-action accent" id="resendBtn">RESEND CODE</button>
+        </div>
+      </div>
+
+      <!-- STAGE 3: Access Granted State -->
+      <div id="successView" class="view-pane">
+        <div class="alert-banner success" style="display: block; margin-bottom: 1.25rem;">
+          <strong>ACCESS GRANTED</strong>
+          <span>Welcome to SYNTHIA. Loading your workspace...</span>
+        </div>
+        <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">Redirecting to cohort generation pipeline...</p>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- Load Supabase JS SDK & AuthService -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/services/authService.js"></script>
+
+<script>
+(function() {
+  'use strict';
+
+  // 1. Redirect if already authenticated
+  if (window.synthiaAuth && typeof window.synthiaAuth.redirectIfAuthenticated === 'function') {
+    window.synthiaAuth.redirectIfAuthenticated();
+  }
+
+  // DOM references
+  const emailView = document.getElementById('emailView');
+  const otpView = document.getElementById('otpView');
+  const successView = document.getElementById('successView');
+  const emailBanner = document.getElementById('emailBanner');
+  const otpBanner = document.getElementById('otpBanner');
+  const emailForm = document.getElementById('emailForm');
+  const userEmail = document.getElementById('userEmail');
+  const sendBtn = document.getElementById('sendBtn');
+  const targetEmailText = document.getElementById('targetEmailText');
+  const otpForm = document.getElementById('otpForm');
+  const otpCells = Array.from(document.querySelectorAll('.otp-cell'));
+  const verifyBtn = document.getElementById('verifyBtn');
+  const backToEmailBtn = document.getElementById('backToEmailBtn');
+  const resendBtn = document.getElementById('resendBtn');
+
+  let activeEmail = '';
+
+  function setBanner(el, type, title, msg) {
+    el.className = `alert-banner ${type}`;
+    el.innerHTML = `<strong>${title}</strong><span>${msg}</span>`;
+  }
+  function resetBanner(el) {
+    el.className = 'alert-banner';
+    el.innerHTML = '';
+  }
+
+  // 8-Cell Segmented OTP Input Handling (Supports paste, typing, backspace, navigation)
+  otpCells.forEach((cell, idx) => {
+    cell.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '');
+      cell.value = val ? val[val.length - 1] : '';
+      if (cell.value && idx < otpCells.length - 1) {
+        otpCells[idx + 1].focus();
+      }
+      resetBanner(otpBanner);
+    });
+
+    cell.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace') {
+        if (!cell.value && idx > 0) {
+          otpCells[idx - 1].focus();
+        }
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        otpCells[idx - 1].focus();
+      } else if (e.key === 'ArrowRight' && idx < otpCells.length - 1) {
+        otpCells[idx + 1].focus();
+      }
+    });
+
+    cell.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').trim();
+      if (!pasteData) return;
+
+      // Populate cells up to length (supports 6, 7, 8 digits)
+      for (let i = 0; i < otpCells.length; i++) {
+        otpCells[i].value = pasteData[i] || '';
+      }
+      const focusIndex = Math.min(pasteData.length, otpCells.length - 1);
+      otpCells[focusIndex].focus();
+    });
+  });
+
+  function getEnteredCode() {
+    return otpCells.map(c => c.value).join('');
+  }
+
+  // Step 1: Send OTP
+  emailForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    resetBanner(emailBanner);
+    const email = userEmail.value.trim().toLowerCase();
+
+    if (!email || !email.includes('@')) {
+      setBanner(emailBanner, 'error', 'INVALID EMAIL', 'Please enter a valid email address.');
+      return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = `<span>SENDING CODE&hellip;</span>`;
+
+    try {
+      const result = await window.synthiaAuth.sendOTP(email, { shouldCreateUser: true });
+      if (!result.success) {
+        const formatted = window.synthiaAuth.formatAuthError(result.error);
+        setBanner(emailBanner, 'error', formatted.title, formatted.message);
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = `<span>SEND CODE</span><span>&rarr;</span>`;
+        return;
+      }
+
+      activeEmail = email;
+      targetEmailText.textContent = email;
+      emailView.classList.remove('active');
+      otpView.classList.add('active');
+      otpCells.forEach(c => c.value = '');
+      setTimeout(() => otpCells[0].focus(), 60);
+
+    } catch (err) {
+      setBanner(emailBanner, 'error', 'AUTHENTICATION ERROR', 'Could not dispatch code. Please try again.');
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = `<span>SEND CODE</span><span>&rarr;</span>`;
+    }
+  });
+
+  // Step 2: Verify OTP
+  otpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    resetBanner(otpBanner);
+    const token = getEnteredCode();
+
+    if (token.length < 6) {
+      setBanner(otpBanner, 'error', 'INCOMPLETE CODE', 'Please enter the verification code received in your email.');
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = `<span>VERIFYING&hellip;</span>`;
+
+    try {
+      const result = await window.synthiaAuth.verifyOTP(activeEmail, token);
+      if (!result.success) {
+        const formatted = window.synthiaAuth.formatAuthError(result.error);
+        setBanner(otpBanner, 'error', formatted.title, formatted.message);
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = `<span>VERIFY CODE</span><span>&rarr;</span>`;
+        return;
+      }
+
+      otpView.classList.remove('active');
+      successView.classList.add('active');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      let target = urlParams.get('redirect') || 'create.html';
+      try { target = decodeURIComponent(target); } catch (e) {}
+
+      setTimeout(() => {
+        window.location.href = target;
+      }, 700);
+
+    } catch (err) {
+      setBanner(otpBanner, 'error', 'VERIFICATION ERROR', 'Could not verify code. Please try again.');
+      verifyBtn.disabled = false;
+      verifyBtn.innerHTML = `<span>VERIFY CODE</span><span>&rarr;</span>`;
+    }
+  });
+
+  // Back to Email
+  backToEmailBtn.addEventListener('click', () => {
+    otpView.classList.remove('active');
+    emailView.classList.add('active');
+    resetBanner(emailBanner);
+    userEmail.focus();
+  });
+
+  // Resend Code
+  resendBtn.addEventListener('click', async () => {
+    resendBtn.disabled = true;
+    resendBtn.textContent = 'RESENDING...';
+    resetBanner(otpBanner);
+
+    try {
+      const result = await window.synthiaAuth.sendOTP(activeEmail, { shouldCreateUser: true });
+      if (!result.success) {
+        const formatted = window.synthiaAuth.formatAuthError(result.error);
+        setBanner(otpBanner, 'error', formatted.title, formatted.message);
+      } else {
+        setBanner(otpBanner, 'success', 'CODE SENT', `A fresh code has been sent to ${activeEmail}.`);
+      }
+    } catch (err) {
+      setBanner(otpBanner, 'error', 'RESEND ERROR', 'Unable to resend code right now.');
+    } finally {
+      resendBtn.disabled = false;
+      resendBtn.textContent = 'RESEND CODE';
+    }
+  });
+
+  // =========================================================================
+  // INTERACTIVE PURPLE NEURAL BALLS CANVAS (Exact SYNTHIA create.html system)
+  // =========================================================================
+  const canvas = document.getElementById('neuralField');
+  const container = document.getElementById('leftPaneContainer');
+
+  if (canvas && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0;
+    let particles = [];
+    const NUM_PARTICLES = 65; // High visual density of purple balls
+
+    const VIOLET = [108, 77, 255];      // #6C4DFF
+    const SOFT_VIOLET = [168, 150, 255];// #A896FF
+
+    const mouse = { x: -9999, y: -9999, active: false };
+
+    function resize() {
+      const rect = container.getBoundingClientRect();
+      W = canvas.width = rect.width;
+      H = canvas.height = rect.height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    container.addEventListener('pointermove', (e) => {
+      const rect = container.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+      mouse.active = true;
+    });
+    container.addEventListener('pointerleave', () => {
+      mouse.active = false;
+    });
+
+    for (let i = 0; i < NUM_PARTICLES; i++) {
+      const depth = Math.random();
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.45,
+        radius: 2.2 + depth * 3.2, // Distinct visible purple balls
+        depth: depth,
+        opacity: 0.35 + depth * 0.55,
+        color: Math.random() < 0.65 ? VIOLET : SOFT_VIOLET,
+        pulseSpeed: 0.002 + Math.random() * 0.003,
+        pulseOffset: Math.random() * Math.PI * 2
+      });
+    }
+
+    function render(now) {
+      ctx.clearRect(0, 0, W, H);
+
+      // 1. Draw glowing links between purple balls
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < 135) {
+            const alpha = (1 - dist / 135) * 0.18 * Math.min(particles[i].opacity, particles[j].opacity);
+            ctx.strokeStyle = `rgba(168, 150, 255, ${alpha.toFixed(3)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // 2. Draw and animate purple neural balls with interactive physics
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        // Motion
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Bounce/Wrap boundaries
+        if (p.x < 0) p.x = W;
+        if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        if (p.y > H) p.y = 0;
+
+        // Mouse interactive reaction
+        let proximity = 0;
+        if (mouse.active) {
+          const mdx = p.x - mouse.x;
+          const mdy = p.y - mouse.y;
+          const mdist = Math.hypot(mdx, mdy);
+          if (mdist < 110) {
+            proximity = 1 - mdist / 110;
+            const force = proximity * 14 * p.depth;
+            p.x += (mdx / (mdist || 1)) * force;
+            p.y += (mdy / (mdist || 1)) * force;
+          }
+        }
+
+        // Pulse
+        const pulse = Math.sin(now * p.pulseSpeed + p.pulseOffset) * 0.4;
+        const currentRadius = Math.max(1.5, p.radius + pulse + proximity * 1.5);
+
+        ctx.save();
+        const [r, g, b] = p.color;
+
+        // Vibrant purple glow
+        ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${0.75 + proximity * 0.25})`;
+        ctx.shadowBlur = 8 + proximity * 10;
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${(p.opacity + proximity * 0.3).toFixed(3)})`;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, currentRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  }
+
+})();
+</script>
+</body>
+</html>

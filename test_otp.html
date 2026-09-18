@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYNTHIA - Supabase Email OTP Diagnostic Test</title>
+  <style>
+    :root {
+      --bg: #0C0D0E;
+      --card: #141618;
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #F5F3EE;
+      --muted: #8E9299;
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --success: #10B981;
+      --danger: #EF4444;
+      --font-mono: 'JetBrains Mono', monospace, Consolas, Courier;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 540px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .header {
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    .tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      background: rgba(37, 99, 235, 0.12);
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .dot.ready {
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+    }
+
+    .section {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-num {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 10px;
+    }
+
+    .field {
+      margin-bottom: 0.75rem;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    input.mono {
+      font-family: var(--font-mono);
+      letter-spacing: 0.15em;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .log-box {
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      display: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .log-box.info {
+      display: block;
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+      color: #93C5FD;
+    }
+
+    .log-box.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6EE7B7;
+    }
+
+    .log-box.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #FCA5A5;
+    }
+
+    .footer {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="header">
+      <span class="tag">SYNTHIA Security Diagnostic</span>
+      <h1>Supabase Email OTP Verification</h1>
+      <p class="subtitle">Direct pipeline verification: Supabase Auth &rarr; Brevo SMTP &rarr; OTP Verification.</p>
+    </div>
+
+    <!-- Client Initialization Badge -->
+    <div class="status-badge" id="initStatusBadge">
+      <div class="dot" id="initDot"></div>
+      <span id="initStatusText">Initializing Supabase Client...</span>
+    </div>
+
+    <!-- Step 1: Send OTP -->
+    <div class="section">
+      <div class="section-title">
+        <span class="step-num">1</span>
+        <span>Request OTP via Supabase Auth</span>
+      </div>
+      <div class="field">
+        <label for="emailInput">Destination Email Address</label>
+        <input type="email" id="emailInput" placeholder="name@example.com" autocomplete="email" required />
+      </div>
+      <button id="sendOtpBtn">Send Test OTP</button>
+      <div class="log-box" id="sendOtpLog"></div>
+    </div>
+
+    <!-- Step 2: Verify OTP -->
+    <div class="section">
+      <div class="section-title">
+        <span class="step-num">2</span>
+        <span>Verify Received OTP Token</span>
+      </div>
+      <div class="field">
+        <label for="otpInput">6-Digit Code (from email)</label>
+        <input type="text" id="otpInput" class="mono" placeholder="123456" maxlength="8" autocomplete="one-time-code" />
+      </div>
+      <button id="verifyOtpBtn">Verify OTP</button>
+      <div class="log-box" id="verifyOtpLog"></div>
+    </div>
+
+    <div class="footer">
+      <strong>Zero-Secret Boundary:</strong> Supabase generate/verify only. SMTP handled by Brevo in Supabase backend.
+      No secret keys or credentials exposed.
+    </div>
+  </div>
+
+  <!-- Load Supabase JS SDK v2 CDN first -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Load Existing SYNTHIA authService -->
+  <script src="src/services/authService.js"></script>
+
+  <script>
+    (function () {
+      const initDot = document.getElementById('initDot');
+      const initStatusText = document.getElementById('initStatusText');
+      const emailInput = document.getElementById('emailInput');
+      const sendOtpBtn = document.getElementById('sendOtpBtn');
+      const sendOtpLog = document.getElementById('sendOtpLog');
+      const otpInput = document.getElementById('otpInput');
+      const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+      const verifyOtpLog = document.getElementById('verifyOtpLog');
+
+      // Resolve Supabase client instance (from authService.js or window.supabase)
+      const supabase = (window.synthiaAuth && window.synthiaAuth.supabase) ||
+        (typeof supabaseClient !== 'undefined' ? supabaseClient : null) ||
+        (typeof window.supabase !== 'undefined' && window.supabase.createClient ?
+          window.supabase.createClient('https://ptjvffbdrjqxpljocsev.supabase.co', 'sb_publishable_MBFsgx7alLUvEX9nzUh5Fg_vZANcX8G') : null);
+
+      if (supabase && supabase.auth) {
+        initDot.className = 'dot ready';
+        initStatusText.textContent = 'Supabase Client Initialized (Ready for OTP Test)';
+      } else {
+        initDot.className = 'dot error';
+        initStatusText.textContent = 'Error: Supabase client could not be initialized.';
+      }
+
+      // Step 1: Send OTP
+      sendOtpBtn.addEventListener('click', async () => {
+        const email = (emailInput.value || '').trim();
+        if (!email || !email.includes('@')) {
+          showLog(sendOtpLog, 'error', 'Please enter a valid email address.');
+          return;
+        }
+
+        sendOtpBtn.disabled = true;
+        sendOtpBtn.textContent = 'Sending OTP...';
+
+        try {
+          if (!supabase || !supabase.auth) {
+            throw new Error('Supabase client is not available.');
+          }
+
+          // Exact requested call:
+          const { data, error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+              shouldCreateUser: true
+            }
+          });
+
+          if (error) {
+            const devError = formatError(error);
+            showLog(sendOtpLog, 'error', `[Supabase Error]\n${devError}`);
+          } else {
+            // Requested exact message:
+            showLog(sendOtpLog, 'success', 'OTP sent. Check your email.');
+            otpInput.focus();
+          }
+        } catch (err) {
+          showLog(sendOtpLog, 'error', `[Unexpected Exception]\n${err.message || String(err)}`);
+        } finally {
+          sendOtpBtn.disabled = false;
+          sendOtpBtn.textContent = 'Send Test OTP';
+        }
+      });
+
+      // Step 2: Verify OTP
+      verifyOtpBtn.addEventListener('click', async () => {
+        const email = (emailInput.value || '').trim();
+        const token = (otpInput.value || '').trim();
+
+        if (!email) {
+          showLog(verifyOtpLog, 'error', 'Email address is required to verify OTP.');
+          return;
+        }
+        if (!token) {
+          showLog(verifyOtpLog, 'error', 'Please enter the OTP received in email.');
+          return;
+        }
+
+        verifyOtpBtn.disabled = true;
+        verifyOtpBtn.textContent = 'Verifying OTP...';
+
+        try {
+          if (!supabase || !supabase.auth) {
+            throw new Error('Supabase client is not available.');
+          }
+
+          // Exact requested call:
+          const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'email'
+          });
+
+          if (error) {
+            const devError = formatError(error);
+            showLog(verifyOtpLog, 'error', `[Supabase Error]\n${devError}`);
+          } else {
+            const user = data && data.user;
+            const session = data && data.session;
+            const userEmail = user ? user.email : email;
+
+            let details = `OTP verified successfully\n`;
+            details += `Supabase Session Returned: ${session ? 'YES' : 'NO'}\n`;
+            details += `Supabase User Returned: ${user ? 'YES' : 'NO'}\n`;
+            details += `Authenticated User Email: ${userEmail}`;
+
+            showLog(verifyOtpLog, 'success', details);
+          }
+        } catch (err) {
+          showLog(verifyOtpLog, 'error', `[Unexpected Exception]\n${err.message || String(err)}`);
+        } finally {
+          verifyOtpBtn.disabled = false;
+          verifyOtpBtn.textContent = 'Verify OTP';
+        }
+      });
+
+      function showLog(el, type, text) {
+        el.className = `log-box ${type}`;
+        el.textContent = text;
+      }
+
+      function formatError(err) {
+        if (!err) return 'Unknown error';
+        if (typeof err === 'string') return err;
+        const parts = [];
+        if (err.message) parts.push(`Message: ${err.message}`);
+        if (err.status) parts.push(`Status: ${err.status}`);
+        if (err.name) parts.push(`Name: ${err.name}`);
+        if (err.code) parts.push(`Code: ${err.code}`);
+        return parts.length > 0 ? parts.join('\n') : JSON.stringify(err, null, 2);
+      }
+    })();
+  </script>
+</body>
+
+</html>
