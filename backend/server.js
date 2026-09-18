@@ -71,18 +71,20 @@ app.use('/api/validate', validationRoutes);
 
 // Privacy API (Nearest real reference record, MIA attack)
 app.use('/api/privacy', privacyRoutes);
-app.use('/privacy', privacyRoutes);
 
 // Bias audit API
 app.use('/api/audit', auditRoutes);
 
 // Edge-cases alias
 app.get('/api/edge-cases/scenarios', privacyController.getEdgeCaseScenarios);
+app.get('/api/generate/edge-cases/scenarios', privacyController.getEdgeCaseScenarios);
 app.post('/api/edge-cases', privacyController.generateEdgeCases);
+app.post('/api/generate/edge-cases', privacyController.generateEdgeCases);
 
 // Patient trajectory & counterfactual APIs
 app.get('/patient/:patient_id/longitudinal', privacyController.getLongitudinalTrajectory);
-app.get('/patient/:patient_id', privacyController.getLongitudinalTrajectory);
+app.get('/api/patient/:patient_id/longitudinal', privacyController.getLongitudinalTrajectory);
+app.get('/api/patient/:patient_id', privacyController.getLongitudinalTrajectory);
 app.post('/api/copula/counterfactual', privacyController.getCounterfactual);
 app.post('/cohort/:cohort_id/counterfactual', privacyController.getCounterfactual);
 
@@ -102,6 +104,15 @@ app.get('/generate', (req, res) => {
 });
 app.get('/validation', (req, res) => {
   res.sendFile(path.join(frontendDir, 'validation.html'));
+});
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'privacy.html'));
+});
+app.get('/patient', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'patient.html'));
+});
+app.get('/stress-test', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'stress-test.html'));
 });
 app.get('/login', (req, res) => {
   res.sendFile(path.join(frontendDir, 'login.html'));
