@@ -42,6 +42,7 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' }));
 
 const generateRoutes = require('./routes/generateRoutes');
+const validationRoutes = require('./routes/validationRoutes');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -61,6 +62,9 @@ app.use('/api/cohort', cohortRoutes);
 
 // Synthetic generation API (SDV Gaussian Copula)
 app.use('/api/generate', generateRoutes);
+
+// Statistical & privacy validation API
+app.use('/api/validate', validationRoutes);
 
 // Optional: Serve frontend static files if accessed directly through backend port
 const frontendDir = path.join(__dirname, '../frontend');

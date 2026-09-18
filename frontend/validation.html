@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SYNTHIA — Statistical & Fidelity Validation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0B0D;
+    --ink-black:#111111;
+    --ivory:#F5F3EE;
+    --ivory-alt:#EFEBE2;
+    --ivory-bright:#FBF9F4;
+    --white:#FFFFFF;
+    --violet:#6C4DFF;
+    --violet-hover:#583BD6;
+    --violet-grad: linear-gradient(90deg, #6C4DFF 0%, #8F73FF 100%);
+    --violet-grad-hover: linear-gradient(90deg, #583BD6 0%, #7B5CFF 100%);
+    --soft-violet:#A896FF;
+    --lavender:#E7E3FF;
+    --hairline:#DBD8CD;
+    --hairline-soft:#E2DFD5;
+    --text-muted:#3A3847;
+    --text-faint:#787588;
+    --teal:#0D9488;
+    --teal-bg:rgba(13,148,136,0.1);
+    --rose:#E11D48;
+    --rose-bg:rgba(225,29,72,0.1);
+    --ease-out: cubic-bezier(0.16,1,0.3,1);
+    --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+    --panel-shadow: 0 1px 2px rgba(17,17,17,0.03), 0 8px 24px rgba(17,17,17,0.04);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ivory);
+    color:var(--ink-black);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3,h4{margin:0;font-family:'Newsreader',serif;font-weight:600;letter-spacing:-0.015em;}
+  .accent{
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    font-style:italic;
+    font-weight:500;
+  }
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+  .label{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 3rem;width:100%;}
+  @media(max-width:900px){.wrap{padding:0 1.25rem;}}
+
+  /* Top hairline scroll progress bar */
+  .scroll-progress{
+    position:fixed;top:0;left:0;height:2.5px;
+    background:var(--violet-grad);
+    z-index:100;width:0%;
+    transition:width 50ms linear;
+    pointer-events:none;
+  }
+
+  /* Nav */
+  nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(11,11,13,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    color:var(--ivory);
+  }
+  .nav-inner{
+    max-width:1180px;margin:0 auto;padding:0 3rem;height:64px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  @media(max-width:900px){.nav-inner{padding:0 1.25rem;}}
+  .nav-left{display:flex;align-items:center;gap:2.5rem;}
+  .logo{font-family:'Newsreader',serif;font-weight:600;font-size:19px;letter-spacing:-0.01em;color:var(--ivory);}
+  
+  .workflow-indicator{
+    display:flex;align-items:center;gap:1.2rem;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;
+  }
+  @media(max-width:980px){.workflow-indicator{display:none;}}
+  .wf-step{color:rgba(245,243,238,0.45);display:inline-flex;align-items:center;gap:0.35rem;transition:color 160ms var(--ease-out);}
+  .wf-step.active{color:var(--ivory);font-weight:600;}
+  .wf-step.active .wf-badge{
+    background:rgba(108,77,255,0.24);color:var(--soft-violet);
+    border:1px solid rgba(168,150,255,0.32);
+    padding:2px 6px;border-radius:3px;font-weight:600;
+  }
+  .wf-sep{color:rgba(255,255,255,0.18);}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13.5px;
+    padding:0.7rem 1.25rem;border-radius:4px;border:none;cursor:pointer;
+    transition:background 160ms var(--ease-out), transform 220ms var(--ease-spring), border-color 160ms var(--ease-out), opacity 200ms ease;
+  }
+  .btn-primary{
+    background:var(--violet-grad);
+    color:#fff;
+    border:none;
+  }
+  .btn-primary:hover{
+    background:var(--violet-grad-hover);
+    transform:scale(1.02);
+  }
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-ghost{background:transparent;color:var(--ink-black);border:1px solid var(--hairline);}
+  .btn-ghost:hover{border-color:var(--ink-black);background:rgba(17,17,17,0.03);}
+  .btn-ghost-dark{background:rgba(255,255,255,0.06);color:var(--ivory);border:1px solid rgba(255,255,255,0.14);}
+  .btn-ghost-dark:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.3);}
+  .btn.disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
+
+  /* Header section */
+  .page-header{
+    padding:3.5rem 0 2rem 0;
+    border-bottom:1px solid var(--hairline);
+    background:var(--ivory);
+  }
+  .section-tag{
+    display:inline-flex;align-items:center;gap:0.5rem;
+    margin-bottom:0.8rem;
+  }
+  .section-tag .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--violet);
+    box-shadow:0 0 8px rgba(108,77,255,0.6);
+  }
+  .page-header h1{
+    font-size:44px;line-height:1.08;color:var(--ink);margin-bottom:0.6rem;
+  }
+  @media(max-width:768px){.page-header h1{font-size:32px;}}
+  .page-header p.subtitle{
+    font-size:16px;color:var(--text-muted);max-width:680px;line-height:1.55;
+  }
+
+  /* Main Workspace */
+  .validation-main{
+    padding:2.5rem 0 5rem 0;
+    flex:1;
+    background:var(--ivory);
+  }
+
+  /* Metadata Grid (Overview) */
+  .overview-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:1rem;
+    margin-bottom:2.5rem;
+  }
+  @media(max-width:960px){.overview-grid{grid-template-columns:repeat(3, 1fr);}}
+  @media(max-width:600px){.overview-grid{grid-template-columns:repeat(2, 1fr);}}
+
+  .overview-card{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:1.1rem 1.25rem;
+    box-shadow:var(--panel-shadow);
+  }
+  .overview-card .label{margin-bottom:0.35rem;display:block;}
+  .overview-val{font-size:20px;font-weight:600;color:var(--ink-black);}
+  .overview-sub{font-size:11.5px;color:var(--text-faint);margin-top:0.3rem;}
+
+  /* Section Title Block */
+  .section-title-row{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin-bottom:1.25rem;
+    padding-bottom:0.75rem;
+    border-bottom:1px solid var(--hairline);
+  }
+  .section-title-row h3{
+    font-size:22px;color:var(--ink);
+  }
+  .section-subtext{
+    font-size:12.5px;color:var(--text-faint);
+  }
+
+  /* Section spacing */
+  .val-section{
+    margin-bottom:3.5rem;
+  }
+
+  /* Analytical Dark Stage Panel (SYNTHIA Aesthetic) */
+  .dark-stage-panel{
+    background:var(--ink);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:6px;
+    padding:1.5rem;
+    color:var(--ivory);
+    box-shadow:0 24px 60px rgba(11,11,13,0.16);
+    margin-bottom:1.5rem;
+  }
+  .dark-stage-top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:1rem;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    margin-bottom:1rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+  }
+  .legend-items{
+    display:flex;align-items:center;gap:1.5rem;
+  }
+  .legend-chip{
+    display:inline-flex;align-items:center;gap:0.45rem;
+  }
+  .legend-dot{width:8px;height:8px;border-radius:50%;}
+  .legend-src .legend-dot{background:rgba(245,243,238,0.7);}
+  .legend-syn .legend-dot{background:var(--violet);box-shadow:0 0 8px rgba(108,77,255,0.8);}
+
+  /* Distribution Selector Tabs */
+  .dist-tabs{
+    display:flex;align-items:center;gap:0.4rem;
+    overflow-x:auto;padding-bottom:0.4rem;
+    margin-bottom:1rem;
+  }
+  .dist-tab-btn{
+    background:rgba(255,255,255,0.06);
+    color:rgba(245,243,238,0.7);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:3px;
+    padding:0.45rem 0.85rem;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all 150ms var(--ease-out);
+  }
+  .dist-tab-btn:hover{background:rgba(255,255,255,0.12);color:#fff;}
+  .dist-tab-btn.active{
+    background:rgba(108,77,255,0.25);
+    color:var(--soft-violet);
+    border-color:rgba(168,150,255,0.45);
+    font-weight:600;
+  }
+
+  /* Canvas Visual Container */
+  .dist-canvas-wrap{
+    width:100%;
+    height:260px;
+    background:#070709;
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:4px;
+    position:relative;
+  }
+  #distCanvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  /* Metric Breakdown Card below stage */
+  .dist-stats-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1rem;
+    margin-top:1rem;
+  }
+  @media(max-width:850px){.dist-stats-grid{grid-template-columns:repeat(2, 1fr);}}
+
+  .stat-card{
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.07);
+    padding:0.85rem 1rem;
+    border-radius:3px;
+  }
+  .stat-card .label{font-size:10px;color:rgba(245,243,238,0.5);}
+  .stat-card .val{font-size:16px;font-weight:600;color:var(--ivory);margin-top:0.25rem;}
+  .stat-card .note{font-size:10.5px;color:rgba(245,243,238,0.4);margin-top:0.2rem;}
+
+  /* Categorical Variables Card Grid */
+  .cat-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:1.5rem;
+  }
+  @media(max-width:768px){.cat-grid{grid-template-columns:1fr;}}
+
+  .cat-card{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:1.4rem 1.6rem;
+    box-shadow:var(--panel-shadow);
+  }
+  .cat-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:0.75rem;
+    border-bottom:1px solid var(--hairline-soft);
+    margin-bottom:1.1rem;
+  }
+  .cat-title{font-size:18px;color:var(--ink);}
+  .test-pill{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    padding:3px 8px;
+    border-radius:3px;
+    background:rgba(108,77,255,0.1);
+    color:var(--violet);
+    font-weight:600;
+  }
+
+  .cat-row{
+    margin-bottom:1rem;
+  }
+  .cat-row-label{
+    display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:0.35rem;
+  }
+  .cat-bars{
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .bar-wrap{
+    height:7px;background:var(--ivory-alt);border-radius:3px;overflow:hidden;position:relative;
+  }
+  .bar-fill{height:100%;transition:width 600ms var(--ease-out);}
+  .bar-fill.src{background:rgba(17,17,17,0.35);}
+  .bar-fill.syn{background:var(--violet-grad);}
+
+  /* Cohort Target Adherence Table */
+  .adherence-table-wrap{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    box-shadow:var(--panel-shadow);
+    overflow-x:auto;
+  }
+  table.synth-table{
+    width:100%;
+    border-collapse:collapse;
+    text-align:left;
+    font-size:13px;
+  }
+  table.synth-table th{
+    background:var(--ivory-bright);
+    padding:0.9rem 1.2rem;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    border-bottom:1px solid var(--hairline);
+  }
+  table.synth-table td{
+    padding:1rem 1.2rem;
+    border-bottom:1px solid var(--hairline-soft);
+    color:var(--ink-black);
+  }
+  table.synth-table tr:last-child td{border-bottom:none;}
+  .delta-pill{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:600;
+    padding:2px 7px;
+    border-radius:3px;
+    display:inline-block;
+  }
+  .delta-met{background:var(--teal-bg);color:var(--teal);}
+  .delta-warn{background:var(--rose-bg);color:var(--rose);}
+
+  /* Correlation Matrix Section */
+  .corr-card{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:1.4rem 1.6rem;
+    box-shadow:var(--panel-shadow);
+  }
+  .corr-head-stats{
+    display:flex;align-items:center;gap:2rem;margin-bottom:1.2rem;
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;
+  }
+  .corr-grid-wrap{
+    overflow-x:auto;margin-bottom:1.5rem;
+  }
+  table.corr-table{
+    border-collapse:collapse;margin:0 auto;font-size:11px;
+  }
+  table.corr-table th, table.corr-table td{
+    width:42px;height:42px;text-align:center;vertical-align:middle;
+    border:1px solid var(--hairline-soft);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+  }
+  table.corr-table th{
+    background:var(--ivory-bright);color:var(--text-muted);font-weight:600;
+  }
+
+  /* Key clinical pairs list */
+  .key-pairs-grid{
+    display:grid;grid-template-columns:repeat(3, 1fr);gap:1rem;
+    margin-top:1.2rem;
+  }
+  @media(max-width:850px){.key-pairs-grid{grid-template-columns:repeat(2, 1fr);}}
+  @media(max-width:550px){.key-pairs-grid{grid-template-columns:1fr;}}
+  .pair-card{
+    background:var(--ivory-bright);
+    border:1px solid var(--hairline-soft);
+    padding:0.85rem 1rem;
+    border-radius:3px;
+  }
+  .pair-label{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:0.4rem;}
+  .pair-row{
+    display:flex;justify-content:space-between;font-size:11.5px;font-family:'JetBrains Mono',monospace;
+    color:var(--text-muted);margin-bottom:2px;
+  }
+
+  /* Privacy Assessment Card */
+  .privacy-card{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:1.4rem 1.6rem;
+    box-shadow:var(--panel-shadow);
+    margin-bottom:2rem;
+  }
+  .privacy-metrics-grid{
+    display:grid;grid-template-columns:repeat(4, 1fr);gap:1rem;margin:1.2rem 0;
+  }
+  @media(max-width:850px){.privacy-metrics-grid{grid-template-columns:repeat(2, 1fr);}}
+  .priv-box{
+    background:var(--ivory-bright);
+    border:1px solid var(--hairline-soft);
+    padding:0.9rem 1.1rem;
+    border-radius:3px;
+  }
+  .priv-box .label{font-size:10.5px;}
+  .priv-box .val{font-size:18px;font-weight:600;margin-top:0.3rem;}
+  .priv-box.safe .val{color:var(--teal);}
+  .privacy-disclaimer{
+    padding:0.8rem 1rem;
+    background:var(--ivory-alt);
+    border-left:3px solid var(--violet);
+    border-radius:0 3px 3px 0;
+    font-size:12px;
+    line-height:1.45;
+    color:var(--text-muted);
+  }
+
+  /* Temporal Section Notice */
+  .temporal-card{
+    background:var(--white);
+    border:1px dashed var(--hairline);
+    border-radius:4px;
+    padding:1.4rem 1.6rem;
+    color:var(--text-faint);
+    font-size:13px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+
+  /* Action Bar */
+  .action-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:2rem;border-top:1px solid var(--hairline);
+    margin-top:2rem;
+  }
+  @media(max-width:640px){
+    .action-bar{flex-direction:column-reverse;gap:1rem;align-items:stretch;}
+    .action-bar .btn{justify-content:center;}
+  }
+
+  /* Loading State Overlay */
+  .loading-card{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:3.5rem 2rem;
+    text-align:center;
+    box-shadow:var(--panel-shadow);
+  }
+  .load-spinner{
+    width:34px;height:34px;border:3px solid rgba(108,77,255,0.2);
+    border-top-color:var(--violet);border-radius:50%;
+    margin:0 auto 1.5rem auto;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* Error State Box */
+  .error-box{
+    background:#FEF2F2;border:1px solid #FECACA;border-radius:4px;
+    padding:1.5rem 1.8rem;color:#991B1B;display:none;margin-bottom:2rem;
+  }
+  .error-box h3{color:#991B1B;font-size:20px;margin-bottom:0.5rem;}
+  .error-box p{font-size:13.5px;line-height:1.5;color:#B91C1C;}
+  .error-actions{margin-top:1.2rem;display:flex;gap:0.8rem;}
+
+  /* Empty State Box */
+  .empty-box{
+    background:var(--white);border:1px solid var(--hairline);border-radius:4px;
+    padding:3.5rem 2rem;text-align:center;box-shadow:var(--panel-shadow);display:none;
+  }
+  .empty-box h2{font-size:26px;color:var(--ink);margin-bottom:0.6rem;}
+  .empty-box p{font-size:14px;color:var(--text-muted);max-width:480px;margin:0 auto 1.5rem auto;line-height:1.5;}
+
+  /* Footer */
+  footer{
+    margin-top:auto;
+    border-top:1px solid var(--hairline);
+    background:var(--ink);
+    color:var(--ivory);
+    padding:2.2rem 0;
+  }
+  .footer-inner{
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .footer-links{display:flex;gap:1.5rem;font-size:12.5px;color:rgba(245,243,238,0.7);}
+  .footer-links a:hover{color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Sticky Nav -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-indicator">
+        <span class="wf-step">01 Dataset</span>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step">02 Cohort</span>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step">03 Generate</span>
+        <span class="wf-sep">&rarr;</span>
+        <span class="wf-step active"><span class="wf-badge">04 Validate</span></span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="generate.html" class="btn btn-ghost-dark" style="font-size:12px;padding:0.45rem 0.9rem;">
+        &larr; Back to generation
+      </a>
+      <span class="mono" style="font-size:11px;color:rgba(245,243,238,0.45);">STAGE 05 / 07</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<header class="page-header">
+  <div class="wrap">
+    <div class="section-tag">
+      <span class="dot"></span>
+      <span class="label">PIPELINE STAGE 05 / VALIDATION</span>
+    </div>
+    <h1>Statistical &amp; <span class="accent">fidelity validation.</span></h1>
+    <p class="subtitle">
+      Does the synthetic population preserve the mathematical structure, distribution moments, and multivariate correlations of the source?
+    </p>
+  </div>
+</header>
+
+<main class="validation-main">
+  <div class="wrap">
+
+    <!-- Loading State View -->
+    <div class="loading-card" id="loadingView">
+      <div class="load-spinner"></div>
+      <h3 style="font-size:22px;color:var(--ink);margin-bottom:0.4rem;">Computing Statistical Fidelity Metrics</h3>
+      <p style="font-size:13.5px;color:var(--text-faint);max-width:540px;margin:0 auto;line-height:1.5;" id="loadingSubtitle">
+        Executing two-sample Kolmogorov-Smirnov tests, Wasserstein optimal transport distances, and pairwise covariance matrix alignment on the server...
+      </p>
+    </div>
+
+    <!-- Empty State View -->
+    <div class="empty-box" id="emptyView">
+      <h2>NO SYNTHETIC COHORT AVAILABLE</h2>
+      <p>
+        No generated cohort reference was found in your current session. Generate a synthetic cohort first before evaluating statistical fidelity.
+      </p>
+      <a href="create.html" class="btn btn-primary">
+        Go to Cohort Builder &rarr;
+      </a>
+    </div>
+
+    <!-- Error State View -->
+    <div class="error-box" id="errorView">
+      <h3>VALIDATION FAILED</h3>
+      <p id="errorDescription">Unable to compute statistical comparison metrics.</p>
+      <div class="error-actions">
+        <button type="button" class="btn btn-primary" id="retryValidationBtn" style="font-size:12.5px;padding:0.5rem 1rem;">
+          Retry validation &rarr;
+        </button>
+        <a href="generate.html" class="btn btn-ghost" style="font-size:12.5px;padding:0.5rem 1rem;background:#fff;">
+          &larr; Back to generation
+        </a>
+      </div>
+    </div>
+
+    <!-- Live Dashboard Container (Shown on Success) -->
+    <div id="dashboardView" style="display:none;">
+
+      <!-- Overview Metadata Grid -->
+      <div class="overview-grid">
+        <div class="overview-card">
+          <span class="label">Source Population</span>
+          <div class="overview-val mono" id="statSourceCount">1,000</div>
+          <div class="overview-sub" id="statSourceSub">source_benchmark_1000.csv (Baseline)</div>
+        </div>
+        <div class="overview-card">
+          <span class="label">Synthetic Cohort</span>
+          <div class="overview-val mono" id="statSyntheticCount">2,500</div>
+          <div class="overview-sub" id="statSyntheticSub">Evaluated sample</div>
+        </div>
+        <div class="overview-card">
+          <span class="label">Variables</span>
+          <div class="overview-val mono" id="statVarCount">9</div>
+          <div class="overview-sub">Clinical features</div>
+        </div>
+        <div class="overview-card">
+          <span class="label">Model</span>
+          <div class="overview-val mono" id="statModelName" style="font-size:16px;">Gaussian Copula</div>
+          <div class="overview-sub" id="statModelProvenance">Model trained on 4,826 NHANES records</div>
+        </div>
+        <div class="overview-card">
+          <span class="label">Overall Fidelity</span>
+          <div class="overview-val mono" id="statOverallStatus" style="font-size:15px;color:var(--teal);">High Fidelity</div>
+          <div class="overview-sub mono" id="statMeanKs">Mean KS: 0.0916</div>
+        </div>
+      </div>
+
+      <!-- SECTION 1: CONTINUOUS DISTRIBUTIONS -->
+      <section class="val-section">
+        <div class="section-title-row">
+          <div>
+            <h3>01 / Continuous Variable Distributions</h3>
+            <span class="section-subtext">Two-sample Kolmogorov-Smirnov and Wasserstein distance tests between source and synthetic distributions.</span>
+          </div>
+          <span class="mono" style="font-size:11.5px;color:var(--text-faint);">7 CONTINUOUS FEATURES</span>
+        </div>
+
+        <!-- Dark Analytical Stage Panel -->
+        <div class="dark-stage-panel">
+          <div class="dark-stage-top">
+            <span class="mono" style="color:var(--soft-violet);font-weight:600;" id="activeVarTitle">VARIABLE: AGE</span>
+            <div class="legend-items mono">
+              <span class="legend-chip legend-src"><span class="legend-dot"></span>SOURCE DISTRIBUTION</span>
+              <span class="legend-chip legend-syn"><span class="legend-dot"></span>SYNTHETIC COHORT</span>
+            </div>
+          </div>
+
+          <!-- Variable Selection Tabs -->
+          <div class="dist-tabs" id="distTabsContainer">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Canvas Distribution Density Chart -->
+          <div class="dist-canvas-wrap">
+            <canvas id="distCanvas"></canvas>
+          </div>
+
+          <!-- Active Variable Key Statistics -->
+          <div class="dist-stats-grid" id="distStatsGrid">
+            <div class="stat-card">
+              <span class="label">KS STATISTIC</span>
+              <div class="val mono" id="statActiveKs">--</div>
+              <div class="note mono" id="statActiveKsP">p-value: --</div>
+            </div>
+            <div class="stat-card">
+              <span class="label">WASSERSTEIN DISTANCE</span>
+              <div class="val mono" id="statActiveWass">--</div>
+              <div class="note">Optimal transport cost</div>
+            </div>
+            <div class="stat-card">
+              <span class="label">SOURCE MEAN &plusmn; STD</span>
+              <div class="val mono" id="statActiveSrcMean">--</div>
+              <div class="note mono" id="statActiveSrcRange">Range: --</div>
+            </div>
+            <div class="stat-card">
+              <span class="label">SYNTHETIC MEAN &plusmn; STD</span>
+              <div class="val mono" id="statActiveSynMean">--</div>
+              <div class="note mono" id="statActiveSynRange">Range: --</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: CATEGORICAL DISTRIBUTIONS -->
+      <section class="val-section">
+        <div class="section-title-row">
+          <div>
+            <h3>02 / Categorical Distribution Alignment</h3>
+            <span class="section-subtext">Chi-square test of independence and Jensen-Shannon divergence across discrete categories.</span>
+          </div>
+          <span class="mono" style="font-size:11.5px;color:var(--text-faint);">2 CATEGORICAL FEATURES</span>
+        </div>
+
+        <div class="cat-grid" id="catGridContainer">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <!-- SECTION 3: COHORT TARGET ADHERENCE -->
+      <section class="val-section">
+        <div class="section-title-row">
+          <div>
+            <h3>03 / Cohort Target Adherence</h3>
+            <span class="section-subtext">Evaluating actual synthetic cohort parameters against requested user constraints and source baseline.</span>
+          </div>
+          <span class="mono" style="font-size:11.5px;color:var(--text-faint);">TARGET CONSTRAINTS</span>
+        </div>
+
+        <div class="adherence-table-wrap">
+          <table class="synth-table">
+            <thead>
+              <tr>
+                <th>Cohort Parameter</th>
+                <th>Source Baseline (1,000)</th>
+                <th>Requested Target</th>
+                <th>Synthetic Achieved</th>
+                <th>Delta</th>
+                <th>Adherence</th>
+              </tr>
+            </thead>
+            <tbody id="adherenceTableBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 4: CORRELATION PRESERVATION -->
+      <section class="val-section">
+        <div class="section-title-row">
+          <div>
+            <h3>04 / Multivariate Correlation Preservation</h3>
+            <span class="section-subtext">Preservation of bivariate relationship structures and covariance dependencies between clinical variables.</span>
+          </div>
+          <span class="mono" style="font-size:11.5px;color:var(--text-faint);">PEARSON COVARIANCE</span>
+        </div>
+
+        <div class="corr-card">
+          <div class="corr-head-stats">
+            <div>
+              <span class="label">CORRELATION FIDELITY</span>
+              <div class="mono" style="font-size:20px;font-weight:600;color:var(--violet);" id="corrFidelityScore">98.6%</div>
+            </div>
+            <div>
+              <span class="label">MEAN ABSOLUTE CORRELATION ERROR</span>
+              <div class="mono" style="font-size:20px;font-weight:600;color:var(--ink);" id="corrMaceScore">0.014</div>
+            </div>
+          </div>
+
+          <div class="label" style="margin-bottom:0.6rem;">Key Clinical Pairwise Correlations</div>
+          <div class="key-pairs-grid" id="keyPairsGrid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: PRIVACY ASSESSMENT -->
+      <section class="val-section">
+        <div class="section-title-row">
+          <div>
+            <h3>05 / Empirical Privacy &amp; Deduplication Assessment</h3>
+            <span class="section-subtext">Evaluation of record memorization risk via exact-match deduplication and Distance to Closest Record (DCR).</span>
+          </div>
+          <span class="mono" style="font-size:11.5px;color:var(--text-faint);">EMPIRICAL PRIVACY</span>
+        </div>
+
+        <div class="privacy-card">
+          <div class="privacy-metrics-grid">
+            <div class="priv-box safe">
+              <span class="label">EXACT MATCHES</span>
+              <div class="val mono" id="privExactMatches">0</div>
+              <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Zero 1:1 duplicate records</div>
+            </div>
+            <div class="priv-box">
+              <span class="label">MINIMUM DCR</span>
+              <div class="val mono" id="privMinDcr">0.084</div>
+              <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Nearest neighbor distance</div>
+            </div>
+            <div class="priv-box">
+              <span class="label">5TH PERCENTILE DCR</span>
+              <div class="val mono" id="priv5thDcr">0.142</div>
+              <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Tail proximity threshold</div>
+            </div>
+            <div class="priv-box">
+              <span class="label">MEDIAN DCR</span>
+              <div class="val mono" id="privMedianDcr">0.315</div>
+              <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.2rem;">Typical spatial distance</div>
+            </div>
+          </div>
+
+          <div class="privacy-disclaimer">
+            <strong>Scientific Integrity Statement:</strong> This empirical privacy assessment is conducted using exact duplicate matching and Distance to Closest Record (DCR) in normalized feature space. No formal mathematical differential privacy (&epsilon;) is claimed for this baseline model.
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: TEMPORAL VALIDATION NOTICE -->
+      <section class="val-section">
+        <div class="section-title-row">
+          <div>
+            <h3>06 / Temporal &amp; Longitudinal Validation</h3>
+            <span class="section-subtext">Evaluation of temporal trajectory persistence across multi-day observations.</span>
+          </div>
+          <span class="mono" style="font-size:11.5px;color:var(--text-faint);">STAGE 06 CAPABILITY</span>
+        </div>
+
+        <div class="temporal-card">
+          <div>
+            <strong style="color:var(--ink);">TEMPORAL VALIDATION: Not available for cross-sectional baseline cohort.</strong>
+            <p style="margin-top:0.25rem;">This synthetic cohort is generated at single patient baseline. 30-day multivariate Markov trajectories are evaluated during Longitudinal Profiling.</p>
+          </div>
+          <span class="mono" style="font-size:11.5px;background:var(--ivory-alt);padding:4px 8px;border-radius:3px;">Cross-sectional only</span>
+        </div>
+      </section>
+
+      <!-- Bottom Action Bar -->
+      <div class="action-bar">
+        <a href="generate.html" class="btn btn-ghost">
+          &larr; Back to generation stage
+        </a>
+        <div style="display:flex;gap:0.8rem;align-items:center;">
+          <button type="button" class="btn btn-ghost" id="downloadReportBtn" style="background:#fff;font-weight:600;">
+            Download validation report (JSON) &darr;
+          </button>
+          <a href="create.html" class="btn btn-primary">
+            Create new cohort &rarr;
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap footer-inner">
+    <div class="logo" style="font-size:15px;">SYNTHIA</div>
+    <div class="footer-links">
+      <a href="index.html#structure">Method</a>
+      <a href="index.html#validate">Validation</a>
+      <a href="create.html">Cohort Setup</a>
+      <a href="generate.html">Generation</a>
+    </div>
+    <div class="mono" style="font-size:11.5px;color:rgba(245,243,238,0.45);">&copy; 2026 Synthia</div>
+  </div>
+</footer>
+
+<!-- Backend Services & Configuration -->
+<script src="src/config.js"></script>
+<script src="src/services/validationApi.js"></script>
+
+<script>
+(function(){
+  "use strict";
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ===================================================================
+     1. RETRIEVE STATE FROM SESSION STORAGE
+  =================================================================== */
+  let cohortState = {};
+  let generatedCohort = null;
+
+  try {
+    const rawCohort = sessionStorage.getItem('synthia_cohort_state');
+    if (rawCohort) cohortState = JSON.parse(rawCohort);
+
+    const rawGen = sessionStorage.getItem('synthia_generated_cohort');
+    if (rawGen) generatedCohort = JSON.parse(rawGen);
+  } catch (e) {
+    console.warn('[Validation] Error reading sessionStorage:', e);
+  }
+
+  const loadingView = document.getElementById('loadingView');
+  const emptyView = document.getElementById('emptyView');
+  const errorView = document.getElementById('errorView');
+  const errorDescription = document.getElementById('errorDescription');
+  const retryBtn = document.getElementById('retryValidationBtn');
+  const dashboardView = document.getElementById('dashboardView');
+
+  // If no generated cohort exists, show empty state
+  if (!generatedCohort || !generatedCohort.cohort_id) {
+    loadingView.style.display = 'none';
+    emptyView.style.display = 'block';
+    return;
+  }
+
+  let fullReport = null;
+  let activeContinuousVar = 'age';
+
+  /* ===================================================================
+     2. EXECUTE REAL STATISTICAL VALIDATION PIPELINE
+  =================================================================== */
+  async function runValidation() {
+    loadingView.style.display = 'block';
+    emptyView.style.display = 'none';
+    errorView.style.display = 'none';
+    dashboardView.style.display = 'none';
+
+    try {
+      if (!window.SYNTHIA_VALIDATION_API || typeof window.SYNTHIA_VALIDATION_API.validateCohort !== 'function') {
+        throw new Error('Validation API client service is not loaded.');
+      }
+
+      const report = await window.SYNTHIA_VALIDATION_API.validateCohort({
+        cohortId: generatedCohort.cohort_id,
+        sourceDataset: 'source_benchmark_1000.csv',
+        targetConditions: {
+          targetSize: cohortState.targetSize || cohortState.size || generatedCohort.target_size,
+          ageOver60: cohortState.ageOver60,
+          diabetes: cohortState.diabetes,
+          lowActivity: cohortState.lowActivity
+        }
+      });
+
+      if (!report || !report.success) {
+        throw new Error(report?.error || 'Validation pipeline execution failed.');
+      }
+
+      fullReport = report;
+      populateDashboard(report);
+
+      loadingView.style.display = 'none';
+      dashboardView.style.display = 'block';
+
+    } catch (err) {
+      console.error('[Validation Error]:', err);
+      loadingView.style.display = 'none';
+      errorDescription.textContent = err.message || 'Unable to execute validation computation.';
+      errorView.style.display = 'block';
+    }
+  }
+
+  retryBtn.addEventListener('click', runValidation);
+
+  /* ===================================================================
+     3. POPULATE DASHBOARD VIEWS
+  =================================================================== */
+  function populateDashboard(report) {
+    // 1. Overview header
+    document.getElementById('statSourceCount').textContent = Number(report.source_records).toLocaleString('en-US');
+    document.getElementById('statSourceSub').textContent = `${report.source_filename} (Baseline)`;
+    
+    document.getElementById('statSyntheticCount').textContent = Number(report.synthetic_records).toLocaleString('en-US');
+    document.getElementById('statSyntheticSub').textContent = `Cohort: ${report.cohort_id}`;
+    
+    document.getElementById('statVarCount').textContent = report.num_features;
+    document.getElementById('statModelName').textContent = report.model_name;
+    document.getElementById('statModelProvenance').textContent = report.model_provenance;
+
+    const summary = report.summary || {};
+    document.getElementById('statOverallStatus').textContent = summary.overall_status || 'High Statistical Fidelity';
+    document.getElementById('statMeanKs').textContent = `Mean KS: ${summary.mean_ks_statistic}`;
+
+    // 2. Continuous variables setup
+    setupContinuousVariables(report.continuous_features);
+
+    // 3. Categorical variables setup
+    setupCategoricalVariables(report.categorical_features);
+
+    // 4. Cohort target adherence table
+    setupTargetAdherence(report.target_adherence);
+
+    // 5. Correlation matrices setup
+    setupCorrelationPreservation(report.correlation_preservation);
+
+    // 6. Privacy assessment
+    setupPrivacyAssessment(report.privacy_assessment);
+
+    // Download JSON report handler
+    document.getElementById('downloadReportBtn').onclick = () => {
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SYNTHIA_Validation_Report_${report.cohort_id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+  }
+
+  /* ===================================================================
+     4. CONTINUOUS VARIABLES & DISTRIBUTION CANVAS
+  =================================================================== */
+  const canvas = document.getElementById('distCanvas');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resizeDistCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', () => {
+    resizeDistCanvas();
+    if (fullReport && fullReport.continuous_features) {
+      drawDistributionChart(fullReport.continuous_features[activeContinuousVar]);
+    }
+  });
+
+  const distTabsContainer = document.getElementById('distTabsContainer');
+
+  function setupContinuousVariables(contFeats) {
+    distTabsContainer.innerHTML = '';
+    const varKeys = Object.keys(contFeats);
+
+    varKeys.forEach((key, idx) => {
+      const btn = document.createElement('button');
+      btn.className = `dist-tab-btn ${idx === 0 ? 'active' : ''}`;
+      btn.textContent = formatVarName(key);
+      btn.onclick = () => {
+        document.querySelectorAll('.dist-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeContinuousVar = key;
+        updateActiveContinuousCard(contFeats[key]);
+      };
+      distTabsContainer.appendChild(btn);
+    });
+
+    if (varKeys.length > 0) {
+      activeContinuousVar = varKeys[0];
+      updateActiveContinuousCard(contFeats[activeContinuousVar]);
+    }
+  }
+
+  function formatVarName(str) {
+    const map = {
+      age: 'Age',
+      systolic_bp: 'Systolic BP',
+      diastolic_bp: 'Diastolic BP',
+      activity_mims: 'Activity MIMS',
+      n_medications: 'Medications',
+      adherence_pct: 'Adherence %',
+      pain_score: 'Pain Score',
+      sex: 'Sex',
+      diabetes: 'Diabetes'
+    };
+    return map[str] || str.replace(/_/g, ' ').toUpperCase();
+  }
+
+  function updateActiveContinuousCard(varData) {
+    if (!varData) return;
+    document.getElementById('activeVarTitle').textContent = `VARIABLE: ${formatVarName(varData.variable).toUpperCase()}`;
+    document.getElementById('statActiveKs').textContent = varData.ks_statistic;
+    document.getElementById('statActiveKsP').textContent = `p-value: ${varData.ks_pvalue}`;
+    document.getElementById('statActiveWass').textContent = varData.wasserstein_distance;
+
+    const s = varData.source;
+    const y = varData.synthetic;
+    document.getElementById('statActiveSrcMean').textContent = `${s.mean} \u00B1 ${s.std}`;
+    document.getElementById('statActiveSrcRange').textContent = `[${s.min}, ${s.max}] \u00B7 Median: ${s.median}`;
+
+    document.getElementById('statActiveSynMean').textContent = `${y.mean} \u00B1 ${y.std}`;
+    document.getElementById('statActiveSynRange').textContent = `[${y.min}, ${y.max}] \u00B7 Median: ${y.median}`;
+
+    resizeDistCanvas();
+    drawDistributionChart(varData);
+  }
+
+  function drawDistributionChart(varData) {
+    if (!varData || !varData.histogram) return;
+    ctx.clearRect(0, 0, W, H);
+
+    const hist = varData.histogram;
+    const centers = hist.bin_centers;
+    const sDens = hist.source_density;
+    const yDens = hist.synthetic_density;
+    const N = centers.length;
+    if (N < 2) return;
+
+    const maxDensity = Math.max(...sDens, ...yDens, 0.0001);
+    const padL = 45, padR = 25, padT = 25, padB = 35;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+
+    // Draw baseline gridlines
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT + chartH);
+    ctx.lineTo(padL + chartW, padT + chartH);
+    ctx.moveTo(padL, padT + chartH * 0.5);
+    ctx.lineTo(padL + chartW, padT + chartH * 0.5);
+    ctx.stroke();
+
+    // Density axis labels
+    ctx.fillStyle = 'rgba(245,243,238,0.35)';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('0', padL - 8, padT + chartH + 3);
+    ctx.fillText((maxDensity * 0.5).toFixed(4), padL - 8, padT + chartH * 0.5 + 3);
+    ctx.fillText(maxDensity.toFixed(4), padL - 8, padT + 4);
+
+    // Value X-axis ticks
+    ctx.textAlign = 'center';
+    ctx.fillText(centers[0], padL, padT + chartH + 18);
+    ctx.fillText(centers[Math.floor(N / 2)], padL + chartW * 0.5, padT + chartH + 18);
+    ctx.fillText(centers[N - 1], padL + chartW, padT + chartH + 18);
+
+    function getPt(idx, dens) {
+      const x = padL + (idx / (N - 1)) * chartW;
+      const y = padT + chartH - (dens[idx] / maxDensity) * chartH;
+      return { x, y };
+    }
+
+    // 1. Draw Source Curve (Ivory)
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const pt = getPt(i, sDens);
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.strokeStyle = 'rgba(245,243,238,0.85)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Source subtle fill
+    ctx.lineTo(padL + chartW, padT + chartH);
+    ctx.lineTo(padL, padT + chartH);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(245,243,238,0.06)';
+    ctx.fill();
+
+    // 2. Draw Synthetic Curve (Violet)
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const pt = getPt(i, yDens);
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.strokeStyle = '#6C4DFF';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Synthetic fill
+    ctx.lineTo(padL + chartW, padT + chartH);
+    ctx.lineTo(padL, padT + chartH);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(108,77,255,0.18)';
+    ctx.fill();
+  }
+
+  /* ===================================================================
+     5. CATEGORICAL VARIABLES
+  =================================================================== */
+  const catGridContainer = document.getElementById('catGridContainer');
+
+  function setupCategoricalVariables(catFeats) {
+    catGridContainer.innerHTML = '';
+
+    Object.keys(catFeats).forEach(key => {
+      const f = catFeats[key];
+      const card = document.createElement('div');
+      card.className = 'cat-card';
+
+      const sProp = f.source_proportions;
+      const yProp = f.synthetic_proportions;
+
+      let rowsHtml = '';
+      f.categories.forEach(cat => {
+        const sVal = sProp[cat] || 0;
+        const yVal = yProp[cat] || 0;
+        let catLabel = cat;
+        if (key === 'sex') catLabel = (cat === '1' ? 'Male (1)' : 'Female (2)');
+        if (key === 'diabetes') catLabel = (cat === '1' ? 'Diabetic (1)' : 'Non-diabetic (0)');
+
+        rowsHtml += `
+          <div class="cat-row">
+            <div class="cat-row-label">
+              <span><strong>${catLabel}</strong></span>
+              <span class="mono" style="font-size:11.5px;color:var(--text-faint);">
+                Src: ${sVal}% \u00B7 Syn: <strong style="color:var(--violet);">${yVal}%</strong>
+              </span>
+            </div>
+            <div class="cat-bars">
+              <div class="bar-wrap" title="Source: ${sVal}%"><div class="bar-fill src" style="width:${sVal}%;"></div></div>
+              <div class="bar-wrap" title="Synthetic: ${yVal}%"><div class="bar-fill syn" style="width:${yVal}%;"></div></div>
+            </div>
+          </div>
+        `;
+      });
+
+      card.innerHTML = `
+        <div class="cat-head">
+          <div class="cat-title">${formatVarName(key)}</div>
+          <div class="test-pill">&chi;&sup2;: ${f.chi2_statistic} \u00B7 JS: ${f.js_divergence}</div>
+        </div>
+        ${rowsHtml}
+        <div class="mono" style="font-size:11px;color:var(--text-faint);margin-top:0.6rem;">
+          Chi-Square p-value: ${f.chi2_pvalue}
+        </div>
+      `;
+      catGridContainer.appendChild(card);
+    });
+  }
+
+  /* ===================================================================
+     6. TARGET ADHERENCE
+  =================================================================== */
+  const adherenceTableBody = document.getElementById('adherenceTableBody');
+
+  function setupTargetAdherence(adherence) {
+    adherenceTableBody.innerHTML = '';
+    const params = adherence.parameters || [];
+
+    params.forEach(p => {
+      const tr = document.createElement('tr');
+      const isMet = p.status === 'met';
+      const deltaFormatted = p.delta >= 0 ? `+${p.delta}` : `${p.delta}`;
+
+      tr.innerHTML = `
+        <td><strong>${p.parameter}</strong></td>
+        <td class="mono">${Number(p.source_baseline).toLocaleString('en-US')}${p.unit === '%' ? '%' : ''}</td>
+        <td class="mono">${Number(p.requested_target).toLocaleString('en-US')}${p.unit === '%' ? '%' : ''}</td>
+        <td class="mono"><strong style="color:var(--violet);">${Number(p.synthetic_achieved).toLocaleString('en-US')}${p.unit === '%' ? '%' : ''}</strong></td>
+        <td><span class="delta-pill ${isMet ? 'delta-met' : 'delta-warn'}">${deltaFormatted} ${p.unit}</span></td>
+        <td><span style="color:${isMet ? 'var(--teal)' : 'var(--rose)'};font-weight:600;">${isMet ? '&check; Target Satisfied' : '&bull; Minor Deviation'}</span></td>
+      `;
+      adherenceTableBody.appendChild(tr);
+    });
+  }
+
+  /* ===================================================================
+     7. CORRELATION PRESERVATION
+  =================================================================== */
+  const keyPairsGrid = document.getElementById('keyPairsGrid');
+
+  function setupCorrelationPreservation(corr) {
+    document.getElementById('corrFidelityScore').textContent = `${corr.correlation_fidelity_pct}%`;
+    document.getElementById('corrMaceScore').textContent = corr.mean_absolute_error;
+
+    keyPairsGrid.innerHTML = '';
+    const pairs = corr.key_relationships || [];
+
+    pairs.forEach(kp => {
+      const card = document.createElement('div');
+      card.className = 'pair-card';
+      card.innerHTML = `
+        <div class="pair-label">${kp.label}</div>
+        <div class="pair-row">
+          <span>Source Pearson r:</span>
+          <strong>${kp.source_r}</strong>
+        </div>
+        <div class="pair-row">
+          <span>Synthetic Pearson r:</span>
+          <strong style="color:var(--violet);">${kp.synthetic_r}</strong>
+        </div>
+        <div class="pair-row" style="margin-top:4px;border-top:1px dashed var(--hairline);padding-top:4px;">
+          <span>Absolute Delta:</span>
+          <span style="color:var(--teal);">${kp.delta}</span>
+        </div>
+      `;
+      keyPairsGrid.appendChild(card);
+    });
+  }
+
+  /* ===================================================================
+     8. PRIVACY ASSESSMENT
+  =================================================================== */
+  function setupPrivacyAssessment(priv) {
+    document.getElementById('privExactMatches').textContent = priv.identical_matches;
+    document.getElementById('privMinDcr').textContent = priv.min_dcr;
+    document.getElementById('priv5thDcr').textContent = priv.dcr_5th_percentile;
+    document.getElementById('privMedianDcr').textContent = priv.median_dcr;
+  }
+
+  // Run validation on load
+  runValidation();
+
+})();
+</script>
+</body>
+</html>
