@@ -140,7 +140,7 @@
     const cleanToken = (token || '').trim();
 
     if (!cleanToken || cleanToken.length < 6) {
-      return { success: false, error: new Error('Please enter the full 6-digit verification code.') };
+      return { success: false, error: new Error('Please enter the complete verification code.') };
     }
 
     try {
@@ -243,7 +243,7 @@
           }
         } catch (e) {}
       }
-      window.location.href = 'create.html';
+      window.location.href = 'http://localhost:5000/index.html';
     }
   }
 

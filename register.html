@@ -405,8 +405,149 @@
     margin-bottom: 2px;
   }
 
-  .view-pane { display: none; }
-  .view-pane.active { display: block; }
+  /* Smooth View Transitions */
+  .view-pane {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 360ms var(--ease-out), transform 360ms var(--ease-out);
+  }
+  .view-pane.active {
+    display: block;
+    animation: paneIn 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes paneIn {
+    0% { opacity: 0; transform: translateY(10px) scale(0.985); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Bespoke Success Screen */
+  .success-card {
+    text-align: center;
+    padding: 1.25rem 0.5rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .success-ring-wrap {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 1.5rem auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .success-ring-ripple {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(108, 77, 255, 0.35);
+    background: radial-gradient(circle, rgba(108, 77, 255, 0.12) 0%, rgba(108, 77, 255, 0) 70%);
+    animation: auraRipple 2.2s infinite cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  @keyframes auraRipple {
+    0% { transform: scale(0.85); opacity: 0.85; }
+    50% { transform: scale(1.18); opacity: 0.25; }
+    100% { transform: scale(1.32); opacity: 0; }
+  }
+  .success-ring-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(108, 77, 255, 0.14) 0%, rgba(168, 150, 255, 0.22) 100%);
+    border: 1.5px solid rgba(108, 77, 255, 0.45);
+    box-shadow: 0 0 24px rgba(108, 77, 255, 0.22), inset 0 0 12px rgba(168, 150, 255, 0.18);
+    animation: ringPulse 2.4s infinite ease-in-out;
+  }
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(108, 77, 255, 0.2); }
+    50% { transform: scale(1.05); box-shadow: 0 0 32px rgba(108, 77, 255, 0.38); }
+  }
+  .success-checkmark-wrap {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: checkPop 550ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes checkPop {
+    0% { transform: scale(0); opacity: 0; }
+    70% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .success-checkmark {
+    width: 34px;
+    height: 34px;
+    color: var(--violet);
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: drawCheck 650ms cubic-bezier(0.2, 1, 0.3, 1) forwards 120ms;
+  }
+  @keyframes drawCheck {
+    to { stroke-dashoffset: 0; }
+  }
+  .success-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--violet);
+    background: rgba(108, 77, 255, 0.08);
+    border: 1px solid rgba(108, 77, 255, 0.22);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    margin-bottom: 0.75rem;
+  }
+  .success-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10B981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.75);
+  }
+  .success-title {
+    font-family: 'Newsreader', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink-black);
+    margin-bottom: 0.35rem;
+  }
+  .success-sub {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1.75rem;
+    max-width: 32ch;
+  }
+  .success-progress-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(17, 17, 17, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 0.75rem;
+  }
+  .success-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #6C4DFF 0%, #8F73FF 50%, #A896FF 100%);
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(108, 77, 255, 0.5);
+    transition: width 1300ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .success-status-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
 </style>
 </head>
 <body>
@@ -515,13 +656,30 @@
         </div>
       </div>
 
-      <!-- STAGE 3: Access Granted State -->
+      <!-- STAGE 3: Smooth Intuitive Success Screen -->
       <div id="successView" class="view-pane">
-        <div class="alert-banner success" style="display: block; margin-bottom: 1.25rem;">
-          <strong>ACCESS GRANTED</strong>
-          <span>Welcome to SYNTHIA. Account successfully verified.</span>
+        <div class="success-card">
+          <div class="success-ring-wrap">
+            <div class="success-ring-ripple"></div>
+            <div class="success-ring-bg"></div>
+            <div class="success-checkmark-wrap">
+              <svg class="success-checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M20 6L9 17l-5-5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="success-badge">
+            <span class="success-badge-dot"></span>
+            <span>ACCOUNT CREATED &bull; SUPABASE AUTH</span>
+          </div>
+          <h2 class="success-title">Welcome to SYNTHIA</h2>
+          <p class="success-sub">Account provisioned successfully. Launching your cohort engine...</p>
+
+          <div class="success-progress-track">
+            <div class="success-progress-bar" id="successProgressBar"></div>
+          </div>
+          <div class="success-status-text" id="successStatus">INITIALIZING SYNTHIA WORKSPACE&hellip;</div>
         </div>
-        <p style="font-size: 13.5px; color: var(--text-muted); line-height: 1.6;">Launching your cohort creation workspace...</p>
       </div>
 
     </div>
@@ -683,16 +841,57 @@
         return;
       }
 
-      otpView.classList.remove('active');
-      successView.classList.add('active');
+      // Immediate tactile feedback on button
+      verifyBtn.style.background = 'linear-gradient(90deg, #10B981 0%, #059669 100%)';
+      verifyBtn.style.borderColor = '#10B981';
+      verifyBtn.innerHTML = `<span>ACCOUNT VERIFIED</span><span>&check;</span>`;
 
-      const urlParams = new URLSearchParams(window.location.search);
-      let target = urlParams.get('redirect') || 'create.html';
-      try { target = decodeURIComponent(target); } catch (e) {}
-
+      // Seamless, luxurious transition to successView
       setTimeout(() => {
-        window.location.href = target;
-      }, 700);
+        otpView.classList.remove('active');
+        successView.classList.add('active');
+
+        const progressBar = document.getElementById('successProgressBar');
+        const statusText = document.getElementById('successStatus');
+
+        // Multi-stage synchronized progress bar
+        setTimeout(() => {
+          if (progressBar) progressBar.style.width = '35%';
+          if (statusText) statusText.textContent = 'PROVISIONING USER PROFILE...';
+        }, 50);
+
+        setTimeout(() => {
+          if (progressBar) progressBar.style.width = '75%';
+          if (statusText) statusText.textContent = 'INITIALIZING COHORT ENGINE...';
+        }, 550);
+
+        setTimeout(() => {
+          if (progressBar) progressBar.style.width = '100%';
+          if (statusText) statusText.textContent = 'REDIRECTING TO SYNTHIA PLATFORM...';
+        }, 1100);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let targetParam = urlParams.get('redirect');
+        let target = 'http://localhost:5000/index.html';
+        if (targetParam) {
+          try {
+            targetParam = decodeURIComponent(targetParam);
+            if (!targetParam.includes('login') && !targetParam.includes('register')) {
+              target = targetParam;
+            }
+          } catch (e) {}
+        }
+
+        // Soft curtain fade out before navigation
+        setTimeout(() => {
+          document.body.style.transition = 'opacity 350ms cubic-bezier(0.4, 0, 0.2, 1)';
+          document.body.style.opacity = '0';
+        }, 1400);
+
+        setTimeout(() => {
+          window.location.href = target;
+        }, 1750);
+      }, 250);
 
     } catch (err) {
       setBanner(otpBanner, 'error', 'VERIFICATION ERROR', 'Could not verify code. Please try again.');
