@@ -1114,7 +1114,7 @@ const isTouch = window.matchMedia('(hover: none)').matches;
       }
     }
 
-    // 2. Connecting lines pass (smooth O(1) letter strokes + ambient partner mesh, NO stutter)
+    // 2. Connecting lines pass (smooth O(1) letter strokes + ambient partner mesh, batched for fluid 60fps+)
     if (!reducedMotion) {
       ctx.lineWidth = 1;
 
@@ -1127,8 +1127,9 @@ const isTouch = window.matchMedia('(hover: none)').matches;
           if (!a || !b) continue;
           const letterMorph = Math.min(a.morphT, b.morphT);
           if (letterMorph > 0.04) {
-            const d = Math.hypot(a.x - b.x, a.y - b.y);
-            if (d < 58) {
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < 3364) { // 58px max
               const strokeAlpha = letterMorph * 0.38 * Math.min(a.opacity, b.opacity);
               ctx.strokeStyle = `rgba(168,150,255,${strokeAlpha.toFixed(3)})`;
               ctx.beginPath();
@@ -1140,57 +1141,81 @@ const isTouch = window.matchMedia('(hover: none)').matches;
         }
       }
 
-      // B: Ambient flowing neuron mesh (continuously coming and drifting)
+      // B: Ambient flowing neuron mesh (batched in single GPU draw call for ultra fluid motion)
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(168,150,255,0.085)';
       for (let i = TOTAL_LETTER_PTS; i < particles.length; i++) {
         const a = particles[i];
         if (!a || a.opacity < 0.02) continue;
-        a.neighborIndices.forEach(j => {
-          const b = particles[j];
-          if (!b || b.opacity < 0.02) return;
-          const d = Math.hypot(a.x - b.x, a.y - b.y);
-          if (d < 130) {
-            const alpha = (1 - d / 130) * 0.13 * Math.min(a.opacity, b.opacity);
-            if (alpha <= 0.002) return;
-            ctx.strokeStyle = `rgba(168,150,255,${alpha.toFixed(3)})`;
-            ctx.beginPath();
+        const neighbors = a.neighborIndices;
+        for (let n = 0; n < neighbors.length; n++) {
+          const b = particles[neighbors[n]];
+          if (!b || b.opacity < 0.02) continue;
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < 16900) { // 130px max
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
-            ctx.stroke();
           }
-        });
+        }
       }
+      ctx.stroke();
     }
 
-    // 3. Draw particles pass with neon white proximity glow and radiant letter stars
+    // 3. Draw particles pass with silky smooth radiant glow (GPU-optimized, zero shadowBlur stutter)
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
       if (p.opacity > 0.01) {
         const px = p.x;
         const py = p.y;
-        const dist = mouse.active ? Math.hypot(px - mouse.x, py - mouse.y) : 9999;
-        const proximity = mouse.active ? Math.max(0, 1 - dist / 48) : 0;
+        const [r, g, b] = p.color;
 
-        ctx.save();
-        if (proximity > 0) {
-          ctx.shadowColor = "rgba(255,255,255,0.95)";
-          ctx.shadowBlur = 7 * proximity;
-          ctx.fillStyle = `rgba(255,255,255,${0.55 + 0.45 * proximity})`;
-        } else if (p.isLetter && p.morphT > 0.06) {
-          // Radiant star-like letter dots forming SYNTHIA
-          ctx.shadowColor = "rgba(168,150,255,0.95)";
-          ctx.shadowBlur = 7 * p.morphT;
-          const [r, g, b] = p.color;
-          ctx.fillStyle = `rgba(${Math.min(255, r + 55)},${Math.min(255, g + 55)},255,${(p.opacity * (0.88 + 0.25 * p.morphT)).toFixed(3)})`;
-        } else {
-          ctx.shadowBlur = 0;
-          const [r, g, b] = p.color;
-          ctx.fillStyle = `rgba(${r},${g},${b},${p.opacity.toFixed(3)})`;
+        let proximity = 0;
+        if (mouse.active) {
+          const mdx = px - mouse.x, mdy = py - mouse.y;
+          const mDist2 = mdx * mdx + mdy * mdy;
+          if (mDist2 < 2304) { // 48px max
+            proximity = Math.max(0, 1 - Math.sqrt(mDist2) / 48);
+          }
         }
-        ctx.beginPath();
-        const r = Math.max(0.1, p.baseRadius * (1 + proximity * 0.6 + p.morphT * 0.4));
-        ctx.arc(px, py, r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+
+        const r_base = Math.max(0.1, p.baseRadius * (1 + proximity * 0.6 + p.morphT * 0.4));
+
+        if (proximity > 0) {
+          // Cursor proximity neon aura
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255,255,255,${(0.25 * proximity).toFixed(3)})`;
+          ctx.arc(px, py, r_base + 3.5 * proximity, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255,255,255,${(0.65 + 0.35 * proximity).toFixed(3)})`;
+          ctx.arc(px, py, r_base, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.isLetter && p.morphT > 0.06) {
+          // Radiant star-like letter dots forming SYNTHIA with soft violet aura
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(168,150,255,${(0.28 * p.morphT * p.opacity).toFixed(3)})`;
+          ctx.arc(px, py, r_base + 3.2 * p.morphT, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(${Math.min(255, r + 55)},${Math.min(255, g + 55)},255,${(p.opacity * (0.88 + 0.25 * p.morphT)).toFixed(3)})`;
+          ctx.arc(px, py, r_base, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Ambient flowing purple neurons with subtle soft halo
+          if (p.depth > 0.55) {
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(168,150,255,${(p.opacity * 0.16).toFixed(3)})`;
+            ctx.arc(px, py, r_base + 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(${r},${g},${b},${p.opacity.toFixed(3)})`;
+          ctx.arc(px, py, r_base, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
 
