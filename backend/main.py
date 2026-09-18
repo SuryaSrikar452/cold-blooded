@@ -30,9 +30,7 @@ from backend.services.validationEngine import run_full_validation
 BASE_DIR = Path(__file__).resolve().parent.parent
 TRAIN_CSV = BASE_DIR / "final_training_data" / "nhanes_generative_train.csv"
 HOLDOUT_CSV = BASE_DIR / "final_training_data" / "nhanes_real_holdout.csv"
-SYNTHETIC_CSV = BASE_DIR / "gaussian_copula_pipeline" / "synthetic" / "gaussian_copula_synthetic.csv"
-FROZEN_CSV = BASE_DIR / "artifacts" / "final_synthetic_sample.csv"
-FROZEN_PARQUET = BASE_DIR / "artifacts" / "final_synthetic_sample.parquet"
+HURDLE_MODEL_CACHE = BASE_DIR / "backend" / "models" / "hurdle_copula" / "hurdle_model.pkl"
 
 # Create DB tables
 Base.metadata.create_all(bind=engine)
@@ -142,7 +140,7 @@ def health_check():
         "status": "online",
         "training_dataset_ready": TRAIN_CSV.exists(),
         "holdout_dataset_ready": HOLDOUT_CSV.exists(),
-        "synthetic_baseline_ready": FROZEN_CSV.exists() or SYNTHETIC_CSV.exists(),
+        "synthetic_baseline_ready": HURDLE_MODEL_CACHE.exists() or TRAIN_CSV.exists(),
         "random_seed": 42
     }
 
