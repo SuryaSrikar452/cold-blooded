@@ -67,18 +67,45 @@
       font-size: 20px; font-weight: 500; letter-spacing: 0.08em;
       color: var(--ivory); text-decoration: none;
     }
-    .workflow-indicator {
-      display: flex; align-items: center; gap: 0.55rem;
-      font-family: 'JetBrains Mono', monospace; font-size: 11px;
-      color: rgba(245, 243, 238, 0.4);
+    /* Precision Stepper (7 Steps) */
+    .workflow-stepper{
+      display:flex;align-items:center;gap:0;
+      font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.05em;
+      white-space:nowrap;
     }
-    .wf-step { display: inline-flex; align-items: center; gap: 0.35rem; color: rgba(245, 243, 238, 0.4); text-decoration: none; }
-    .wf-step.active { color: var(--ivory); font-weight: 500; }
-    .wf-badge {
-      padding: 1px 5px; border-radius: 2px;
-      background: rgba(108, 77, 255, 0.25); color: #C5B8FF; font-size: 10px;
+    @media(max-width:980px){
+      .workflow-stepper{display:none;}
+      .mobile-stepper-compact{display:flex !important;}
     }
-    .wf-sep { color: rgba(245, 243, 238, 0.2); }
+    .mobile-stepper-compact{
+      display:none;align-items:center;gap:8px;
+      font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ivory);
+    }
+    .compact-track{
+      width:54px;height:3px;background:rgba(255,255,255,0.14);border-radius:999px;overflow:hidden;
+    }
+    .compact-bar{height:100%;background:var(--violet);border-radius:999px;}
+    .step-item{
+      display:inline-flex;align-items:center;gap:5px;
+      color:rgba(245,243,238,0.45);text-decoration:none;
+      padding:3px 6px;border-radius:3px;
+      transition:color 140ms ease, background 140ms ease;
+      white-space:nowrap;flex-shrink:0;
+    }
+    .step-item:hover{color:var(--ivory);background:rgba(255,255,255,0.05);}
+    .step-item.active{color:var(--ivory);font-weight:600;}
+    .step-badge{
+      font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;
+      background:rgba(255,255,255,0.08);color:rgba(245,243,238,0.65);
+      border:1px solid rgba(255,255,255,0.14);transition:all 140ms ease;
+    }
+    .step-item.active .step-badge{
+      background:#6C4DFF;color:#FFFFFF;border-color:#8F73FF;
+      box-shadow:0 0 10px rgba(108,77,255,0.45);
+    }
+    .step-track{
+      width:10px;height:1px;background:rgba(255,255,255,0.15);margin:0 1px;flex-shrink:0;
+    }
 
     /* Page Header */
     .page-header {
@@ -225,26 +252,28 @@
   <div class="wrap nav-inner">
     <div class="nav-left">
       <a href="index.html" class="logo">SYNTHIA</a>
-      <div class="workflow-indicator">
-        <a href="index.html" class="wf-step"><span class="wf-badge">01</span> INDEX</a>
-        <span class="wf-sep">&rarr;</span>
-        <a href="create.html" class="wf-step"><span class="wf-badge">02</span> SETUP</a>
-        <span class="wf-sep">&rarr;</span>
-        <a href="generate.html" class="wf-step"><span class="wf-badge">03</span> GENERATE</a>
-        <span class="wf-sep">&rarr;</span>
-        <a href="validation.html" class="wf-step"><span class="wf-badge">04</span> VALIDATE</a>
-        <span class="wf-sep">&rarr;</span>
-        <a href="privacy.html" class="wf-step"><span class="wf-badge">05</span> PRIVACY</a>
-        <span class="wf-sep">&rarr;</span>
-        <a href="patient.html" class="wf-step"><span class="wf-badge">06</span> PATIENTS</a>
-        <span class="wf-sep">&rarr;</span>
-        <span class="wf-step active"><span class="wf-badge">07</span> STRESS TEST</span>
-        <span class="wf-sep">&middot;</span>
-        <a href="api-hub.html" class="wf-step">08 API HUB</a>
+      <div class="workflow-stepper">
+        <a href="index.html" class="step-item"><span class="step-badge">01</span> INDEX</a>
+        <span class="step-track"></span>
+        <a href="create.html" class="step-item"><span class="step-badge">02</span> SETUP</a>
+        <span class="step-track"></span>
+        <a href="generate.html" class="step-item"><span class="step-badge">03</span> GENERATE</a>
+        <span class="step-track"></span>
+        <a href="validation.html" class="step-item"><span class="step-badge">04</span> VALIDATE</a>
+        <span class="step-track"></span>
+        <a href="privacy.html" class="step-item"><span class="step-badge">05</span> PRIVACY</a>
+        <span class="step-track"></span>
+        <a href="patient.html" class="step-item"><span class="step-badge">06</span> PATIENTS</a>
+        <span class="step-track"></span>
+        <span class="step-item active"><span class="step-badge">07</span> STRESS TEST</span>
+      </div>
+      <div class="mobile-stepper-compact">
+        <span>STEP 07 / 07</span>
+        <div class="compact-track"><div class="compact-bar" style="width: 100%;"></div></div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
-      <a href="api-hub.html" class="btn btn-ghost" style="color:var(--ivory);border-color:rgba(245,243,238,0.18);padding:0.4rem 0.85rem;font-size:12px;">Next: Developer API Hub &rarr;</a>
+      <a href="validation.html" class="btn btn-ghost" style="color:var(--ivory);border-color:rgba(245,243,238,0.18);padding:0.4rem 0.85rem;font-size:12px;">Review Validation &rarr;</a>
     </div>
   </div>
 </nav>
@@ -254,7 +283,7 @@
   <div class="wrap">
     <div class="section-tag">
       <span class="dot"></span>
-      <span class="label">PIPELINE STAGE 08 / STRESS TEST</span>
+      <span class="label">PIPELINE STAGE 07 / STRESS TEST</span>
     </div>
     <h1>Edge-case generation for <span class="accent">downstream systems.</span></h1>
     <p class="subtitle">

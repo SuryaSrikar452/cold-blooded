@@ -106,12 +106,24 @@
       return { success: false, error: new Error('Please enter a valid email address.') };
     }
 
+    const optionsPayload = {
+      shouldCreateUser: options.shouldCreateUser !== false
+    };
+
+    if (options.data) {
+      optionsPayload.data = options.data;
+    } else if (options.fullName) {
+      optionsPayload.data = { full_name: options.fullName };
+    }
+
+    // Set emailRedirectTo so that if a confirmation link is clicked in email, it redirects back smoothly
+    if (typeof window !== 'undefined' && window.location) {
+      optionsPayload.emailRedirectTo = options.emailRedirectTo || window.location.href;
+    }
+
     const payload = {
       email: cleanEmail,
-      options: {
-        shouldCreateUser: options.shouldCreateUser !== false,
-        data: options.data || (options.fullName ? { full_name: options.fullName } : undefined)
-      }
+      options: optionsPayload
     };
 
     try {
@@ -144,11 +156,24 @@
     }
 
     try {
-      const { data, error } = await client.auth.verifyOtp({
+      let { data, error } = await client.auth.verifyOtp({
         email: cleanEmail,
         token: cleanToken,
         type: 'email'
       });
+
+      // If 'email' type fails, try 'signup' type (which Supabase uses for new accounts in some configurations)
+      if (error) {
+        const res2 = await client.auth.verifyOtp({
+          email: cleanEmail,
+          token: cleanToken,
+          type: 'signup'
+        });
+        if (!res2.error) {
+          data = res2.data;
+          error = null;
+        }
+      }
 
       if (error) {
         console.error('[SYNTHIA Auth] verifyOtp error:', error);
@@ -270,15 +295,15 @@
       const name = (session.user.user_metadata && session.user.user_metadata.full_name) || email.split('@')[0];
 
       authNavEl.innerHTML = `
-        <div class="nav-user-chip" style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);border-radius:999px;padding:3px 8px 3px 10px;gap:8px;backdrop-filter:blur(8px);">
-          <div style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:rgba(245,243,238,0.92);" title="${email}">
-            <span style="width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 6px #10B981;display:inline-block;"></span>
-            <span style="max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;">${name}</span>
+        <div class="nav-user-chip" style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:999px;padding:3px 8px 3px 10px;gap:8px;backdrop-filter:blur(10px);box-shadow:0 2px 8px rgba(0,0,0,0.25);flex-shrink:0;">
+          <div style="display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#F5F3EE;" title="${email}">
+            <span style="width:7px;height:7px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981;display:inline-block;flex-shrink:0;"></span>
+            <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;letter-spacing:0.02em;">${name}</span>
           </div>
-          <span style="width:1px;height:12px;background:rgba(255,255,255,0.16);display:inline-block;"></span>
-          <button id="synthiaSignOutBtn" type="button" title="Log out from SYNTHIA" style="background:transparent;border:none;color:rgba(245,243,238,0.65);font-size:11px;font-family:'IBM Plex Sans',sans-serif;font-weight:500;padding:2px 5px;cursor:pointer;border-radius:3px;display:inline-flex;align-items:center;gap:3px;transition:all 140ms ease;">
-            <span>Logout</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.75;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span style="width:1px;height:14px;background:rgba(255,255,255,0.2);display:inline-block;flex-shrink:0;"></span>
+          <button id="synthiaSignOutBtn" type="button" title="Log out from SYNTHIA" style="background:rgba(239,68,68,0.14);border:1px solid rgba(239,68,68,0.35);color:#FCA5A5;font-size:10.5px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:0.04em;padding:2px 8px;cursor:pointer;border-radius:999px;display:inline-flex;align-items:center;gap:4px;transition:all 150ms ease;flex-shrink:0;">
+            <span>LOGOUT</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
           </button>
         </div>
       `;
@@ -286,12 +311,16 @@
       const signOutBtn = authNavEl.querySelector('#synthiaSignOutBtn');
       if (signOutBtn) {
         signOutBtn.addEventListener('mouseenter', () => {
-          signOutBtn.style.color = '#F87171';
-          signOutBtn.style.background = 'rgba(239, 68, 68, 0.12)';
+          signOutBtn.style.color = '#FFFFFF';
+          signOutBtn.style.background = '#EF4444';
+          signOutBtn.style.borderColor = '#EF4444';
+          signOutBtn.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.5)';
         });
         signOutBtn.addEventListener('mouseleave', () => {
-          signOutBtn.style.color = 'rgba(245,243,238,0.65)';
-          signOutBtn.style.background = 'transparent';
+          signOutBtn.style.color = '#FCA5A5';
+          signOutBtn.style.background = 'rgba(239, 68, 68, 0.14)';
+          signOutBtn.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+          signOutBtn.style.boxShadow = 'none';
         });
         signOutBtn.addEventListener('click', async (e) => {
           e.preventDefault();
@@ -303,7 +332,7 @@
     } else {
       authNavEl.innerHTML = `
         <a href="http://localhost:5000/login.html" class="btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:rgba(245,243,238,0.9);font-size:11.5px;padding:0.35rem 0.75rem;border-radius:999px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms var(--ease-out, ease);">
-          Sign in &rarr;
+          Sign In &rarr;
         </a>
       `;
     }

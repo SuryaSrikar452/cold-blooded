@@ -105,20 +105,45 @@
   .nav-left{display:flex;align-items:center;gap:2.5rem;}
   .logo{font-family:'Newsreader',serif;font-weight:600;font-size:19px;letter-spacing:-0.01em;color:var(--ivory);}
   
-  /* Understated workflow indicator */
-  .workflow-indicator{
-    display:flex;align-items:center;gap:1.5rem;
-    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;
+  /* Precision Stepper (7 Steps) */
+  .workflow-stepper{
+    display:flex;align-items:center;gap:0;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.05em;
+    white-space:nowrap;
   }
-  @media(max-width:980px){.workflow-indicator{display:none;}}
-  .wf-step{color:rgba(245,243,238,0.45);display:inline-flex;align-items:center;gap:0.35rem;transition:color 160ms var(--ease-out);}
-  .wf-step.active{color:var(--ivory);font-weight:600;}
-  .wf-step.active .wf-badge{
-    background:rgba(108,77,255,0.24);color:var(--soft-violet);
-    border:1px solid rgba(168,150,255,0.32);
-    padding:2px 6px;border-radius:3px;font-weight:600;
+  @media(max-width:980px){
+    .workflow-stepper{display:none;}
+    .mobile-stepper-compact{display:flex !important;}
   }
-  .wf-sep{color:rgba(255,255,255,0.18);}
+  .mobile-stepper-compact{
+    display:none;align-items:center;gap:8px;
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ivory);
+  }
+  .compact-track{
+    width:54px;height:3px;background:rgba(255,255,255,0.14);border-radius:999px;overflow:hidden;
+  }
+  .compact-bar{height:100%;background:var(--violet);border-radius:999px;}
+  .step-item{
+    display:inline-flex;align-items:center;gap:5px;
+    color:rgba(245,243,238,0.45);text-decoration:none;
+    padding:3px 6px;border-radius:3px;
+    transition:color 140ms ease, background 140ms ease;
+    white-space:nowrap;flex-shrink:0;
+  }
+  .step-item:hover{color:var(--ivory);background:rgba(255,255,255,0.05);}
+  .step-item.active{color:var(--ivory);font-weight:600;}
+  .step-badge{
+    font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;
+    background:rgba(255,255,255,0.08);color:rgba(245,243,238,0.65);
+    border:1px solid rgba(255,255,255,0.14);transition:all 140ms ease;
+  }
+  .step-item.active .step-badge{
+    background:#6C4DFF;color:#FFFFFF;border-color:#8F73FF;
+    box-shadow:0 0 10px rgba(108,77,255,0.45);
+  }
+  .step-track{
+    width:10px;height:1px;background:rgba(255,255,255,0.15);margin:0 1px;flex-shrink:0;
+  }
 
   .btn{
     display:inline-flex;align-items:center;gap:0.5rem;
@@ -716,22 +741,24 @@
   <div class="nav-inner">
     <div class="nav-left">
       <a href="index.html" class="logo">SYNTHIA</a>
-      <div class="workflow-indicator">
-        <a href="index.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">01</span> INDEX</a>
-        <span class="wf-sep">&rarr;</span>
-        <span class="wf-step active"><span class="wf-badge">02</span> SETUP</span>
-        <span class="wf-sep">&rarr;</span>
-        <a href="generate.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">03</span> GENERATE</a>
-        <span class="wf-sep">&rarr;</span>
-        <a href="validation.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">04</span> VALIDATE</a>
-        <span class="wf-sep">&rarr;</span>
-        <a href="privacy.html" class="wf-step" style="text-decoration:none;color:inherit;"><span class="wf-badge">05</span> PRIVACY</a>
-        <span class="wf-sep">&middot;</span>
-        <a href="patient.html" class="wf-step" style="text-decoration:none;color:inherit;">06 PATIENTS</a>
-        <span class="wf-sep">&middot;</span>
-        <a href="stress-test.html" class="wf-step" style="text-decoration:none;color:inherit;">07 STRESS TEST</a>
-        <span class="wf-sep">&middot;</span>
-        <a href="api-hub.html" class="wf-step" style="text-decoration:none;color:inherit;">08 API HUB</a>
+      <div class="workflow-stepper">
+        <a href="index.html" class="step-item"><span class="step-badge">01</span> INDEX</a>
+        <span class="step-track"></span>
+        <span class="step-item active"><span class="step-badge">02</span> SETUP</span>
+        <span class="step-track"></span>
+        <a href="generate.html" class="step-item"><span class="step-badge">03</span> GENERATE</a>
+        <span class="step-track"></span>
+        <a href="validation.html" class="step-item"><span class="step-badge">04</span> VALIDATE</a>
+        <span class="step-track"></span>
+        <a href="privacy.html" class="step-item"><span class="step-badge">05</span> PRIVACY</a>
+        <span class="step-track"></span>
+        <a href="patient.html" class="step-item"><span class="step-badge">06</span> PATIENTS</a>
+        <span class="step-track"></span>
+        <a href="stress-test.html" class="step-item"><span class="step-badge">07</span> STRESS TEST</a>
+      </div>
+      <div class="mobile-stepper-compact">
+        <span>STEP 02 / 07</span>
+        <div class="compact-track"><div class="compact-bar" style="width: 28.5%;"></div></div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
@@ -1868,6 +1895,7 @@ async function interpretPrompt(text) {
   interpretBtn.disabled = true;
 
   try {
+    const startTime = performance.now();
     let result = null;
     if (window.SYNTHIA_COHORT_API && typeof window.SYNTHIA_COHORT_API.interpretCohort === 'function') {
       result = await window.SYNTHIA_COHORT_API.interpretCohort(text, cohortState, cohortState.schema || []);
@@ -1944,6 +1972,13 @@ async function interpretPrompt(text) {
       } else {
         feasBox.style.display = 'none';
       }
+    }
+
+    // Ensure the user clearly sees "Analysing..." with the animation before converting to "Analysis Complete ✓"
+    const elapsed = performance.now() - startTime;
+    const minWait = 1100;
+    if (elapsed < minWait) {
+      await new Promise(res => setTimeout(res, minWait - elapsed));
     }
 
     const badge = document.getElementById('interpStatusBadge');

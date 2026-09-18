@@ -828,51 +828,9 @@
       verifyBtn.style.borderColor = '#10B981';
       verifyBtn.innerHTML = `<span>VERIFIED</span><span>&check;</span>`;
 
-      // Seamless, luxurious transition to successView
+      // Seamless transition to successView
       setTimeout(() => {
-        otpView.classList.remove('active');
-        successView.classList.add('active');
-
-        const progressBar = document.getElementById('successProgressBar');
-        const statusText = document.getElementById('successStatus');
-
-        // Multi-stage synchronized progress bar
-        setTimeout(() => {
-          if (progressBar) progressBar.style.width = '35%';
-          if (statusText) statusText.textContent = 'AUTHENTICATING SESSION TOKEN...';
-        }, 50);
-
-        setTimeout(() => {
-          if (progressBar) progressBar.style.width = '75%';
-          if (statusText) statusText.textContent = 'CONNECTING COHORT ENVIRONMENT...';
-        }, 550);
-
-        setTimeout(() => {
-          if (progressBar) progressBar.style.width = '100%';
-          if (statusText) statusText.textContent = 'REDIRECTING TO SYNTHIA PLATFORM...';
-        }, 1100);
-
-        const urlParams = new URLSearchParams(window.location.search);
-        let targetParam = urlParams.get('redirect');
-        let target = 'http://localhost:5000/index.html';
-        if (targetParam) {
-          try {
-            targetParam = decodeURIComponent(targetParam);
-            if (!targetParam.includes('login') && !targetParam.includes('register')) {
-              target = targetParam;
-            }
-          } catch (e) {}
-        }
-
-        // Soft curtain fade out before navigation
-        setTimeout(() => {
-          document.body.style.transition = 'opacity 350ms cubic-bezier(0.4, 0, 0.2, 1)';
-          document.body.style.opacity = '0';
-        }, 1400);
-
-        setTimeout(() => {
-          window.location.href = target;
-        }, 1750);
+        showSuccessAndRedirect();
       }, 250);
 
     } catch (err) {
@@ -881,6 +839,75 @@
       verifyBtn.innerHTML = `<span>VERIFY CODE</span><span>&rarr;</span>`;
     }
   });
+
+  let isTransitioning = false;
+  function showSuccessAndRedirect() {
+    if (isTransitioning) return;
+    isTransitioning = true;
+
+    otpView.classList.remove('active');
+    emailView.classList.remove('active');
+    successView.classList.add('active');
+
+    const progressBar = document.getElementById('successProgressBar');
+    const statusText = document.getElementById('successStatus');
+
+    setTimeout(() => {
+      if (progressBar) progressBar.style.width = '35%';
+      if (statusText) statusText.textContent = 'AUTHENTICATING SESSION TOKEN...';
+    }, 50);
+
+    setTimeout(() => {
+      if (progressBar) progressBar.style.width = '75%';
+      if (statusText) statusText.textContent = 'CONNECTING COHORT ENVIRONMENT...';
+    }, 550);
+
+    setTimeout(() => {
+      if (progressBar) progressBar.style.width = '100%';
+      if (statusText) statusText.textContent = 'REDIRECTING TO SYNTHIA PLATFORM...';
+    }, 1100);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetParam = urlParams.get('redirect');
+    let target = 'http://localhost:5000/index.html';
+    if (targetParam) {
+      try {
+        targetParam = decodeURIComponent(targetParam);
+        if (!targetParam.includes('login') && !targetParam.includes('register')) {
+          target = targetParam;
+        }
+      } catch (e) {}
+    }
+
+    setTimeout(() => {
+      document.body.style.transition = 'opacity 350ms cubic-bezier(0.4, 0, 0.2, 1)';
+      document.body.style.opacity = '0';
+    }, 1400);
+
+    setTimeout(() => {
+      window.location.href = target;
+    }, 1750);
+  }
+
+  // Auto-detect authentication if user clicked email link
+  if (window.synthiaAuth && typeof window.synthiaAuth.onAuthStateChange === 'function') {
+    window.synthiaAuth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session && session.user) {
+        showSuccessAndRedirect();
+      }
+    });
+  }
+
+  if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('type='))) {
+    setTimeout(async () => {
+      if (window.synthiaAuth && typeof window.synthiaAuth.getSession === 'function') {
+        const session = await window.synthiaAuth.getSession();
+        if (session && session.user) {
+          showSuccessAndRedirect();
+        }
+      }
+    }, 350);
+  }
 
   // Back to Email
   backToEmailBtn.addEventListener('click', () => {
