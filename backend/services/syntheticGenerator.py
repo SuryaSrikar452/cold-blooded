@@ -48,29 +48,30 @@ def synthesize_cohort(params):
     targets = {}
     if diabetes_target is not None:
         try:
-            diab_val = float(diabetes_target)
-            if diab_val >= 50:
-                targets['diabetes'] = 1
-            elif diab_val <= 15:
-                targets['diabetes'] = 0
+            val = float(diabetes_target)
+            targets['diabetes'] = val
+            targets['diabetes_pct'] = val
         except (ValueError, TypeError):
             pass
 
     if age_over_60_target is not None:
         try:
-            age_val = float(age_over_60_target)
-            if age_val >= 50:
-                targets['age_gt'] = 60
+            val = float(age_over_60_target)
+            targets['ageOver60'] = val
+            targets['age_over_60_pct'] = val
         except (ValueError, TypeError):
             pass
 
     if low_activity_target is not None:
         try:
-            act_val = float(low_activity_target)
-            if act_val >= 50:
-                targets['activity_mims_lt'] = 8500
+            val = float(low_activity_target)
+            targets['lowActivity'] = val
+            targets['low_activity_pct'] = val
         except (ValueError, TypeError):
             pass
+
+    if isinstance(params.get('targets'), dict):
+        targets.update(params['targets'])
 
     t_start = time.time()
     gen = get_generator()
