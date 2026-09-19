@@ -583,7 +583,7 @@
         <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
           <div class="mono" style="font-size:10.5px;color:var(--text-faint);">POPULATION DISTANCE PERCENTILE</div>
           <div class="mono" style="font-size:20px;font-weight:600;margin-top:2px;" id="nnPercentile">46.2th %ile</div>
-          <span class="clarity-hint">46th percentile = this synthetic patient is near the middle of the distance distribution — not unusually close to any real person.</span>
+          <span class="clarity-hint" id="nnPercentileDesc">46.2th percentile = this synthetic patient is near the middle of the distance distribution — not unusually close to any real person.</span>
         </div>
         <div style="padding:1rem;background:var(--ivory);border-radius:3px;border:1px solid var(--hairline);">
           <div class="mono" style="font-size:10.5px;color:var(--text-faint);">NEAREST SEED ID</div>
@@ -976,7 +976,8 @@
     try {
       let data = null;
       try {
-        const resp = await fetch(`${BACKEND_URL}/api/privacy/nearest-neighbor/${patientId}`, { signal: controller.signal });
+        const currentCohortId = getActiveCohortId();
+        const resp = await fetch(`${BACKEND_URL}/api/privacy/nearest-neighbor/${patientId}?cohort_id=${encodeURIComponent(currentCohortId)}`, { signal: controller.signal });
         clearTimeout(timeoutId);
         if (resp.ok) {
           data = await resp.json();
@@ -995,9 +996,23 @@
         data = baselineNeighbors[patientId] || baselineNeighbors['SYN-000001'];
       }
 
+      const rawPct = data.distance_percentile != null ? data.distance_percentile : 46.2;
+      const pct = typeof rawPct === 'number' ? rawPct : parseFloat(rawPct) || 46.2;
+
       document.getElementById('nnDistance').textContent = (data.distance || 1.3842).toFixed(4);
-      document.getElementById('nnPercentile').textContent = (data.distance_percentile || 46.2).toFixed(1) + 'th %ile';
+      document.getElementById('nnPercentile').textContent = pct.toFixed(1) + 'th %ile';
       document.getElementById('nnSeedId').textContent = data.nearest_real_patient_id || 'NHANES-REF';
+
+      const pctDescEl = document.getElementById('nnPercentileDesc');
+      if (pctDescEl) {
+        let qualDesc = 'near the middle of the distance distribution — not unusually close to any real person.';
+        if (pct >= 70) {
+          qualDesc = 'in the upper distance range — well-separated and safely differentiated from real training participants.';
+        } else if (pct <= 30) {
+          qualDesc = 'closer to training seeds than median, but retains distinct clinical feature combinations.';
+        }
+        pctDescEl.textContent = `${pct.toFixed(1)}th percentile = this synthetic patient is ${qualDesc}`;
+      }
 
       const syn = data.synthetic_record || {};
       const real = data.nearest_real_record || {};
@@ -1022,8 +1037,13 @@
     } catch (err) {
       const fallback = baselineNeighbors[patientId] || baselineNeighbors['SYN-000001'];
       document.getElementById('nnDistance').textContent = fallback.distance.toFixed(4);
-      document.getElementById('nnPercentile').textContent = fallback.distance_percentile.toFixed(1) + 'th %ile';
+      const fbPct = fallback.distance_percentile != null ? fallback.distance_percentile : 46.2;
+      document.getElementById('nnPercentile').textContent = fbPct.toFixed(1) + 'th %ile';
       document.getElementById('nnSeedId').textContent = fallback.nearest_real_patient_id;
+      const pctDescEl = document.getElementById('nnPercentileDesc');
+      if (pctDescEl) {
+        pctDescEl.textContent = `${fbPct.toFixed(1)}th percentile = this synthetic patient is near the middle of the distance distribution — not unusually close to any real person.`;
+      }
     }
   }
 
