@@ -91,6 +91,7 @@ app.post('/cohort/:cohort_id/counterfactual', privacyController.getCounterfactua
 // Optional: Serve frontend static files if accessed directly through backend port
 const frontendDir = path.join(__dirname, '../frontend');
 app.use(express.static(frontendDir));
+app.use(express.static(path.join(__dirname, '..')));
 
 // Clean URL rewrites for direct navigation
 app.get('/', (req, res) => {

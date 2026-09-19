@@ -727,7 +727,7 @@
         <!-- Dark Analytical Stage Panel -->
         <div class="dark-stage-panel">
           <div class="dark-stage-top">
-            <span class="mono" style="color:var(--soft-violet);font-weight:600;" id="activeVarTitle">VARIABLE: AGE</span>
+            <span class="mono" style="color:var(--soft-violet);font-weight:600;" id="activeVarTitle">VARIABLE: SYSTOLIC BP</span>
             <div class="legend-items mono">
               <span class="legend-chip legend-src"><span class="legend-dot"></span>SOURCE DISTRIBUTION</span>
               <span class="legend-chip legend-syn"><span class="legend-dot"></span>SYNTHETIC COHORT</span>
@@ -1041,7 +1041,7 @@
   }
 
   let fullReport = null;
-  let activeContinuousVar = 'age';
+  let activeContinuousVar = 'systolic_bp';
 
   /* ===================================================================
      2. EXECUTE REAL STATISTICAL VALIDATION PIPELINE
@@ -1169,7 +1169,12 @@
 
   function setupContinuousVariables(contFeats) {
     distTabsContainer.innerHTML = '';
-    const varKeys = Object.keys(contFeats);
+    let varKeys = Object.keys(contFeats);
+    // Position 'age' at the last position after 'pain_score'
+    if (varKeys.includes('age')) {
+      varKeys = varKeys.filter(k => k !== 'age');
+      varKeys.push('age');
+    }
 
     varKeys.forEach((key, idx) => {
       const btn = document.createElement('button');

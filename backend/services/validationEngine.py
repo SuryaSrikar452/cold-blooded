@@ -343,8 +343,8 @@ def run_full_validation(params):
         "activity_mims", "n_medications", "adherence_pct", "pain_score"
     ]
     continuous_cols = [
-        "age", "systolic_bp", "diastolic_bp", "activity_mims",
-        "n_medications", "adherence_pct", "pain_score"
+        "systolic_bp", "diastolic_bp", "activity_mims",
+        "n_medications", "adherence_pct", "pain_score", "age"
     ]
     categorical_cols = ["sex", "diabetes"]
 
