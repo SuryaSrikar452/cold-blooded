@@ -887,7 +887,7 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     let targetParam = urlParams.get('redirect');
-    let target = 'http://localhost:5000/index.html';
+    let target = 'index.html';
     if (targetParam) {
       try {
         targetParam = decodeURIComponent(targetParam);

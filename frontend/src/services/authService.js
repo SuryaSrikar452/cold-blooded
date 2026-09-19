@@ -221,7 +221,7 @@
   /**
    * Sign out and redirect to /login while preserving cohort state.
    */
-  async function signOut(redirectPath = 'http://localhost:5000/login.html') {
+  async function signOut(redirectPath = 'login.html') {
     try {
       const client = getClient();
       if (client) {
@@ -268,7 +268,7 @@
           }
         } catch (e) {}
       }
-      window.location.href = 'http://localhost:5000/index.html';
+      window.location.href = 'index.html';
     }
   }
 
@@ -332,12 +332,12 @@
           e.preventDefault();
           signOutBtn.innerHTML = `<span style="font-size:9px;color:#FCA5A5;">…</span>`;
           signOutBtn.disabled = true;
-          await signOut('http://localhost:5000/login.html');
+          await signOut('login.html');
         });
       }
     } else {
       authNavEl.innerHTML = `
-        <a href="http://localhost:5000/login.html" class="btn" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:rgba(245,243,238,0.85);font-size:12px;padding:0.3rem 0.8rem;border-radius:999px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms ease;">
+        <a href="login.html" class="btn" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:rgba(245,243,238,0.85);font-size:12px;padding:0.3rem 0.8rem;border-radius:999px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;transition:all 160ms ease;">
           Sign In &rarr;
         </a>
       `;
