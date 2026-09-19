@@ -445,6 +445,7 @@
   .footer-links a:hover{color:#fff;}
 </style>
   <link rel="stylesheet" href="src/responsive.css">
+  <script src="src/config.js"></script>
 </head>
 <body>
 
@@ -944,7 +945,8 @@
       downloadCsvBtn.classList.remove('disabled');
       downloadCsvBtn.onclick = () => {
         const cohortId = (result && result.cohort_id) || 'SYN-GC-BDF99F07';
-        const backendUrl = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
+        const backendUrl = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL)
+          || (window.location && window.location.origin && !window.location.origin.startsWith('file:') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.origin : 'http://localhost:5000');
         window.open(`${backendUrl}/api/generate/download/${cohortId}`, '_blank');
       };
     }
@@ -956,6 +958,10 @@
 
   function renderLoop(time) {
     if (!isRunning) return;
+    if (document.hidden) {
+      animId = requestAnimationFrame(renderLoop);
+      return;
+    }
 
     ctx.clearRect(0, 0, W, H);
 
@@ -1020,13 +1026,16 @@
       }
       const sx = s.x1 + (s.x2 - s.x1) * s.prog;
       const sy = s.y1 + (s.y2 - s.y1) * s.prog;
+      // Fast GPU-friendly radiant glow (zero shadowBlur stutter)
       ctx.beginPath();
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.shadowColor = 'rgba(168,150,255,0.9)';
-      ctx.shadowBlur = 6;
+      ctx.fillStyle = 'rgba(168,150,255,0.35)';
+      ctx.arc(sx, sy, s.r + 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
       ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
 
     // Render nodes

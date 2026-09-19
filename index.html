@@ -328,6 +328,7 @@
   .footer-links a:hover{color:var(--ink-black);}
 </style>
   <link rel="stylesheet" href="src/responsive.css">
+  <script src="src/config.js"></script>
 </head>
 <body>
 
@@ -991,6 +992,10 @@ const isTouch = window.matchMedia('(hover: none)').matches;
   }
 
   function tick(now) {
+    if (document.hidden || smoothScrollY > H + 120) {
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
     if (startTime === null) startTime = now;
     const deltaMs = lastFrameTime ? Math.min(now - lastFrameTime, 100) : 16.67;
     lastFrameTime = now;

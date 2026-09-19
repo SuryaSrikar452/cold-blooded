@@ -578,6 +578,7 @@
   .footer-links a:hover{color:#fff;}
 </style>
   <link rel="stylesheet" href="src/responsive.css">
+  <script src="src/config.js"></script>
 </head>
 <body>
 
@@ -1443,7 +1444,8 @@
   async function loadBiasAudit(cohortId, tolerance) {
     if (!biasTableBody) return;
     try {
-      const backendUrl = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.API_BASE_URL) || 'http://localhost:5000';
+      const backendUrl = (window.SYNTHIA_CONFIG && (window.SYNTHIA_CONFIG.API_BASE_URL || window.SYNTHIA_CONFIG.BACKEND_URL))
+        || (window.location && window.location.origin && !window.location.origin.startsWith('file:') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.origin : 'http://localhost:5000');
       const res = await fetch(`${backendUrl}/api/audit/bias?cohort_id=${encodeURIComponent(cohortId)}&tolerance_pct=${tolerance}`);
       if (!res.ok) throw new Error('Failed to fetch bias audit');
       const data = await res.json();

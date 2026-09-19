@@ -12,23 +12,26 @@
     if (global.SYNTHIA_CONFIG && global.SYNTHIA_CONFIG.BACKEND_URL) {
       return global.SYNTHIA_CONFIG.BACKEND_URL;
     }
+    if (typeof window !== 'undefined' && window.location && window.location.origin && !window.location.origin.startsWith('file:') && window.location.origin !== 'null' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return window.location.origin;
+    }
     return 'http://localhost:5000';
   };
 
   /**
-   * Request statistical and empirical privacy validation for a generated synthetic cohort.
-   * @param {object} params
-   * @param {string} params.cohortId Generated synthetic cohort ID
-   * @param {string} [params.sourceDataset] Source benchmark file (defaults to benchmark)
-   * @param {object} [params.targetConditions] User-requested cohort targets
-   * @returns {Promise<object>} Validation report
+   * Request statistical validation against benchmark distribution.
+   * @param {object} params Validation parameters
+   * @param {string} params.cohortId Unique generated cohort identifier
+   * @param {string} [params.sourceDataset] Path or benchmark reference
+   * @param {object} [params.targetConditions] Target parameters to cross-validate
+   * @returns {Promise<object>} Validation report payload or structured error
    */
   async function validateCohort(params = {}) {
     const backendUrl = getBackendUrl();
     const endpoint = `${backendUrl}/api/validate`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 35000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
     const cohortId = params.cohortId || params.cohort_id;
     if (!cohortId) {

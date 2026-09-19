@@ -298,6 +298,7 @@
     .clarity-hint{display:block;font-size:11px;font-weight:400;color:var(--text-faint);line-height:1.4;margin-top:3px;letter-spacing:normal;text-transform:none;}
   </style>
   <link rel="stylesheet" href="src/responsive.css">
+  <script src="src/config.js"></script>
 </head>
 <body>
 
@@ -559,7 +560,8 @@
 (function() {
   'use strict';
 
-  const BACKEND_URL = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL) || 'http://localhost:5000';
+  const BACKEND_URL = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL)
+    || (window.location && window.location.origin && !window.location.origin.startsWith('file:') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.origin : 'http://localhost:5000');
   const patientPicker = document.getElementById('patientPicker');
   const cadenceMonthlyBtn = document.getElementById('cadenceMonthlyBtn');
   const cadenceWeeklyBtn = document.getElementById('cadenceWeeklyBtn');

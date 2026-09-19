@@ -456,11 +456,14 @@
 </footer>
 
 <script>
+  const BACKEND_URL = (window.SYNTHIA_CONFIG && window.SYNTHIA_CONFIG.BACKEND_URL)
+    || (window.location && window.location.origin && !window.location.origin.startsWith('file:') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.origin : 'http://localhost:5000');
+
   let currentKey = "syn_live_demo994a28f8";
   let currentLang = "curl";
 
   const codeTemplates = {
-    curl: () => `curl -X POST "http://localhost:5000/api/v1/generate" \\
+    curl: () => `curl -X POST "${BACKEND_URL}/api/v1/generate" \\
   -H "Content-Type: application/json" \\
   -H "X-API-Key: ${currentKey}" \\
   -d '{
@@ -473,7 +476,7 @@
   }'`,
     python: () => `import requests
 
-url = "http://localhost:5000/api/v1/generate"
+url = "${BACKEND_URL}/api/v1/generate"
 headers = {
     "X-API-Key": "${currentKey}",
     "Content-Type": "application/json"
@@ -490,7 +493,7 @@ payload = {
 response = requests.post(url, json=payload, headers=headers)
 data = response.json()
 print(f"Generated {data['n_generated']} patients with ID: {data['cohort_id']}")`,
-    js: () => `const res = await fetch("http://localhost:5000/api/v1/generate", {
+    js: () => `const res = await fetch("${BACKEND_URL}/api/v1/generate", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -534,12 +537,13 @@ console.log(data.cohort_id, data.patients);`
   };
 
   // Copy code snippet
+  // Copy code
   document.getElementById("copyCodeBtn").onclick = () => {
-    const code = document.getElementById("codeDisplay").textContent;
-    navigator.clipboard.writeText(code).then(() => {
+    const text = document.getElementById("codeDisplay").textContent;
+    navigator.clipboard.writeText(text).then(() => {
       const btn = document.getElementById("copyCodeBtn");
-      btn.textContent = "Copied!";
-      setTimeout(() => btn.textContent = "Copy", 1500);
+      btn.textContent = "COPIED!";
+      setTimeout(() => { btn.textContent = "COPY"; }, 1500);
     });
   };
 
@@ -548,7 +552,7 @@ console.log(data.cohort_id, data.patients);`
     const btn = document.getElementById("generateKeyBtn");
     btn.textContent = "Generating...";
     try {
-      const res = await fetch("http://localhost:5000/api/v1/keys", {
+      const res = await fetch(`${BACKEND_URL}/api/v1/keys`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Interactive Console Key" })
@@ -581,7 +585,7 @@ console.log(data.cohort_id, data.patients);`
     statusPill.className = "status-pill loading";
     statusPill.textContent = "SAMPLING";
     latencyEl.textContent = "...";
-    jsonOutput.textContent = "// Sending request to http://localhost:5000/api/v1/generate...";
+    jsonOutput.textContent = `// Sending request to ${BACKEND_URL}/api/v1/generate...`;
 
     const n = parseInt(document.getElementById("testN").value) || 50;
     const targets = {};
@@ -597,7 +601,7 @@ console.log(data.cohort_id, data.patients);`
     const t0 = performance.now();
 
     try {
-      const res = await fetch("http://localhost:5000/api/v1/generate", {
+      const res = await fetch(`${BACKEND_URL}/api/v1/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -640,7 +644,7 @@ console.log(data.cohort_id, data.patients);`
       statusPill.style.background = "rgba(224, 82, 82, 0.15)";
       statusPill.style.color = "var(--crimson)";
       statusPill.textContent = "ERROR";
-      jsonOutput.textContent = `// Error: ${err.message}\n// Check if backend is active on http://localhost:5000`;
+      jsonOutput.textContent = `// Error: ${err.message}\n// Check if backend is active on ${BACKEND_URL}`;
     } finally {
       runBtn.disabled = false;
       runBtn.textContent = "Execute Live Request \u2192";
