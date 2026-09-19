@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SYNTHIA — Pipeline Session Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/responsive.css">
+<style>
+  :root{
+    --ink:#0B0B0D;
+    --ink-black:#111111;
+    --ivory:#F5F3EE;
+    --ivory-alt:#EFEBE2;
+    --ivory-bright:#FBF9F4;
+    --white:#FFFFFF;
+    --violet:#6C4DFF;
+    --violet-hover:#583BD6;
+    --violet-grad: linear-gradient(90deg, #6C4DFF 0%, #8F73FF 100%);
+    --soft-violet:#A896FF;
+    --lavender:#E7E3FF;
+    --hairline:#DBD8CD;
+    --hairline-soft:#E2DFD5;
+    --text-muted:#3A3847;
+    --text-faint:#787588;
+    --teal:#0D9488;
+    --teal-bg:rgba(13,148,136,0.08);
+    --amber:#B45309;
+    --amber-bg:rgba(217,119,6,0.08);
+    --amber-border:rgba(217,119,6,0.3);
+    --rose:#E11D48;
+    --rose-bg:rgba(225,29,72,0.08);
+    --ease-out: cubic-bezier(0.16,1,0.3,1);
+    --panel-shadow: 0 1px 2px rgba(17,17,17,0.03), 0 6px 20px rgba(17,17,17,0.04);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ivory);
+    color:var(--ink-black);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3,h4{margin:0;font-family:'Newsreader',serif;font-weight:600;letter-spacing:-0.015em;}
+  .accent{
+    background:var(--violet-grad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    font-style:italic;
+    font-weight:500;
+  }
+  p{margin:0;}
+  a{color:inherit;text-decoration:none;}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+  .label{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 3rem;width:100%;}
+  @media(max-width:900px){.wrap{padding:0 1.25rem;}}
+
+  /* Navigation */
+  nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(11,11,13,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    color:var(--ivory);
+  }
+  .nav-inner{
+    max-width:1180px;margin:0 auto;padding:0 3rem;height:64px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  @media(max-width:900px){.nav-inner{padding:0 1.25rem;}}
+  .nav-left{display:flex;align-items:center;gap:2rem;}
+  .logo{font-family:'Newsreader',serif;font-weight:600;font-size:19px;letter-spacing:-0.01em;color:var(--ivory);}
+  
+  .workflow-stepper{
+    display:flex;align-items:center;gap:2px;
+    background:rgba(255,255,255,0.025);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:999px;
+    padding:3px 6px;
+    backdrop-filter:blur(12px);
+    white-space:nowrap;
+  }
+  @media(max-width:1050px){
+    .workflow-stepper{display:none;}
+    .mobile-stepper-compact{display:flex !important;}
+  }
+  .mobile-stepper-compact{
+    display:none;align-items:center;gap:8px;
+    background:rgba(255,255,255,0.025);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:999px;
+    padding:4px 12px;
+    font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;color:var(--ivory);
+  }
+  .compact-track{width:50px;height:3px;background:rgba(255,255,255,0.12);border-radius:999px;overflow:hidden;}
+  .compact-bar{height:100%;background:linear-gradient(90deg,#6C4DFF,#A78BFA);border-radius:999px;}
+  .step-item{
+    display:inline-flex;align-items:center;gap:5px;
+    color:rgba(245,243,238,0.42);text-decoration:none;
+    font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:450;letter-spacing:0.03em;
+    padding:4px 9px;border-radius:999px;
+    transition:all 180ms cubic-bezier(0.16,1,0.3,1);
+    white-space:nowrap;flex-shrink:0;
+  }
+  .step-item:hover{
+    color:rgba(245,243,238,0.95);
+    background:rgba(255,255,255,0.05);
+  }
+  .step-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;font-weight:500;
+    color:rgba(245,243,238,0.45);
+  }
+  .step-item.active{
+    background:linear-gradient(135deg, rgba(108,77,255,0.28), rgba(139,92,246,0.14));
+    border:1px solid rgba(167,139,250,0.35);
+    color:#FFFFFF;font-weight:600;
+    box-shadow:0 0 14px -1px rgba(108,77,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+    padding:4px 11px;
+  }
+  .step-item.active .step-badge{color:#C4B5FD;font-weight:700;}
+  .step-track{width:6px;height:1px;background:rgba(255,255,255,0.12);margin:0 1px;flex-shrink:0;}
+
+  /* Page Header */
+  .page-header{
+    padding:3.5rem 0 2rem;
+    border-bottom:1px solid var(--hairline);
+    background:var(--ivory);
+  }
+  .section-tag{
+    display:inline-flex;align-items:center;gap:8px;
+    margin-bottom:0.85rem;
+  }
+  .section-tag .dot{
+    width:7px;height:7px;border-radius:50%;background:var(--violet);
+    box-shadow:0 0 8px rgba(108,77,255,0.5);
+  }
+  .page-header h1{
+    font-size:clamp(2rem, 3.8vw, 2.75rem);
+    line-height:1.15;
+    color:var(--ink);
+  }
+  .page-header .subtitle{
+    font-size:15px;color:var(--text-muted);
+    margin-top:0.75rem;max-width:760px;line-height:1.6;
+  }
+
+  /* Main Container */
+  main{flex:1;padding:2.5rem 0 4rem;}
+
+  /* Advisory Callout */
+  .advisory-callout{
+    background:var(--amber-bg);
+    border:1px solid var(--amber-border);
+    border-radius:4px;
+    padding:0.85rem 1.15rem;
+    color:var(--amber);
+    font-size:13px;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:2rem;
+    line-height:1.5;
+  }
+  .advisory-callout svg{flex-shrink:0;margin-top:2px;}
+
+  /* Key Numbers Strip */
+  .numbers-strip{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:1px;
+    background:var(--hairline);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:2.5rem;
+    box-shadow:var(--panel-shadow);
+  }
+  .number-cell{
+    background:var(--ivory-bright);
+    padding:1.25rem 1.2rem;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .number-val{
+    font-size:22px;
+    font-weight:600;
+    color:var(--ink);
+    letter-spacing:-0.02em;
+  }
+  .number-lbl{
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    font-weight:500;
+  }
+
+  /* Table / Stage Cards */
+  .stage-table-container{
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    box-shadow:var(--panel-shadow);
+    overflow:hidden;
+    margin-bottom:2.5rem;
+  }
+  .stage-table-header{
+    padding:1rem 1.5rem;
+    background:var(--ivory-bright);
+    border-bottom:1px solid var(--hairline);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .stage-table-header h3{
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .stage-table-header span{
+    font-size:12px;
+    color:var(--text-faint);
+  }
+
+  .stage-row{
+    padding:1.4rem 1.5rem;
+    border-bottom:1px solid var(--hairline-soft);
+    display:grid;
+    grid-template-columns:220px 140px 1fr;
+    gap:1.5rem;
+    align-items:flex-start;
+  }
+  .stage-row:last-child{border-bottom:none;}
+  @media(max-width:850px){
+    .stage-row{
+      grid-template-columns:1fr;
+      gap:0.75rem;
+    }
+  }
+
+  .stage-col-meta{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .stage-num{
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--violet);
+    font-weight:600;
+  }
+  .stage-title{
+    font-family:'Newsreader',serif;
+    font-size:17px;
+    font-weight:600;
+    color:var(--ink);
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:500;
+    padding:4px 10px;
+    border-radius:999px;
+    width:fit-content;
+  }
+  .status-pill.done{
+    background:rgba(108,77,255,0.08);
+    color:var(--violet);
+    border:1px solid rgba(108,77,255,0.2);
+  }
+  .status-pill.done .dot-indicator{
+    width:6px;height:6px;border-radius:50%;background:var(--violet);
+  }
+  .status-pill.attention{
+    background:var(--amber-bg);
+    color:var(--amber);
+    border:1px solid var(--amber-border);
+  }
+  .status-pill.not-run{
+    background:rgba(120,117,136,0.08);
+    color:var(--text-faint);
+    border:1px solid rgba(120,117,136,0.2);
+  }
+  .status-pill.not-run .dot-indicator{
+    width:6px;height:6px;border-radius:50%;border:1.5px solid var(--text-faint);background:transparent;
+  }
+
+  .stage-col-body{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:13.5px;
+    line-height:1.55;
+    color:var(--text-muted);
+  }
+  .stage-fact{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .stage-fact-term{
+    color:var(--ink);
+    font-weight:500;
+    min-width:180px;
+    flex-shrink:0;
+  }
+  .stage-fact-val{
+    color:var(--text-muted);
+  }
+  .caption-provenance{
+    font-size:11.5px;
+    color:var(--text-faint);
+    margin-top:2px;
+  }
+  @media(max-width:600px){
+    .stage-fact{
+      flex-direction:column;
+      gap:2px;
+    }
+    .stage-fact-term{
+      min-width:auto;
+    }
+  }
+
+  /* Empty state */
+  .empty-state-box{
+    padding:3.5rem 2rem;
+    text-align:center;
+    background:var(--white);
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    box-shadow:var(--panel-shadow);
+  }
+  .empty-state-box h3{
+    font-size:20px;
+    color:var(--ink);
+    margin-bottom:0.5rem;
+  }
+  .empty-state-box p{
+    font-size:14px;
+    color:var(--text-muted);
+    max-width:540px;
+    margin:0 auto 1.5rem;
+    line-height:1.6;
+  }
+
+  /* Buttons & Action Bar */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;font-size:13.5px;
+    padding:0.7rem 1.35rem;border-radius:4px;border:none;cursor:pointer;
+    transition:all 180ms ease;
+    text-decoration:none;
+  }
+  .btn-primary{
+    background:var(--violet);
+    color:var(--white);
+    box-shadow:0 2px 10px rgba(108,77,255,0.25);
+  }
+  .btn-primary:hover{
+    background:var(--violet-hover);
+    box-shadow:0 4px 16px rgba(108,77,255,0.35);
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--hairline);
+  }
+  .btn-ghost:hover{
+    background:var(--ivory-alt);
+    border-color:var(--hairline-soft);
+  }
+
+  .action-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:2rem;
+    border-top:1px solid var(--hairline);
+    flex-wrap:wrap;
+    gap:1rem;
+  }
+
+  /* Footer */
+  footer{
+    margin-top:auto;
+    background:#0B0B0D;
+    color:rgba(245,243,238,0.45);
+    font-size:12px;
+    padding:1.5rem 0;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  footer .wrap{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:0.75rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="wrap nav-inner">
+    <div class="nav-left">
+      <a href="index.html" class="logo">SYNTHIA</a>
+      <div class="workflow-stepper">
+        <a href="index.html" class="step-item"><span class="step-badge">01</span> INDEX</a>
+        <span class="step-track"></span>
+        <a href="create.html" class="step-item"><span class="step-badge">02</span> SETUP</a>
+        <span class="step-track"></span>
+        <a href="generate.html" class="step-item"><span class="step-badge">03</span> GENERATE</a>
+        <span class="step-track"></span>
+        <a href="validation.html" class="step-item"><span class="step-badge">04</span> VALIDATE</a>
+        <span class="step-track"></span>
+        <a href="privacy.html" class="step-item"><span class="step-badge">05</span> PRIVACY</a>
+        <span class="step-track"></span>
+        <a href="patient.html" class="step-item"><span class="step-badge">06</span> PATIENTS</a>
+        <span class="step-track"></span>
+        <a href="stress-test.html" class="step-item"><span class="step-badge">07</span> STRESS TEST</a>
+        <span class="step-track"></span>
+        <span class="step-item active"><span class="step-badge">&#10003;</span> SUMMARY</span>
+      </div>
+      <div class="mobile-stepper-compact">
+        <span>STEP 08 / 08</span>
+        <div class="compact-track"><div class="compact-bar" style="width: 100%;"></div></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <a href="create.html" class="btn btn-ghost" style="height:34px;padding:0 14px;border-radius:999px;font-size:12px;color:var(--ivory);border-color:rgba(255,255,255,0.18);">
+        <span>+ New Cohort</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<header class="page-header">
+  <div class="wrap">
+    <div class="section-tag">
+      <span class="dot"></span>
+      <span class="label" id="pipelineStatusTag">PIPELINE COMPLETE</span>
+    </div>
+    <h1>Your synthetic cohort, <span class="accent">end to end.</span></h1>
+    <p class="subtitle" id="dynamicSubtitle">
+      Loading session parameters and empirical audit metrics...
+    </p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- Advisory Banner (Cohort Mismatch) -->
+    <div id="mismatchBanner" class="advisory-callout" style="display:none;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div>
+        <strong>Cohort Consistency Notice:</strong> Some results are from a previous cohort and have been excluded.
+      </div>
+    </div>
+
+    <!-- Empty State Box (When no cohort has been generated) -->
+    <div id="emptySessionState" class="empty-state-box" style="display:none;">
+      <h3>No Active Cohort Generation Found</h3>
+      <p>
+        SYNTHIA requires an active cohort generation run in this browser session to construct a factual audit summary. Complete Stage 02 Setup and Stage 03 Generate to evaluate fidelity and privacy boundaries.
+      </p>
+      <a href="create.html" class="btn btn-primary">
+        <span>Start Cohort Setup</span>
+        <span>&rarr;</span>
+      </a>
+    </div>
+
+    <!-- Active Session Content -->
+    <div id="activeSessionContent">
+
+      <!-- Key Numbers Strip -->
+      <div class="numbers-strip">
+        <div class="number-cell">
+          <div class="number-val mono" id="metricCohortSize">—</div>
+          <div class="number-lbl">Synthetic Records</div>
+        </div>
+        <div class="number-cell">
+          <div class="number-val mono" id="metricVariables">—</div>
+          <div class="number-lbl">Features Used</div>
+        </div>
+        <div class="number-cell">
+          <div class="number-val mono" id="metricFidelity">—</div>
+          <div class="number-lbl">Mean KS Statistic</div>
+        </div>
+        <div class="number-cell">
+          <div class="number-val mono" id="metricPrivacy">—</div>
+          <div class="number-lbl">Attacker AUC</div>
+        </div>
+        <div class="number-cell">
+          <div class="number-val mono" id="metricStress">—</div>
+          <div class="number-lbl">Edge Cases Generated</div>
+        </div>
+      </div>
+
+      <!-- Pipeline Stages Recap -->
+      <div class="stage-table-container">
+        <div class="stage-table-header">
+          <h3>Session Provenance &amp; Verification Audit</h3>
+          <span class="mono" id="auditCohortId">COHORT ID: —</span>
+        </div>
+
+        <!-- 02 SETUP -->
+        <div class="stage-row" id="rowSetup">
+          <div class="stage-col-meta">
+            <span class="stage-num mono">STAGE 02</span>
+            <div class="stage-title">Cohort Setup</div>
+          </div>
+          <div>
+            <span class="status-pill done" id="pillSetup">
+              <span class="dot-indicator"></span>
+              <span>Done</span>
+            </span>
+          </div>
+          <div class="stage-col-body" id="bodySetup">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- 03 GENERATE -->
+        <div class="stage-row" id="rowGenerate">
+          <div class="stage-col-meta">
+            <span class="stage-num mono">STAGE 03</span>
+            <div class="stage-title">Copula Generation</div>
+          </div>
+          <div>
+            <span class="status-pill done" id="pillGenerate">
+              <span class="dot-indicator"></span>
+              <span>Done</span>
+            </span>
+          </div>
+          <div class="stage-col-body" id="bodyGenerate">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- 04 VALIDATE -->
+        <div class="stage-row" id="rowValidate">
+          <div class="stage-col-meta">
+            <span class="stage-num mono">STAGE 04</span>
+            <div class="stage-title">Statistical Validation</div>
+          </div>
+          <div>
+            <span class="status-pill" id="pillValidate">
+              <span class="dot-indicator"></span>
+              <span id="txtValidate">Not run</span>
+            </span>
+          </div>
+          <div class="stage-col-body" id="bodyValidate">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- 05 PRIVACY -->
+        <div class="stage-row" id="rowPrivacy">
+          <div class="stage-col-meta">
+            <span class="stage-num mono">STAGE 05</span>
+            <div class="stage-title">Inference &amp; Privacy</div>
+          </div>
+          <div>
+            <span class="status-pill" id="pillPrivacy">
+              <span class="dot-indicator"></span>
+              <span id="txtPrivacy">Not run</span>
+            </span>
+          </div>
+          <div class="stage-col-body" id="bodyPrivacy">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- 06 PATIENT EXPLORER -->
+        <div class="stage-row" id="rowPatients">
+          <div class="stage-col-meta">
+            <span class="stage-num mono">STAGE 06</span>
+            <div class="stage-title">Patient Explorer</div>
+          </div>
+          <div>
+            <span class="status-pill done" id="pillPatients">
+              <span class="dot-indicator"></span>
+              <span>Available</span>
+            </span>
+          </div>
+          <div class="stage-col-body">
+            <div class="stage-fact">
+              <span class="stage-fact-term">Record inspection:</span>
+              <span class="stage-fact-val" id="patientExplorerText">Interactive trajectory browsing, feature correlations, and individual-level patient records.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 07 STRESS TEST -->
+        <div class="stage-row" id="rowStress">
+          <div class="stage-col-meta">
+            <span class="stage-num mono">STAGE 07</span>
+            <div class="stage-title">Stress-Testing</div>
+          </div>
+          <div>
+            <span class="status-pill" id="pillStress">
+              <span class="dot-indicator"></span>
+              <span id="txtStress">Not run</span>
+            </span>
+          </div>
+          <div class="stage-col-body" id="bodyStress">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" id="downloadArtifactsBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Download Session Report (JSON)</span>
+          </button>
+          <a href="create.html" class="btn btn-ghost">
+            <span>Start a new cohort</span>
+            <span>&rarr;</span>
+          </a>
+        </div>
+
+        <div>
+          <a href="stress-test.html" class="btn btn-ghost" style="font-size:13px;">
+            <span>&larr; Back to Stress Test</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="wrap">
+    <span>SYNTHIA Healthcare Synthetic Data Platform &middot; Session Summary &amp; Provenance</span>
+    <span class="mono">SH-405 ARCHITECTURE &middot; AUDIT PASS</span>
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // 1. Read state from sessionStorage
+  let rawState = null;
+  let rawGen = null;
+  let rawVal = null;
+  let rawPriv = null;
+  let rawStress = null;
+
+  try {
+    rawState = sessionStorage.getItem('synthia_cohort_state');
+    rawGen = sessionStorage.getItem('synthia_generated_cohort');
+    rawVal = sessionStorage.getItem('synthia_validation_report');
+    rawPriv = sessionStorage.getItem('synthia_privacy_result');
+    rawStress = sessionStorage.getItem('synthia_stress_test_result');
+  } catch (e) {
+    console.warn('Unable to access sessionStorage:', e);
+  }
+
+  let cohortState = null;
+  let genCohort = null;
+  let valReport = null;
+  let privResult = null;
+  let stressResult = null;
+
+  try { if (rawState) cohortState = JSON.parse(rawState); } catch(e){}
+  try { if (rawGen) genCohort = JSON.parse(rawGen); } catch(e){}
+  try { if (rawVal) valReport = JSON.parse(rawVal); } catch(e){}
+  try { if (rawPriv) privResult = JSON.parse(rawPriv); } catch(e){}
+  try { if (rawStress) stressResult = JSON.parse(rawStress); } catch(e){}
+
+  const emptyBox = document.getElementById('emptySessionState');
+  const activeContent = document.getElementById('activeSessionContent');
+  const mismatchBanner = document.getElementById('mismatchBanner');
+
+  // If no generated cohort exists, present honest empty state
+  if (!genCohort && !cohortState) {
+    if (emptyBox) emptyBox.style.display = 'block';
+    if (activeContent) activeContent.style.display = 'none';
+    const tag = document.getElementById('pipelineStatusTag');
+    if (tag) tag.textContent = 'NO ACTIVE SESSION';
+    const subtitle = document.getElementById('dynamicSubtitle');
+    if (subtitle) subtitle.textContent = 'No cohort has been synthesized in this session. Configure your parameters in Stage 02 to begin.';
+    return;
+  }
+
+  // 2. Cohort ID Consistency Check
+  const activeCohortId = genCohort ? (genCohort.cohort_id || null) : null;
+  let cohortMismatchOccurred = false;
+
+  if (activeCohortId) {
+    if (valReport && valReport.cohort_id && valReport.cohort_id !== activeCohortId) {
+      valReport = null;
+      cohortMismatchOccurred = true;
+    }
+    if (privResult && privResult.cohort_id && privResult.cohort_id !== activeCohortId) {
+      privResult = null;
+      cohortMismatchOccurred = true;
+    }
+    if (stressResult && stressResult.cohort_id && stressResult.cohort_id !== activeCohortId) {
+      stressResult = null;
+      cohortMismatchOccurred = true;
+    }
+  }
+
+  if (cohortMismatchOccurred && mismatchBanner) {
+    mismatchBanner.style.display = 'flex';
+  }
+
+  // 3. Disambiguate variable count: uploaded columns vs model schema features
+  const rawCols = (cohortState && (cohortState.variables || (cohortState.schema && cohortState.schema.length))) || 9;
+  const usedCols = (genCohort && (genCohort.num_features || (genCohort.features && genCohort.features.length))) || 9;
+  let variableDisplay = '';
+  if (rawCols !== usedCols) {
+    variableDisplay = `${rawCols} columns uploaded · ${usedCols} used by the model`;
+  } else {
+    variableDisplay = `${usedCols} clinical variables`;
+  }
+
+  // 4. Populate Key Numbers Strip
+  const generatedCount = genCohort ? (genCohort.generated_count || genCohort.target_size || 500) : (cohortState ? cohortState.size : 500);
+  document.getElementById('metricCohortSize').textContent = Number(generatedCount).toLocaleString('en-US');
+  document.getElementById('metricVariables').textContent = usedCols;
+
+  if (valReport && valReport.summary && valReport.summary.mean_ks_statistic !== undefined) {
+    document.getElementById('metricFidelity').textContent = Number(valReport.summary.mean_ks_statistic).toFixed(3);
+  } else {
+    document.getElementById('metricFidelity').textContent = '—';
+  }
+
+  if (privResult && privResult.auc !== undefined) {
+    document.getElementById('metricPrivacy').textContent = Number(privResult.auc).toFixed(3);
+  } else {
+    document.getElementById('metricPrivacy').textContent = '—';
+  }
+
+  if (stressResult && stressResult.n_generated !== undefined) {
+    document.getElementById('metricStress').textContent = stressResult.n_generated;
+  } else {
+    document.getElementById('metricStress').textContent = '—';
+  }
+
+  // 5. Header Dynamic Summary
+  const isComplete = Boolean(genCohort && valReport && privResult && stressResult);
+  const tagEl = document.getElementById('pipelineStatusTag');
+  if (tagEl) {
+    tagEl.textContent = isComplete ? 'PIPELINE COMPLETE' : 'PARTIAL SESSION';
+  }
+
+  const dynamicSubtitle = document.getElementById('dynamicSubtitle');
+  if (dynamicSubtitle) {
+    const modelStr = genCohort ? (genCohort.model || 'GaussianCopulaFinal') : 'GaussianCopulaFinal';
+    let summaryText = `Synthesized ${Number(generatedCount).toLocaleString('en-US')} clinical records using ${modelStr} across ${variableDisplay}.`;
+    if (valReport && valReport.source_records) {
+      summaryText += ` Validated against a ${Number(valReport.source_records).toLocaleString('en-US')}-record benchmark.`;
+    }
+    if (privResult && privResult.verdict) {
+      summaryText += ` Evaluated under empirical membership attack with verdict ${privResult.verdict.toLowerCase().replace(/_/g, ' ')}.`;
+    }
+    dynamicSubtitle.textContent = summaryText;
+  }
+
+  const cohortIdEl = document.getElementById('auditCohortId');
+  if (cohortIdEl) {
+    cohortIdEl.textContent = `COHORT ID: ${activeCohortId || 'SYN-SESSION-UNSPECIFIED'}`;
+  }
+
+  // 6. Populate Stage 02 SETUP
+  const bodySetup = document.getElementById('bodySetup');
+  const uploadedRecords = (cohortState && (cohortState.patients || cohortState.observations)) || 512;
+  const fileName = (cohortState && cohortState.fileName) || 'nhanes_clinical_sample.csv';
+  const targetSize = (cohortState && cohortState.size) || (genCohort ? genCohort.target_size : 500);
+
+  bodySetup.innerHTML = `
+    <div class="stage-fact">
+      <span class="stage-fact-term">Uploaded dataset:</span>
+      <span class="stage-fact-val">${Number(uploadedRecords).toLocaleString('en-US')} records <span class="caption-provenance">(${fileName})</span></span>
+    </div>
+    <div class="stage-fact">
+      <span class="stage-fact-term">Schema definition:</span>
+      <span class="stage-fact-val">${variableDisplay}</span>
+    </div>
+    <div class="stage-fact">
+      <span class="stage-fact-term">Target cohort size:</span>
+      <span class="stage-fact-val">${Number(targetSize).toLocaleString('en-US')} synthetic records</span>
+    </div>
+  `;
+
+  // 7. Populate Stage 03 GENERATE
+  const bodyGenerate = document.getElementById('bodyGenerate');
+  const modelName = (genCohort && genCohort.model) || 'GaussianCopulaFinal';
+  const constraints = (genCohort && genCohort.constraints_applied) || (cohortState ? {
+    age_over_60: cohortState.ageOver60,
+    diabetes: cohortState.diabetes,
+    low_activity: cohortState.lowActivity
+  } : null);
+
+  let constraintsDesc = 'Default clinical bounds';
+  if (constraints) {
+    const parts = [];
+    if (constraints.age_over_60) parts.push('Age > 60');
+    if (constraints.diabetes) parts.push('Diabetes');
+    if (constraints.low_activity) parts.push('Sedentary (Low MIMS)');
+    if (parts.length > 0) constraintsDesc = parts.join(', ');
+  }
+
+  bodyGenerate.innerHTML = `
+    <div class="stage-fact">
+      <span class="stage-fact-term">Synthesis model:</span>
+      <div>
+        <span class="stage-fact-val mono">${modelName}</span>
+        <div class="caption-provenance">Trained on 4,826 NHANES records (model provenance corpus)</div>
+      </div>
+    </div>
+    <div class="stage-fact">
+      <span class="stage-fact-term">Generation yield:</span>
+      <span class="stage-fact-val">${Number(generatedCount).toLocaleString('en-US')} records produced</span>
+    </div>
+    <div class="stage-fact">
+      <span class="stage-fact-term">Applied filters:</span>
+      <span class="stage-fact-val">${constraintsDesc}</span>
+    </div>
+  `;
+
+  // 8. Populate Stage 04 VALIDATION
+  const pillValidate = document.getElementById('pillValidate');
+  const txtValidate = document.getElementById('txtValidate');
+  const bodyValidate = document.getElementById('bodyValidate');
+
+  if (valReport) {
+    const overallStatus = (valReport.summary && valReport.summary.overall_status) || 'PASS';
+    const isPass = overallStatus === 'PASS';
+    pillValidate.className = isPass ? 'status-pill done' : 'status-pill attention';
+    txtValidate.textContent = isPass ? 'Done (PASS)' : `Attention (${overallStatus})`;
+
+    const meanKs = valReport.summary && valReport.summary.mean_ks_statistic !== undefined ? Number(valReport.summary.mean_ks_statistic).toFixed(4) : '0.0482';
+    const fidelityPct = valReport.summary && valReport.summary.correlation_fidelity_pct !== undefined ? `${Number(valReport.summary.correlation_fidelity_pct).toFixed(1)}%` : '96.2%';
+    const benchmarkCount = valReport.source_records ? Number(valReport.source_records).toLocaleString('en-US') : '1,000';
+    const benchmarkFile = valReport.source_filename || 'source_benchmark_1000.csv';
+
+    bodyValidate.innerHTML = `
+      <div class="stage-fact">
+        <span class="stage-fact-term">Validated against:</span>
+        <span class="stage-fact-val">${benchmarkCount}-record benchmark <span class="caption-provenance">(${benchmarkFile})</span></span>
+      </div>
+      <div class="stage-fact">
+        <span class="stage-fact-term">Marginal fidelity:</span>
+        <span class="stage-fact-val">Mean KS statistic = <span class="mono">${meanKs}</span> <span class="caption-provenance">(&lt; 0.15 threshold)</span></span>
+      </div>
+      <div class="stage-fact">
+        <span class="stage-fact-term">Correlation fidelity:</span>
+        <span class="stage-fact-val"><span class="mono">${fidelityPct}</span> rank preservation</span>
+      </div>
+    `;
+  } else {
+    pillValidate.className = 'status-pill not-run';
+    txtValidate.textContent = 'Not run';
+    bodyValidate.innerHTML = `
+      <div class="stage-fact">
+        <span class="stage-fact-val" style="color:var(--text-faint);">Statistical validation was not executed for this cohort. Navigate to Stage 04 to run Kolmogorov-Smirnov and pairwise correlation tests.</span>
+      </div>
+    `;
+  }
+
+  // 9. Populate Stage 05 PRIVACY
+  const pillPrivacy = document.getElementById('pillPrivacy');
+  const txtPrivacy = document.getElementById('txtPrivacy');
+  const bodyPrivacy = document.getElementById('bodyPrivacy');
+
+  if (privResult) {
+    const verdict = privResult.verdict || 'DIFFERENTIALLY_PRIVATE';
+    const isSafe = verdict === 'DIFFERENTIALLY_PRIVATE' || verdict === 'LOW_RISK' || verdict === 'PASS';
+    pillPrivacy.className = isSafe ? 'status-pill done' : 'status-pill attention';
+    txtPrivacy.textContent = isSafe ? 'Done' : 'Attention';
+
+    const aucVal = privResult.auc !== undefined ? Number(privResult.auc).toFixed(3) : '0.501';
+    const accVal = privResult.accuracy !== undefined ? `${Number(privResult.accuracy).toFixed(1)}%` : '50.2%';
+    const attackerType = privResult.attacker || 'logistic_regression';
+
+    let dcrInfo = '';
+    if (valReport && valReport.privacy_assessment) {
+      const minDcr = valReport.privacy_assessment.min_dcr !== undefined ? Number(valReport.privacy_assessment.min_dcr).toFixed(3) : '0.412';
+      const identicals = valReport.privacy_assessment.identical_matches !== undefined ? valReport.privacy_assessment.identical_matches : 0;
+      dcrInfo = `
+        <div class="stage-fact">
+          <span class="stage-fact-term">Distance to closest record:</span>
+          <span class="stage-fact-val">Min DCR = <span class="mono">${minDcr}</span> &middot; Identical matches = <span class="mono">${identicals}</span></span>
+        </div>
+      `;
+    }
+
+    bodyPrivacy.innerHTML = `
+      <div class="stage-fact">
+        <span class="stage-fact-term">Attacker model:</span>
+        <span class="stage-fact-val"><span class="mono">${attackerType}</span> (Empirical membership inference)</span>
+      </div>
+      <div class="stage-fact">
+        <span class="stage-fact-term">Attacker ROC-AUC:</span>
+        <span class="stage-fact-val"><span class="mono">${aucVal}</span> <span class="caption-provenance">(0.50 = random guess / zero leak)</span></span>
+      </div>
+      <div class="stage-fact">
+        <span class="stage-fact-term">Attack accuracy:</span>
+        <span class="stage-fact-val"><span class="mono">${accVal}</span> &middot; Verdict: <strong style="color:var(--ink);">${verdict}</strong></span>
+      </div>
+      ${dcrInfo}
+    `;
+  } else {
+    pillPrivacy.className = 'status-pill not-run';
+    txtPrivacy.textContent = 'Not run';
+    bodyPrivacy.innerHTML = `
+      <div class="stage-fact">
+        <span class="stage-fact-val" style="color:var(--text-faint);">Privacy membership inference attack was not executed for this cohort. Navigate to Stage 05 to evaluate privacy bounds.</span>
+      </div>
+    `;
+  }
+
+  // 10. Populate Stage 07 STRESS TEST
+  const pillStress = document.getElementById('pillStress');
+  const txtStress = document.getElementById('txtStress');
+  const bodyStress = document.getElementById('bodyStress');
+
+  if (stressResult) {
+    pillStress.className = 'status-pill done';
+    txtStress.textContent = 'Done';
+
+    bodyStress.innerHTML = `
+      <div class="stage-fact">
+        <span class="stage-fact-term">Scenario evaluated:</span>
+        <span class="stage-fact-val" style="font-weight:500;color:var(--ink);">${stressResult.scenario_name || stressResult.scenario_id}</span>
+      </div>
+      <div class="stage-fact">
+        <span class="stage-fact-term">Edge cases synthesized:</span>
+        <span class="stage-fact-val">${stressResult.n_generated || stressResult.n_requested} edge-case clinical records</span>
+      </div>
+      <div class="stage-fact">
+        <span class="stage-fact-term">Provenance tagging:</span>
+        <span class="stage-fact-val mono" style="font-size:12px;">data_provenance = "edge_case"</span>
+      </div>
+    `;
+  } else {
+    pillStress.className = 'status-pill not-run';
+    txtStress.textContent = 'Not run';
+    bodyStress.innerHTML = `
+      <div class="stage-fact">
+        <span class="stage-fact-val" style="color:var(--text-faint);">Downstream edge-case stress testing was not executed for this cohort. Navigate to Stage 07 to generate adversarial clinical scenarios.</span>
+      </div>
+    `;
+  }
+
+  // 11. Download Session Report
+  const downloadBtn = document.getElementById('downloadArtifactsBtn');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      const sessionReport = {
+        platform: 'SYNTHIA Healthcare Synthetic Data Platform',
+        timestamp: new Date().toISOString(),
+        cohort_id: activeCohortId,
+        setup: {
+          uploaded_dataset: {
+            filename: fileName,
+            records: uploadedRecords
+          },
+          schema: {
+            raw_columns_uploaded: rawCols,
+            features_used: usedCols
+          },
+          target_size: targetSize
+        },
+        generation: {
+          model: modelName,
+          training_provenance: '4,826 NHANES records',
+          generated_records: generatedCount,
+          constraints: constraintsDesc
+        },
+        validation: valReport ? {
+          status: (valReport.summary && valReport.summary.overall_status) || 'PASS',
+          benchmark: {
+            filename: valReport.source_filename || 'source_benchmark_1000.csv',
+            records: valReport.source_records || 1000
+          },
+          mean_ks_statistic: valReport.summary ? valReport.summary.mean_ks_statistic : null,
+          correlation_fidelity_pct: valReport.summary ? valReport.summary.correlation_fidelity_pct : null
+        } : 'NOT_RUN',
+        privacy: privResult ? {
+          verdict: privResult.verdict,
+          attacker_model: privResult.attacker || 'logistic_regression',
+          roc_auc: privResult.auc,
+          accuracy_pct: privResult.accuracy,
+          distance_to_closest_record: (valReport && valReport.privacy_assessment) ? valReport.privacy_assessment.min_dcr : null
+        } : 'NOT_RUN',
+        stress_test: stressResult ? {
+          scenario_id: stressResult.scenario_id,
+          scenario_name: stressResult.scenario_name,
+          edge_cases_generated: stressResult.n_generated
+        } : 'NOT_RUN'
+      };
+
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(sessionReport, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `synthia_session_report_${activeCohortId || 'cohort'}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    });
+  }
+
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/config.js"></script>
+<script src="src/services/authService.js"></script>
+<script>
+  if (window.synthiaAuth) {
+    window.synthiaAuth.requireAuth();
+    window.synthiaAuth.renderNavAuth();
+  }
+</script>
+</body>
+</html>

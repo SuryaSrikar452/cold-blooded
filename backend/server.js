@@ -114,6 +114,9 @@ app.get('/patient', (req, res) => {
 app.get('/stress-test', (req, res) => {
   res.sendFile(path.join(frontendDir, 'stress-test.html'));
 });
+app.get('/summary', (req, res) => {
+  res.sendFile(path.join(frontendDir, 'summary.html'));
+});
 app.get('/login', (req, res) => {
   res.sendFile(path.join(frontendDir, 'login.html'));
 });

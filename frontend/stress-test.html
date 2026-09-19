@@ -297,6 +297,8 @@
         <a href="patient.html" class="step-item"><span class="step-badge">06</span> PATIENTS</a>
         <span class="step-track"></span>
         <span class="step-item active"><span class="step-badge">07</span> STRESS TEST</span>
+        <span class="step-track"></span>
+        <a href="summary.html" class="step-item" title="Pipeline Session Summary"><span class="step-badge">&#10003;</span> SUMMARY</a>
       </div>
       <div class="mobile-stepper-compact">
         <span>STEP 07 / 07</span>
@@ -304,8 +306,8 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
-      <a href="validation.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);">
-        <span>Review Validation</span>
+      <a href="summary.html" class="btn btn-primary" style="height:34px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:550;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);border:1px solid rgba(167,139,250,0.3);">
+        <span>View summary</span>
         <span style="font-size:13px;line-height:1;">&rarr;</span>
       </a>
     </div>
@@ -445,6 +447,15 @@
       </table>
     </div>
 
+    <!-- Action Bar to Summary -->
+    <div class="action-bar" style="margin-top:2.5rem;display:flex;justify-content:space-between;align-items:center;padding-top:1.5rem;border-top:1px solid var(--hairline);">
+      <a href="patient.html" class="btn btn-ghost" style="padding:0.6rem 1.25rem;border-radius:4px;font-size:13px;font-weight:500;">&larr; Back to Patients</a>
+      <a href="summary.html" class="btn btn-primary" id="viewSummaryBtn" style="padding:0.65rem 1.4rem;border-radius:4px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 14px rgba(108,77,255,0.35);">
+        <span>View summary</span>
+        <span style="font-size:14px;line-height:1;">&rarr;</span>
+      </a>
+    </div>
+
   </div>
 </main>
 
@@ -497,6 +508,28 @@
 
       document.getElementById('resCount').textContent = `Generated: ${patients.length} / ${n}`;
       edgeTableBody.innerHTML = '';
+
+      // Persist stress test run into sessionStorage
+      try {
+        let currentCohortId = null;
+        const rawCohort = sessionStorage.getItem('synthia_generated_cohort');
+        if (rawCohort) {
+          const parsed = JSON.parse(rawCohort);
+          currentCohortId = parsed.cohort_id || null;
+        }
+        const stressSummary = {
+          cohort_id: currentCohortId,
+          scenario_id: activeScenarioId,
+          scenario_name: selectedScenarioName ? selectedScenarioName.textContent : activeScenarioId,
+          n_requested: n,
+          n_generated: patients.length,
+          timestamp: new Date().toISOString(),
+          status: 'done'
+        };
+        sessionStorage.setItem('synthia_stress_test_result', JSON.stringify(stressSummary));
+      } catch (e) {
+        console.warn('Could not store stress test summary:', e);
+      }
 
       patients.slice(0, 50).forEach((pat, i) => {
         const tr = document.createElement('tr');

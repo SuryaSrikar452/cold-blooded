@@ -1072,6 +1072,11 @@
       }
 
       fullReport = report;
+      try {
+        sessionStorage.setItem('synthia_validation_report', JSON.stringify(report));
+      } catch (storeErr) {
+        console.warn('[Validation] Could not cache report to sessionStorage:', storeErr);
+      }
       populateDashboard(report);
 
       loadingView.style.display = 'none';

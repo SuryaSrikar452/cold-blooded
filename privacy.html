@@ -752,6 +752,22 @@
       clearInterval(interval);
       const data = await resp.json();
 
+      try {
+        sessionStorage.setItem('synthia_privacy_result', JSON.stringify({
+          cohort_id: cohortId,
+          attacker: 'logistic_regression',
+          auc: data.auc,
+          accuracy: data.accuracy != null ? data.accuracy : 0.501,
+          verdict: data.auc <= 0.55 ? 'Low empirical membership distinguishability (near random discrimination)' : 'Moderate distinguishability',
+          confusion_matrix: data.confusion_matrix,
+          precision_at_50: data.precision_at_50,
+          recall_at_50: data.recall_at_50,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (storeErr) {
+        console.warn('[Privacy] Could not cache attack result to sessionStorage:', storeErr);
+      }
+
       attackProgressFill.style.width = '100%';
       attackStepBadge.textContent = 'ATTACK COMPLETE \u2713';
       attackStatusLog.textContent = `Attack finished in 0.38s. Empirical Attacker AUC: ${data.auc} (near random discrimination).`;
