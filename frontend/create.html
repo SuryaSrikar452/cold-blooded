@@ -1806,11 +1806,12 @@ fileInput.addEventListener('change', (e) => {
 
 loadSampleBtn.addEventListener('click', (e) => {
   e.stopPropagation();
+  cohortState.schema = ['age', 'sex', 'diabetes', 'systolic_bp', 'diastolic_bp', 'activity_mims', 'n_medications', 'adherence_pct', 'pain_score'];
   setDatasetState({
-    name: "clinical_sample.csv",
-    patients: 512,
+    name: "nhanes_jury_showcase_1000.csv",
+    patients: 1000,
     variables: 9,
-    observations: 4608
+    observations: 9000
   });
 });
 

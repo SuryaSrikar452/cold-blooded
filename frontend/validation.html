@@ -1059,7 +1059,7 @@
 
       const report = await window.SYNTHIA_VALIDATION_API.validateCohort({
         cohortId: generatedCohort.cohort_id,
-        sourceDataset: 'source_benchmark_1000.csv',
+        sourceDataset: cohortState.fileName || 'nhanes_jury_showcase_1000.csv',
         targetConditions: {
           targetSize: cohortState.targetSize || cohortState.size || generatedCohort.target_size,
           ageOver60: cohortState.ageOver60,
