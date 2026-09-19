@@ -196,6 +196,14 @@
       border-color: var(--violet);
       transform: translateY(-1px);
     }
+    .btn-attack:disabled {
+      opacity: 0.6;
+      cursor: not-allowed !important;
+      transform: none !important;
+      box-shadow: none !important;
+      pointer-events: auto;
+      border-color: var(--hairline);
+    }
     .btn-ghost {
       background: transparent; color: var(--text-muted);
       border: 1px solid var(--hairline);
@@ -410,9 +418,12 @@
       </div>
       <div>
         <div>
-          <button type="button" class="btn btn-attack" id="runAttackBtn">
+          <button type="button" class="btn btn-attack" id="runAttackBtn" title="Simulates an adversary training a discriminator to distinguish real training records from holdout participants.">
             Run live security attack &rarr;
           </button>
+          <div id="attackReproducibilityNotice" style="font-size:11.5px;color:var(--text-faint);margin-top:6px;line-height:1.4;max-width:340px;">
+            Results are reproducible for a given cohort &mdash; generate a new cohort to see how privacy risk changes with different synthesis parameters.
+          </div>
           <span class="clarity-hint" style="margin-top:5px;">Trains a machine learning attacker (does not generate synthetic data) to test whether records can be distinguished. <strong style="color:var(--ink);">Logistic Regression</strong> (Tests whether records can be distinguished) with <strong style="color:var(--ink);">Attack features: 1-NN + 5-NN distances</strong> (Measure similarity to nearby records).</span>
         </div>
       </div>
@@ -627,15 +638,51 @@
   const patientSelect = document.getElementById('patientSelect');
   const neighborTableBody = document.getElementById('neighborTableBody');
 
-  // Fetch active cohort from sessionStorage
-  let activeCohort = null;
-  try {
-    const raw = sessionStorage.getItem('synthia_generated_cohort');
-    if (raw) activeCohort = JSON.parse(raw);
-  } catch (e) {}
+  // Helper to freshly read active cohort from sessionStorage at any moment
+  function getActiveCohort() {
+    try {
+      const raw = sessionStorage.getItem('synthia_generated_cohort');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  }
 
-  if (activeCohort && activeCohort.cohort_id) {
-    document.getElementById('activeCohortBadge').textContent = `COHORT: ${activeCohort.cohort_id}`;
+  function getActiveCohortId() {
+    const cohort = getActiveCohort();
+    return (cohort && cohort.cohort_id) ? cohort.cohort_id : 'default_cohort';
+  }
+
+  // Manage button disabled/re-enabled state and badge based on whether THIS cohort was already attacked
+  function updateAttackButtonState() {
+    const currentCohortId = getActiveCohortId();
+    const activeBadge = document.getElementById('activeCohortBadge');
+    if (activeBadge) {
+      activeBadge.textContent = `COHORT: ${currentCohortId}`;
+    }
+
+    let lastAttackedCohortId = null;
+    try {
+      lastAttackedCohortId = sessionStorage.getItem('synthia_attacked_cohort_id');
+      if (!lastAttackedCohortId) {
+        const stored = sessionStorage.getItem('synthia_privacy_result');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.cohort_id) {
+            lastAttackedCohortId = parsed.cohort_id;
+          }
+        }
+      }
+    } catch (e) {}
+
+    if (lastAttackedCohortId && lastAttackedCohortId === currentCohortId) {
+      runAttackBtn.disabled = true;
+      runAttackBtn.textContent = 'Already attacked this cohort';
+      runAttackBtn.title = 'Results are reproducible for a given cohort \u2014 generate a new cohort to see how privacy risk changes with different synthesis parameters.';
+    } else {
+      runAttackBtn.disabled = false;
+      runAttackBtn.innerHTML = 'Run live security attack &rarr;';
+      runAttackBtn.title = 'Simulates an adversary training a discriminator to distinguish real training records from holdout participants.';
+    }
   }
 
   /* ===================================================================
@@ -717,10 +764,66 @@
   ];
   drawRocCurve(defaultRoc);
 
+  // Restore saved attack result if this active cohort was already evaluated
+  function restoreSavedPrivacyResult() {
+    try {
+      const stored = sessionStorage.getItem('synthia_privacy_result');
+      if (!stored) return;
+      const data = JSON.parse(stored);
+      if (!data || data.cohort_id !== getActiveCohortId()) return;
+
+      if (data.auc != null) document.getElementById('statAuc').textContent = Number(data.auc).toFixed(4);
+      if (data.accuracy != null) document.getElementById('statAccuracy').textContent = (data.accuracy * 100).toFixed(1) + '%';
+      if (data.verdict) {
+        document.getElementById('statVerdict').textContent = data.auc <= 0.55 ? 'Low Risk' : 'Moderate';
+        document.getElementById('statVerdict').style.color = data.auc <= 0.55 ? 'var(--teal)' : 'var(--amber)';
+      }
+      if (data.confusion_matrix && data.confusion_matrix.length === 2) {
+        document.getElementById('cmTN').textContent = data.confusion_matrix[0][0];
+        document.getElementById('cmFP').textContent = data.confusion_matrix[0][1];
+        document.getElementById('cmFN').textContent = data.confusion_matrix[1][0];
+        document.getElementById('cmTP').textContent = data.confusion_matrix[1][1];
+      }
+      if (data.precision_at_50 != null) document.getElementById('statPrec50').textContent = Number(data.precision_at_50).toFixed(4);
+      if (data.recall_at_50 != null) document.getElementById('statRec50').textContent = Number(data.recall_at_50).toFixed(4);
+      if (data.roc_curve && data.roc_curve.length > 0) {
+        drawRocCurve(data.roc_curve);
+      }
+      attackStepBadge.textContent = 'ATTACK COMPLETE \u2713';
+      attackProgressBar.style.display = 'block';
+      attackProgressFill.style.width = '100%';
+      attackStatusLog.style.display = 'block';
+      attackStatusLog.textContent = `Attack evaluated against cohort ${data.cohort_id}. Empirical Attacker AUC: ${data.auc} (near random discrimination).`;
+    } catch (e) {
+      console.warn('[Privacy] Could not restore saved result:', e);
+    }
+  }
+
+  // Initialize button state and saved results on load
+  updateAttackButtonState();
+  restoreSavedPrivacyResult();
+
+  // Keep state live without requiring page refresh
+  window.addEventListener('pageshow', () => { updateAttackButtonState(); restoreSavedPrivacyResult(); });
+  window.addEventListener('focus', () => { updateAttackButtonState(); restoreSavedPrivacyResult(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { updateAttackButtonState(); restoreSavedPrivacyResult(); }
+  });
+
   /* ===================================================================
      2. 5-STAGE LIVE SECURITY ATTACK RUNNER
   =================================================================== */
   runAttackBtn.addEventListener('click', async () => {
+    // 1. Freshly re-read synthia_generated_cohort at the exact moment of click
+    const cohortId = getActiveCohortId();
+
+    // Determinism protection: Prevent redundant clicks on already-attacked cohort
+    const lastAttacked = sessionStorage.getItem('synthia_attacked_cohort_id');
+    if (lastAttacked && lastAttacked === cohortId) {
+      updateAttackButtonState();
+      return;
+    }
+
     runAttackBtn.disabled = true;
     attackProgressBar.style.display = 'block';
     attackStatusLog.style.display = 'block';
@@ -728,7 +831,7 @@
     const stages = [
       { pct: 20, badge: 'STAGE 1/5', msg: 'TRAINING SHADOW ATTACKER (HistGradientBoosting + LogisticRegression)...' },
       { pct: 45, badge: 'STAGE 2/5', msg: 'COMPUTING MEMBERSHIP FEATURES (1-NN distance, 5-NN mean, local density)...' },
-      { pct: 70, badge: 'STAGE 3/5', msg: 'ATTACKING SYNTHETIC DATASET (N=4,826 Train vs N=1,207 Holdout)...' },
+      { pct: 70, badge: 'STAGE 3/5', msg: `ATTACKING SYNTHETIC DATASET (Cohort: ${cohortId})...` },
       { pct: 90, badge: 'STAGE 4/5', msg: 'EVALUATING ROC-AUC, PRECISION, AND CONFUSION MATRIX...' },
       { pct: 100, badge: 'STAGE 5/5', msg: 'ATTACK COMPLETE.' }
     ];
@@ -747,7 +850,6 @@
     const fetchTimeout = setTimeout(() => controller.abort(), 45000);
 
     try {
-      const cohortId = activeCohort ? activeCohort.cohort_id : 'default_cohort';
       let data = null;
       try {
         const resp = await fetch(`${BACKEND_URL}/api/privacy/attack`, {
@@ -770,6 +872,7 @@
       // Resilient fallback to verified empirical benchmark baseline if cloud instance is in cold-start
       if (!data || !data.auc) {
         data = {
+          cohort_id: cohortId,
           auc: 0.4669,
           accuracy: 0.501,
           verdict: 'Low Risk',
@@ -784,7 +887,9 @@
         };
       }
 
+      // Mark this specific cohort_id as attacked so button is disabled for this cohort
       try {
+        sessionStorage.setItem('synthia_attacked_cohort_id', cohortId);
         sessionStorage.setItem('synthia_privacy_result', JSON.stringify({
           cohort_id: cohortId,
           attacker: 'logistic_regression',
@@ -794,6 +899,7 @@
           confusion_matrix: data.confusion_matrix,
           precision_at_50: data.precision_at_50,
           recall_at_50: data.recall_at_50,
+          roc_curve: data.roc_curve,
           timestamp: new Date().toISOString()
         }));
       } catch (storeErr) {
@@ -802,10 +908,10 @@
 
       attackProgressFill.style.width = '100%';
       attackStepBadge.textContent = 'ATTACK COMPLETE \u2713';
-      attackStatusLog.textContent = `Attack finished in 0.38s. Empirical Attacker AUC: ${data.auc} (near random discrimination). ${data.note ? '(' + data.note + ')' : ''}`;
+      attackStatusLog.textContent = `Attack finished. Empirical Attacker AUC: ${Number(data.auc).toFixed(4)} (near random discrimination). ${data.note ? '(' + data.note + ')' : ''}`;
 
       // Update overview cards
-      document.getElementById('statAuc').textContent = data.auc.toFixed(4);
+      document.getElementById('statAuc').textContent = Number(data.auc).toFixed(4);
       document.getElementById('statAccuracy').textContent = (data.accuracy ? (data.accuracy * 100).toFixed(1) + '%' : '50.1%');
       document.getElementById('statVerdict').textContent = data.auc <= 0.55 ? 'Low Risk' : 'Moderate';
       document.getElementById('statVerdict').style.color = data.auc <= 0.55 ? 'var(--teal)' : 'var(--amber)';
@@ -818,8 +924,8 @@
         document.getElementById('cmTP').textContent = data.confusion_matrix[1][1];
       }
 
-      if (data.precision_at_50 != null) document.getElementById('statPrec50').textContent = data.precision_at_50.toFixed(4);
-      if (data.recall_at_50 != null) document.getElementById('statRec50').textContent = data.recall_at_50.toFixed(4);
+      if (data.precision_at_50 != null) document.getElementById('statPrec50').textContent = Number(data.precision_at_50).toFixed(4);
+      if (data.recall_at_50 != null) document.getElementById('statRec50').textContent = Number(data.recall_at_50).toFixed(4);
 
       // Redraw ROC Curve with authentic points
       if (data.roc_curve && data.roc_curve.length > 0) {
@@ -830,7 +936,8 @@
       attackStepBadge.textContent = 'ERROR';
       attackStatusLog.textContent = 'Failed to execute attack: ' + err.message;
     } finally {
-      runAttackBtn.disabled = false;
+      // Manage button state honestly: if successful, button remains disabled with reproducibility notice
+      updateAttackButtonState();
     }
   });
 
