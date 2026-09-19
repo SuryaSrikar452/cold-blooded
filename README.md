@@ -11,11 +11,22 @@ An end-to-end, production-grade synthetic patient data generation, clinical vali
 3. **Natural Language Cohort Builder**: Converts queries like *"Generate 5,000 diabetic patients over 60 with low activity"* into structured target schemas with explicit threshold resolution.
 4. **Copula "What-If" Counterfactual Engine**: Computes mathematically correlated multivariate updates when patient parameters are modified.
 5. **Edge Case & Adversarial Lab**: Generates rare tail-distribution cohorts tagged with `data_provenance = "edge_case"`.
-6. **12-Month Longitudinal Year-View**: Mean-reverting AR(1) population trajectories with clinical boundary enforcement.
+6. **Longitudinal Dynamics & Patient Trajectories ("Every Patient Has a Story Over Time")**: Multi-interval (30-day to 12-month) intra-patient progression where vitals, pain, and activity respond coherently over time via mean-reverting AR(1) stochastic drift.
 7. **Representativeness / Bias Audit**: Neutral subgroup gap analysis against reference benchmarks.
 8. **Public API & Key Authentication**: Programmatic `X-API-Key` authenticated REST endpoints with rate metrics.
 9. **Nearest Real Neighbor Explainability**: Standardized distance lookup matching synthetic patients to closest real seed records.
 10. **Glassmorphic Interactive Dashboard**: 12 responsive views with live Chart.js charts.
+
+---
+
+### Longitudinal Dynamics: "Every Patient Has a Story Over Time"
+
+Human health is rarely a static cross-sectional snapshot. In clinical trials and drug efficacy studies, patient vitals and symptoms evolve dynamically in response to treatment, adherence fluctuations, and lifestyle changes. 
+
+Synthia models this longitudinal continuum:
+* **Chronological Coherence**: Rather than drawing isolated time-points, Synthia simulates dynamic multi-week and multi-month trajectories (e.g. 30-day treatment windows and 12-month progression) where systolic/diastolic blood pressure, daily pain ratings (0–10), physical activity (MIMS), and medication adherence fluctuate realistically around patient baseline setpoints using an **AR(1) Ornstein-Uhlenbeck mean-reverting stochastic process**.
+* **Clinical Boundary Protection**: Ensures physiological realism is preserved at every daily/monthly timestep (e.g., non-negative pain, $\text{SBP} > \text{DBP}$, adherence bounded in $[0, 100\%]$).
+* **UI Streamlining Note**: While earlier prototypes displayed the *"Every patient has a story over time"* 30-day interactive scrubber directly inside the cohort configuration page (`create.html`), this feature is now centralized within the dedicated **Patient Longitudinal Inspector (`patient.html`)** and platform showcase (`index.html`) to keep the cohort creation workflow streamlined for demographic and clinical conditioning.
 
 ---
 
